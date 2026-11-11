@@ -1,0 +1,130 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum PayrollStatus {
+  Draft
+  Processing
+  Approved
+  Finalized
+  Disbursed
+  Cancelled
+}
+
+enum ComponentType {
+  Earning
+  Deduction
+  Employer_Contribution
+}
+
+model SalaryComponent {
+  id              String        @id @default(uuid())
+  code            String        @unique // BASIC, HRA, DA, SPECIAL, EPF, ESI, PT, TDS
+  name            String
+  type            ComponentType
+  isTaxable       Boolean       @default(true)
+  isStatutory     Boolean       @default(false)
+  calculationRule String?       // formula or percentage description
+  status          String        @default("Active")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("salary_components")
+}
+
+model SalaryStructure {
+  id               String   @id @default(uuid())
+  employeeId       String   @unique
+  effectiveFrom    DateTime
+  grossSalaryMonthly Float
+  baseSalaryAnnual Float
+  items            Json     // array of { componentId, code, amountMonthly, type }
+  status           String   @default("Active")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("salary_structures")
+}
+
+model StatutorySetting {
+  id                      String   @id @default(uuid())
+  jurisdiction            String   @default("IN") // India
+  financialYear           String   // e.g. "2026-2027"
+  epfEmployeeRatePercent  Float    @default(12.0)
+  epfEmployerRatePercent  Float    @default(12.0)
+  epfWageCeilingMonthly   Float    @default(15000.0)
+  esiEmployeeRatePercent  Float    @default(0.75)
+  esiEmployerRatePercent  Float    @default(3.25)
+  esiWageCeilingMonthly   Float    @default(21000.0)
+  professionalTaxMonthly  Float    @default(200.0)
+  effectiveFrom           DateTime
+  effectiveTo             DateTime?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("statutory_settings")
+}
+
+model PayrollRun {
+  id               String        @id @default(uuid())
+  month            Int           // 1 - 12
+  year             Int
+  periodKey        String        @unique // e.g. "2026-11"
+  status           PayrollStatus @default(Draft)
+  totalEmployees   Int           @default(0)
+  totalGrossPayout Float         @default(0.0)
+  totalDeductions  Float         @default(0.0)
+  totalNetPayout   Float         @default(0.0)
+  finalizedBy      String?
+  finalizedAt      DateTime?
+  lineItems        PayslipLineItem[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@map("payroll_runs")
+}
+
+model PayslipLineItem {
+  id                       String     @id @default(uuid())
+  payrollRunId             String
+  payrollRun               PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  employeeId               String
+  employeeName             String
+  department               String?
+  designation              String?
+  panOrTaxNumber           String?
+  bankAccountNumber        String?
+  bankName                 String?
+  ifscCode                 String?
+  totalWorkingDays         Float
+  daysPresent              Float
+  lossOfPayDays            Float
+  clientBillableHours      Float      @default(0.0)
+  clientAllowance          Float      @default(0.0)
+  basic                    Float
+  hra                      Float
+  specialAllowance         Float
+  otherAllowances          Float      @default(0.0)
+  grossEarnings            Float
+  epfEmployeeDeduction     Float
+  esiEmployeeDeduction     Float
+  professionalTaxDeduction Float
+  tdsDeduction             Float
+  lopDeduction             Float
+  totalDeductions          Float
+  netPayable               Float
+  epfEmployerContribution  Float
+  esiEmployerContribution  Float
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
+
+  @@unique([payrollRunId, employeeId])
+  @@index([employeeId])
+  @@map("payslip_line_items")
+}
+
