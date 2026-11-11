@@ -1,0 +1,174 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum WorkMode {
+  Office
+  Client_Site
+  Remote
+}
+
+enum PunchStatus {
+  Present
+  Late
+  Half_Day
+  Overtime
+  Absent
+}
+
+enum CorrectionStatus {
+  Pending
+  Approved
+  Rejected
+}
+
+enum LeaveStatus {
+  Pending
+  Approved
+  Rejected
+  Cancelled
+}
+
+model Shift {
+  id               String   @id @default(uuid())
+  code             String   @unique
+  name             String
+  startTime        String   // "09:30"
+  endTime          String   // "18:30"
+  gracePeriodMins  Int      @default(15)
+  halfDayThreshold Float    @default(4.5) // hours
+  fullDayThreshold Float    @default(8.0) // hours
+  isOvernight      Boolean  @default(false)
+  weeklyOffDays    Int[]    @default([0, 6]) // 0=Sunday, 6=Saturday
+  status           String   @default("Active")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("shifts")
+}
+
+model Holiday {
+  id          String   @id @default(uuid())
+  name        String
+  date        DateTime
+  branchId    String?  // null = all branches
+  isOptional  Boolean  @default(false)
+  year        Int
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([date, branchId])
+  @@map("holidays")
+}
+
+model AttendanceRecord {
+  id                   String      @id @default(uuid())
+  employeeId           String
+  date                 DateTime
+  shiftId              String
+  workMode             WorkMode    @default(Office)
+  checkInTime          DateTime?
+  checkOutTime         DateTime?
+  breakDurationMinutes Int         @default(60)
+  totalWorkingHours    Float       @default(0.0)
+  overtimeHours        Float       @default(0.0)
+  status               PunchStatus @default(Present)
+  isLate               Boolean     @default(false)
+  isEarlyDeparture     Boolean     @default(false)
+  checkInPhotoUrl      String?
+  checkOutPhotoUrl     String?
+  checkInLatitude      Float?
+  checkInLongitude     Float?
+  checkOutLatitude     Float?
+  checkOutLongitude    Float?
+  notes                String?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([employeeId])
+  @@index([date])
+  @@map("attendance_records")
+}
+
+model AttendanceRegularization {
+  id                 String           @id @default(uuid())
+  attendanceRecordId String
+  employeeId         String
+  requestedCheckIn   DateTime
+  requestedCheckOut  DateTime
+  reason             String
+  status             CorrectionStatus @default(Pending)
+  reviewedBy         String?          // Manager or HR user ID
+  reviewedAt         DateTime?
+  reviewRemarks      String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([employeeId])
+  @@index([attendanceRecordId])
+  @@map("attendance_regularizations")
+}
+
+model LeaveType {
+  id               String   @id @default(uuid())
+  code             String   @unique // "CL", "SL", "EL", "ML", "PL", "CO", "LOP"
+  name             String
+  annualQuotaDays  Float
+  isCarryForward   Boolean  @default(false)
+  maxCarryForward  Float    @default(0)
+  isEncashable     Boolean  @default(false)
+  isUnpaid         Boolean  @default(false)
+  requiresApproval Boolean  @default(true)
+  status           String   @default("Active")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("leave_types")
+}
+
+model LeaveBalance {
+  id             String   @id @default(uuid())
+  employeeId     String
+  leaveTypeId    String
+  year           Int
+  allocatedDays  Float
+  usedDays       Float    @default(0)
+  pendingDays    Float    @default(0)
+  carriedForward Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([employeeId, leaveTypeId, year])
+  @@index([employeeId])
+  @@map("leave_balances")
+}
+
+model LeaveApplication {
+  id              String      @id @default(uuid())
+  employeeId      String
+  leaveTypeId     String
+  startDate       DateTime
+  endDate         DateTime
+  isHalfDay       Boolean     @default(false)
+  halfDaySession  String?     // "First" | "Second"
+  totalDays       Float
+  reason          String
+  status          LeaveStatus @default(Pending)
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([employeeId])
+  @@index([startDate, endDate])
+  @@map("leave_applications")
+}
+
