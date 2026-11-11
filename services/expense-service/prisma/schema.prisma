@@ -1,0 +1,61 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ClaimStatus {
+  Draft
+  Submitted
+  Approved_By_Manager
+  Approved_By_HR
+  Rejected
+  Reimbursed
+}
+
+model ExpenseCategory {
+  id              String   @id @default(uuid())
+  code            String   @unique // TRAVEL, FOOD, LODGING, MISC
+  name            String
+  description     String?
+  policyLimitMax  Float    @default(5000.0) // per claim limit
+  requiresReceipt Boolean  @default(true)
+  status          String   @default("Active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("expense_categories")
+}
+
+model ExpenseClaim {
+  id               String      @id @default(uuid())
+  claimNumber      String      @unique // EXP-2026-0001
+  employeeId       String
+  categoryId       String
+  amount           Float
+  currency         String      @default("INR")
+  expenseDate      DateTime
+  purpose          String
+  receiptUrl       String?
+  receiptFileName  String?
+  status           ClaimStatus @default(Submitted)
+  managerId        String?
+  managerRemarks   String?
+  managerActionAt  DateTime?
+  hrAdminId        String?
+  hrRemarks        String?
+  hrActionAt       DateTime?
+  reimbursedAt     DateTime?
+  isPettyCash      Boolean     @default(false)
+  approvalHistory  Json?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@map("expense_claims")
+}
+

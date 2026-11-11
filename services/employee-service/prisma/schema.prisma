@@ -1,0 +1,105 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ProfileStatus {
+  Draft
+  Profile_Incomplete
+  Pending_Verification
+  Active
+  Inactive
+  Separated
+}
+
+enum EmploymentType {
+  Permanent
+  Contract
+  Probation
+  Intern
+}
+
+enum EmploymentStatus {
+  Active
+  On_Leave
+  Probation
+  Notice_Period
+  Separated
+  Inactive
+}
+
+model EmployeeSequence {
+  prefix     String @id // e.g., "SWE", "HRM", "MD", "GEN"
+  lastNumber Int    @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@map("employee_sequences")
+}
+
+model Employee {
+  id                     String           @id // Format: EMP-[CODE]-[0001]
+  originalLegacyId       String?          @unique
+  userId                 String           @unique
+  firstName              String
+  lastName               String
+  email                  String           @unique // Official work email
+  phone                  String
+  personalEmail          String?
+  personalPhone          String?
+  avatarUrl              String?
+  dateOfBirth            DateTime?
+  gender                 String?
+  bloodGroup             String?
+  maritalStatus          String?
+  address                String?
+  currentAddress         String?
+  permanentAddress       String?
+  emergencyContact       Json?            // { name, relationship, phone }
+  
+  // Organization Links
+  departmentId           String?
+  designationId          String?
+  branchId               String?
+  employmentType         EmploymentType   @default(Permanent)
+  status                 EmploymentStatus @default(Active)
+  profileStatus          ProfileStatus    @default(Draft)
+  
+  // Dates & Lifecycle
+  dateOfJoining          DateTime?
+  probationPeriodDays    Int?             @default(90)
+  probationEndDate       DateTime?
+  confirmationDate       DateTime?
+  noticePeriodDays       Int              @default(30)
+  dateOfSeparation       DateTime?
+  separationReason       String?
+  reportingManagerId     String?          // References another Employee.id
+  shiftId                String?
+  
+  // Statutory & Financial (Encrypted / Sensitive)
+  bankDetails            Json?            // { accountNumber, ifscCode, bankName, branchName }
+  panOrTaxNumber         String?          @unique
+  pfUan                  String?          @unique
+  esiNumber              String?
+  epfApplicable          Boolean          @default(true)
+  epfWageCeilingApplied  Boolean          @default(true)
+  esiApplicable          Boolean          @default(false)
+  ptApplicable           Boolean          @default(true)
+  tdsRatePercent         Float?
+  baseSalaryAnnual       Float?
+  salaryStructureId      String?
+
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  @@index([departmentId])
+  @@index([designationId])
+  @@index([branchId])
+  @@index([reportingManagerId])
+  @@index([profileStatus])
+  @@map("employees")
+}
+

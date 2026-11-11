@@ -1,0 +1,77 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum AssetStatus {
+  Available
+  Allocated
+  In_Maintenance
+  Damaged
+  Retired
+}
+
+enum CustodyStatus {
+  Pending_Acknowledgement
+  In_Possession
+  Returned
+  Disputed
+}
+
+model HardwareAsset {
+  id              String        @id @default(uuid())
+  assetTag        String        @unique // AST-LAP-001
+  category        String        // Laptop, Desktop, Monitor, Phone
+  brand           String
+  model           String
+  serialNumber    String        @unique
+  purchaseDate    DateTime?
+  warrantyExpiry  DateTime?
+  status          AssetStatus   @default(Available)
+  currentHolderId String?       // employeeId
+  custodyStatus   CustodyStatus @default(Available)
+  allocatedAt     DateTime?
+  acknowledgedAt  DateTime?
+  notes           String?
+  allocations     AssetAllocation[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("hardware_assets")
+}
+
+model SoftwareLicense {
+  id              String   @id @default(uuid())
+  softwareName    String   // JetBrains, Adobe, Microsoft 365, Figma
+  licenseKey      String?
+  totalSeats      Int
+  allocatedSeats  Int      @default(0)
+  expiryDate      DateTime?
+  renewalCost     Float?
+  status          String   @default("Active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("software_licenses")
+}
+
+model AssetAllocation {
+  id             String        @id @default(uuid())
+  assetId        String
+  asset          HardwareAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  employeeId     String
+  allocatedBy    String
+  allocatedAt    DateTime      @default(now())
+  returnedAt     DateTime?
+  conditionOnReturn String?
+  isExitCleared  Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+
+  @@index([employeeId])
+  @@map("asset_allocations")
+}
+

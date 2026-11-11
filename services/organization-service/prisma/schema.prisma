@@ -1,0 +1,77 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model CompanyProfile {
+  id                    String   @id @default(uuid())
+  legalName             String
+  tradingName           String
+  cinNumber             String?
+  panNumber             String?
+  tanNumber             String?
+  gstin                 String?
+  pfRegistrationNumber  String?
+  esiRegistrationNumber String?
+  registeredAddress     String
+  headquartersAddress   String
+  contactEmail          String
+  contactPhone          String
+  website               String?
+  directors             String?  // JSON stringified array of directors
+  fiscalYearStart       String   @default("04-01")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("company_profiles")
+}
+
+model Branch {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  name            String
+  city            String
+  state           String
+  country         String   @default("India")
+  address         String
+  isHeadquarters  Boolean  @default(false)
+  timezone        String   @default("Asia/Kolkata")
+  status          String   @default("Active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("branches")
+}
+
+model Department {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  name            String
+  branchId        String?
+  parentDeptId    String?
+  headEmployeeId  String?
+  status          String   @default("Active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("departments")
+}
+
+model Designation {
+  id              String   @id @default(uuid())
+  code            String   @unique // e.g. 'SWE', 'MD', 'HRM'
+  title           String
+  departmentId    String?
+  level           Int      @default(1)
+  description     String?
+  status          String   @default("Active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("designations")
+}
+

@@ -1,0 +1,120 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum DeploymentStatus {
+  Active
+  Completed
+  Terminated
+  On_Hold
+}
+
+enum ClientVerificationStatus {
+  Submitted
+  Pending_Client_Verification
+  Client_Approved
+  Client_Rejected
+  Pending_HR_Verification
+  HR_Approved
+  HR_Rejected
+}
+
+enum PayrollEligibilityStatus {
+  Not_Eligible
+  Eligible
+  Disputed
+}
+
+model ClientOrganization {
+  id            String              @id @default(uuid())
+  name          String
+  contactName   String?
+  email         String?
+  phone         String?
+  address       String?
+  contractStart DateTime?
+  contractEnd   DateTime?
+  status        String              @default("Active")
+  supervisors   ClientSupervisor[]
+  deployments   ClientDeployment[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@map("client_organizations")
+}
+
+model ClientSupervisor {
+  id           String             @id @default(uuid())
+  clientId     String
+  client       ClientOrganization @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  fullName     String
+  email        String             @unique
+  phone        String?
+  designation  String?
+  status       String             @default("Active") // Active, Invited, Suspended
+  userId       String?            @unique // Linkage to Auth Service user
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([clientId])
+  @@map("client_supervisors")
+}
+
+model ClientDeployment {
+  id               String             @id @default(uuid())
+  clientId         String
+  client           ClientOrganization @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  employeeId       String             // Reference to Employee Service
+  supervisorId     String?
+  project          String
+  location         String
+  workMode         String             @default("Client Site")
+  startDate        DateTime
+  plannedEndDate   DateTime
+  actualEndDate    DateTime?
+  allocation       Float              @default(100.0) // %
+  allowanceMonthly Float              @default(0.0)   // Client allowance for payroll
+  status           DeploymentStatus   @default(Active)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([clientId])
+  @@index([employeeId])
+  @@map("client_deployments")
+}
+
+model ClientAttendanceVerification {
+  id                       String                   @id @default(uuid())
+  attendanceId             String                   @unique // Reference to Attendance Service authoritative punch record
+  employeeId               String
+  clientId                 String
+  deploymentId             String
+  supervisorId             String?
+  date                     DateTime
+  periodKey                String                   // e.g. "2026-11-P1", "2026-11-P2", "2026-11-M1"
+  workingHours             Float
+  workMode                 String                   @default("Client Site")
+  notes                    String?
+  clientVerificationStatus ClientVerificationStatus @default(Submitted)
+  clientVerifiedAt         DateTime?
+  clientVerifiedBy         String?
+  disputeDetails           String?
+  companyApprovalStatus    String                   @default("Pending")
+  companyApprovedAt        DateTime?
+  companyApprovedBy        String?
+  companyComments          String?
+  payrollEligibilityStatus PayrollEligibilityStatus @default(Not_Eligible)
+  approvalHistory          Json?                    // Audit log of decisions
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+
+  @@index([clientId, periodKey])
+  @@index([employeeId])
+  @@map("client_attendance_records")
+}
+
