@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { gatewayConfig } from '../config/env';
-import { JwtPayload } from '../../shared/src/contracts/auth';
+import { JwtTokenPayload } from '../../../shared/src/contracts/auth';
 
 /**
  * Validates JWT at the edge, strips untrusted forwarded headers,
@@ -27,13 +27,14 @@ export function gatewayAuth(optional = false) {
 
     const token = authHeader.split(' ')[1];
     try {
-      const decoded = jwt.verify(token, gatewayConfig.jwtSecret) as JwtPayload;
+      const decoded = jwt.verify(token, gatewayConfig.jwtSecret) as JwtTokenPayload;
       
-      // Inject verified downstream headers
-      req.headers['x-user-id'] = decoded.userId;
+      // Inject verified downstream headers (supports sub and userId)
+      const sanitizedUserId = (decoded as any).userId || decoded.sub;
+      req.headers['x-user-id'] = sanitizedUserId;
       req.headers['x-user-role'] = decoded.role;
       if (decoded.employeeId) req.headers['x-employee-id'] = decoded.employeeId;
-      if (decoded.tenantId) req.headers['x-tenant-id'] = decoded.tenantId;
+      if ((decoded as any).tenantId) req.headers['x-tenant-id'] = (decoded as any).tenantId;
       if (decoded.clientId) req.headers['x-client-id'] = decoded.clientId;
 
       (req as any).user = decoded;

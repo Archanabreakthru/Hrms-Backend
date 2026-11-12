@@ -40,7 +40,7 @@ test('InMemoryEventBus publishes and delivers domain events', async () => {
 
   bus.subscribe('attendance.punched', async (event) => {
     assert.equal(event.eventType, 'ATTENDANCE_PUNCH_RECORDED');
-    assert.equal(event.payload.hours, 8.5);
+    assert.equal((event.payload as any).hours, 8.5);
     received = true;
   });
 

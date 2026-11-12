@@ -42,7 +42,7 @@ export class AuthController {
 
   register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const result = await this.authService.register(req.body);
+      const result = await this.authService.register(req.body, req.user);
       apiSuccess(res, result, 201);
     } catch (err) {
       next(err);

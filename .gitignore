@@ -35,3 +35,7 @@ Thumbs.db
 *.db-shm
 *.db-wal
 
+# Generated Prisma Clients
+**/src/generated/client/
+src/generated/client/
+

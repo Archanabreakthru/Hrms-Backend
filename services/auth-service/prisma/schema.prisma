@@ -1,60 +1,110 @@
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  schemas    = ["auth"]
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  output          = "../src/generated/client"
+  previewFeatures = ["multiSchema"]
 }
 
-enum UserRole {
-  super_admin
-  managing_director
-  hr_admin
-  senior_manager
-  reporting_manager
-  employee
-  client_supervisor
+model Roles {
+  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  code         String            @unique(map: "uq_auth_roles_code") @db.VarChar(50) @map("code")
+  name         String            @db.VarChar(100) @map("name")
+  description  String?           @db.Text @map("description")
+  isSystemRole Boolean           @default(true) @map("is_system_role")
+  createdAt    DateTime          @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt    DateTime          @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+  permissions  RolePermissions[]
+  userRoles    UserRoles[]
+
+  @@map("roles")
+  @@schema("auth")
 }
 
-enum UserStatus {
-  ACTIVE
-  INVITED
-  SUSPENDED
-  DEACTIVATED
+model Permissions {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  code            String            @unique(map: "uq_auth_permissions_code") @db.VarChar(100) @map("code")
+  name            String            @db.VarChar(150) @map("name")
+  module          String            @db.VarChar(50) @map("module")
+  description     String?           @db.Text @map("description")
+  createdAt       DateTime          @default(now()) @db.Timestamptz(6) @map("created_at")
+  rolePermissions RolePermissions[]
+
+  @@map("permissions")
+  @@schema("auth")
 }
 
-model User {
-  id           String      @id @default(uuid())
-  email        String      @unique
-  passwordHash String
-  role         UserRole
-  status       UserStatus  @default(ACTIVE)
-  employeeId   String?     @unique
-  departmentId String?
-  clientId     String?
-  sessions     AuthSession[]
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+model Users {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  email        String        @unique(map: "uq_auth_users_email") @db.VarChar(255) @map("email")
+  passwordHash String        @db.VarChar(255) @map("password_hash")
+  roleCode     String        @db.VarChar(50) @map("role_code")
+  status       String        @default("ACTIVE") @db.VarChar(50) @map("status")
+  employeeId   String?       @unique(map: "uq_auth_users_employee_id") @db.VarChar(50) @map("employee_id")
+  departmentId String?       @db.VarChar(50) @map("department_id")
+  clientId     String?       @db.VarChar(50) @map("client_id")
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt    DateTime      @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+  sessions     AuthSessions[]
+  userRoles    UserRoles[]
 
+  @@index([email], map: "idx_auth_users_email")
+  @@index([employeeId], map: "idx_auth_users_employee_id")
+  @@index([roleCode, status], map: "idx_auth_users_role_status")
   @@map("users")
+  @@schema("auth")
 }
 
-model AuthSession {
-  id           String   @id @default(uuid())
-  tokenHash    String   @unique
-  refreshToken String   @unique
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userType     String
-  userAgent    String?
-  ipAddress    String?
-  expiresAt    DateTime
-  isRevoked    Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model AuthSessions {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  tokenHash    String   @unique(map: "uq_auth_sessions_token_hash") @db.VarChar(255) @map("token_hash")
+  refreshToken String   @unique(map: "uq_auth_sessions_refresh_token") @db.VarChar(255) @map("refresh_token")
+  userId       String   @db.Uuid @map("user_id")
+  userType     String   @db.VarChar(50) @map("user_type")
+  userAgent    String?  @db.Text @map("user_agent")
+  ipAddress    String?  @map("ip_address")
+  expiresAt    DateTime @db.Timestamptz(6) @map("expires_at")
+  isRevoked    Boolean  @default(false) @map("is_revoked")
+  createdAt    DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+  user         Users    @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_auth_sessions_user")
 
-  @@index([userId])
+  @@index([userId], map: "idx_auth_sessions_user")
+  @@index([refreshToken], map: "idx_auth_sessions_refresh")
   @@map("auth_sessions")
+  @@schema("auth")
 }
 
+model RolePermissions {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  roleId       String      @db.Uuid @map("role_id")
+  permissionId String      @db.Uuid @map("permission_id")
+  createdAt    DateTime    @default(now()) @db.Timestamptz(6) @map("created_at")
+  role         Roles       @relation(fields: [roleId], references: [id], onDelete: Cascade, map: "fk_role_permissions_role")
+  permission   Permissions @relation(fields: [permissionId], references: [id], onDelete: Cascade, map: "fk_role_permissions_permission")
+
+  @@unique([roleId, permissionId], map: "uq_auth_role_permissions")
+  @@index([roleId], map: "idx_auth_role_permissions_role")
+  @@index([permissionId], map: "idx_auth_role_permissions_perm")
+  @@map("role_permissions")
+  @@schema("auth")
+}
+
+model UserRoles {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  userId     String   @db.Uuid @map("user_id")
+  roleId     String   @db.Uuid @map("role_id")
+  assignedAt DateTime @default(now()) @db.Timestamptz(6) @map("assigned_at")
+  user       Users    @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_user_roles_user")
+  role       Roles    @relation(fields: [roleId], references: [id], onDelete: Cascade, map: "fk_user_roles_role")
+
+  @@unique([userId, roleId], map: "uq_auth_user_roles")
+  @@index([userId], map: "idx_auth_user_roles_user")
+  @@index([roleId], map: "idx_auth_user_roles_role")
+  @@map("user_roles")
+  @@schema("auth")
+}

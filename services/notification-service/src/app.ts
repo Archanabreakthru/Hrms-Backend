@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import { correlationMiddleware } from '../../../../shared/src/middleware/correlation';
-import { errorHandler } from '../../../../shared/src/middleware/errorHandler';
+import { correlationMiddleware } from '../../../shared/src/middleware/correlation';
+import { errorHandler } from '../../../shared/src/middleware/errorHandler';
 import { InMemoryNotificationRepository } from './repositories/notificationRepository';
 import { NotificationService } from './services/notificationService';
 import { NotificationController } from './controllers/notificationController';

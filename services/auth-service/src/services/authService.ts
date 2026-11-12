@@ -9,16 +9,37 @@ import { JwtTokenPayload } from '../../../../shared/src/contracts/auth';
 export class AuthService {
   constructor(private authRepo: IAuthRepository) {}
 
-  static hashPassword(password: string): string {
+  static hashPassword(password: string, iterations = 100000): string {
     const salt = crypto.randomBytes(16).toString('hex');
-    const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
-    return `${salt}:${hash}`;
+    const hash = crypto.pbkdf2Sync(password, salt, iterations, 64, 'sha512').toString('hex');
+    return `${iterations}:${salt}:${hash}`;
   }
 
   static verifyPassword(password: string, storedHash: string): boolean {
-    const [salt, key] = storedHash.split(':');
+    const parts = storedHash.split(':');
+    let iterations = 100000;
+    let salt = '';
+    let key = '';
+
+    if (parts.length === 3) {
+      iterations = parseInt(parts[0], 10);
+      salt = parts[1];
+      key = parts[2];
+    } else if (parts.length === 2) {
+      salt = parts[0];
+      key = parts[1];
+      // Try 100k first, fallback to 10k for legacy compatibility
+      const hash100k = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
+      if (crypto.timingSafeEqual(Buffer.from(key, 'hex'), Buffer.from(hash100k, 'hex'))) {
+        return true;
+      }
+      iterations = 10000;
+    } else {
+      return false;
+    }
+
     if (!salt || !key) return false;
-    const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
+    const hash = crypto.pbkdf2Sync(password, salt, iterations, 64, 'sha512').toString('hex');
     return crypto.timingSafeEqual(Buffer.from(key, 'hex'), Buffer.from(hash, 'hex'));
   }
 
@@ -38,6 +59,7 @@ export class AuthService {
 
     return jwt.sign(payload, config.jwtSecret, {
       expiresIn: config.accessTokenExpiresIn as any,
+      jwtid: crypto.randomUUID(),
     });
   }
 
@@ -143,8 +165,19 @@ export class AuthService {
       employeeId?: string;
       departmentId?: string;
       clientId?: string;
-    }
+    },
+    actor?: { role: UserRole; id: string }
   ): Promise<Omit<UserRecord, 'passwordHash'>> {
+    // Role Escalation Prevention: HR Admin cannot grant super_admin or managing_director
+    if (actor && actor.role !== UserRole.SUPER_ADMIN) {
+      if (data.role === UserRole.SUPER_ADMIN) {
+        throw new UnauthorizedError('Forbidden: Only Super Administrator can provision super_admin accounts');
+      }
+      if (data.role === UserRole.MANAGING_DIRECTOR) {
+        throw new UnauthorizedError('Forbidden: Only Super Administrator can provision managing_director accounts');
+      }
+    }
+
     const existing = await this.authRepo.findUserByEmail(data.email);
     if (existing) {
       throw new ConflictError('A user with this email address already exists');

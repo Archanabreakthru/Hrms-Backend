@@ -119,6 +119,7 @@ export const ROLE_PERMISSIONS_MAP: Record<UserRole, Permission[]> = {
     'employee.profile.read_org',
     'employee.profile.read_all',
     'audit.logs.read_all',
+    'notifications.broadcast',
     'reports.organization.read',
     'reports.executive.read',
   ],
@@ -179,6 +180,7 @@ export const ROLE_PERMISSIONS_MAP: Record<UserRole, Permission[]> = {
     'documents.read_all',
     'documents.verify',
     'audit.logs.read_all',
+    'notifications.broadcast',
     'reports.organization.read',
   ],
   [UserRole.SENIOR_MANAGER]: [

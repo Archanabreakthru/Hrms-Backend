@@ -66,7 +66,7 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
     const code = designationCode.toUpperCase().trim() || 'GEN';
     
     // Concurrency-safe atomic increment via PostgreSQL transaction with row-level lock
-    const seq = await this.prisma.$transaction(async (tx) => {
+    const seq = await this.prisma.$transaction(async (tx: any) => {
       const record = await tx.employeeSequence.upsert({
         where: { prefix: code },
         create: { prefix: code, lastNumber: 1 },
