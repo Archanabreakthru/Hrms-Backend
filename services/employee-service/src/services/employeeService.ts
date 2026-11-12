@@ -476,6 +476,7 @@ export class EmployeeService {
       branchId?: string;
       status?: string;
       profileStatus?: string;
+      reportingManagerId?: string;
       page?: number;
       limit?: number;
     },

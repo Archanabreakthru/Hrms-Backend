@@ -9,7 +9,7 @@ export const createNotificationSchema = z.object({
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('MEDIUM'),
   channel: z.enum(['IN_APP', 'EMAIL', 'SMS', 'PUSH']).default('IN_APP'),
   linkUrl: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export const createAuditLogSchema = z.object({
@@ -20,8 +20,8 @@ export const createAuditLogSchema = z.object({
   actorId: z.string().min(1, 'Actor ID is required'),
   actorRole: z.string().optional(),
   actorIp: z.string().optional(),
-  details: z.record(z.any()).optional(),
-  diff: z.record(z.any()).optional(),
+  details: z.record(z.string(), z.any()).optional(),
+  diff: z.record(z.string(), z.any()).optional(),
   correlationId: z.string().optional(),
 });
 

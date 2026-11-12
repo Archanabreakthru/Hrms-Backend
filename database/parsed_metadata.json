@@ -1,0 +1,5296 @@
+{
+  "tables": [
+    {
+      "schema": "auth",
+      "originalSchema": "auth",
+      "table": "roles",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "is_system_role",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_auth_roles_code UNIQUE (code)"
+      ]
+    },
+    {
+      "schema": "auth",
+      "originalSchema": "auth",
+      "table": "permissions",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "module",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_auth_permissions_code UNIQUE (code)"
+      ]
+    },
+    {
+      "schema": "org",
+      "originalSchema": "organization",
+      "table": "company_profiles",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "legal_name",
+          "type": "VARCHAR(255)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "trading_name",
+          "type": "VARCHAR(255)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "registration_number",
+          "type": "VARCHAR(100)",
+          "modifiers": ", -- CIN"
+        },
+        {
+          "name": "incorporated_date",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "pan_number",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "gst_number",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "tan_number",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "iec_number",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "pf_registration_number",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "esi_registration_number",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "contact_email",
+          "type": "VARCHAR(255)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "contact_phone",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "website",
+          "type": "VARCHAR(255)",
+          "modifiers": ""
+        },
+        {
+          "name": "address",
+          "type": "TEXT",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "city",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "state",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "country",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL DEFAULT 'India'"
+        },
+        {
+          "name": "zip_code",
+          "type": "VARCHAR(20)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR(10)",
+          "modifiers": "NOT NULL DEFAULT 'INR'"
+        },
+        {
+          "name": "currency_symbol",
+          "type": "VARCHAR(10)",
+          "modifiers": "NOT NULL DEFAULT '₹'"
+        },
+        {
+          "name": "working_days_per_week",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL DEFAULT 5"
+        },
+        {
+          "name": "standard_hours_per_day",
+          "type": "NUMERIC(4",
+          "modifiers": ",2) NOT NULL DEFAULT 8.00"
+        },
+        {
+          "name": "fiscal_year_start",
+          "type": "VARCHAR(10)",
+          "modifiers": "NOT NULL DEFAULT '04-01'"
+        },
+        {
+          "name": "governance_mode",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'None'"
+        },
+        {
+          "name": "governance_authority_name",
+          "type": "VARCHAR(150)",
+          "modifiers": ""
+        },
+        {
+          "name": "governance_authority_title",
+          "type": "VARCHAR(150)",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "org",
+      "originalSchema": "organization",
+      "table": "statutory_compliance_configs",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "company_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "epf_applicable",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "epf_employee_rate_percent",
+          "type": "NUMERIC(5",
+          "modifiers": ",2) NOT NULL DEFAULT 12.00"
+        },
+        {
+          "name": "epf_employer_rate_percent",
+          "type": "NUMERIC(5",
+          "modifiers": ",2) NOT NULL DEFAULT 12.00"
+        },
+        {
+          "name": "epf_wage_ceiling_monthly",
+          "type": "NUMERIC(15",
+          "modifiers": ",2) NOT NULL DEFAULT 15000.00"
+        },
+        {
+          "name": "epf_restrict_to_wage_ceiling",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "epf_effective_from",
+          "type": "DATE",
+          "modifiers": "NOT NULL DEFAULT '2026-04-01'"
+        },
+        {
+          "name": "epf_exemption_reason",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "esi_applicable",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "esi_gross_threshold_monthly",
+          "type": "NUMERIC(15",
+          "modifiers": ",2) NOT NULL DEFAULT 21000.00"
+        },
+        {
+          "name": "esi_employee_rate_percent",
+          "type": "NUMERIC(5",
+          "modifiers": ",2) NOT NULL DEFAULT 0.75"
+        },
+        {
+          "name": "esi_employer_rate_percent",
+          "type": "NUMERIC(5",
+          "modifiers": ",2) NOT NULL DEFAULT 3.25"
+        },
+        {
+          "name": "esi_effective_from",
+          "type": "DATE",
+          "modifiers": "NOT NULL DEFAULT '2026-04-01'"
+        },
+        {
+          "name": "esi_exemption_reason",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "pt_applicable",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "pt_state_jurisdiction",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL DEFAULT 'Karnataka'"
+        },
+        {
+          "name": "pt_monthly_slab_amount",
+          "type": "NUMERIC(15",
+          "modifiers": ",2) NOT NULL DEFAULT 200.00"
+        },
+        {
+          "name": "pt_min_gross_threshold",
+          "type": "NUMERIC(15",
+          "modifiers": ",2) NOT NULL DEFAULT 15000.00"
+        },
+        {
+          "name": "pt_effective_from",
+          "type": "DATE",
+          "modifiers": "NOT NULL DEFAULT '2026-04-01'"
+        },
+        {
+          "name": "tds_applicable",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "tds_financial_year",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'FY 2026-27'"
+        },
+        {
+          "name": "tds_default_regime",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL DEFAULT 'New Regime (FY 2026-27)'"
+        },
+        {
+          "name": "tds_effective_from",
+          "type": "DATE",
+          "modifiers": "NOT NULL DEFAULT '2026-04-01'"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_statutory_company UNIQUE (company_id)"
+      ]
+    },
+    {
+      "schema": "org",
+      "originalSchema": "organization",
+      "table": "branches",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "company_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "city",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "state",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "country",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL DEFAULT 'India'"
+        },
+        {
+          "name": "address",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "is_headquarters",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "timezone",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL DEFAULT 'Asia/Kolkata'"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_branches_code UNIQUE (code)"
+      ]
+    },
+    {
+      "schema": "org",
+      "originalSchema": "organization",
+      "table": "company_directors",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "company_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "full_name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "designation",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "appointment_date",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "din",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "org",
+      "originalSchema": "organization",
+      "table": "policy_rules",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "module",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL, -- Organization, Leave, Attendance, Payroll, Statutory, Expense, Asset, Client, Employee & Exit"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "rules_summary",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "parameters",
+          "type": "JSONB",
+          "modifiers": "NOT NULL DEFAULT '{}'::jsonb"
+        },
+        {
+          "name": "effective_from",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "effective_to",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "applicable_to",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL DEFAULT 'All Employees'"
+        },
+        {
+          "name": "owner_department",
+          "type": "VARCHAR(100)",
+          "modifiers": ""
+        },
+        {
+          "name": "version",
+          "type": "VARCHAR(20)",
+          "modifiers": "NOT NULL DEFAULT '1.0'"
+        },
+        {
+          "name": "version_number",
+          "type": "NUMERIC(4",
+          "modifiers": ",1) NOT NULL DEFAULT 1.0"
+        },
+        {
+          "name": "review_expiry_date",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_policy_rules_code UNIQUE (code)"
+      ]
+    },
+    {
+      "schema": "employee",
+      "originalSchema": "employee",
+      "table": "employee_sequences",
+      "pk": "prefix",
+      "pkType": "VARCHAR(20)",
+      "columns": [
+        {
+          "name": "prefix",
+          "type": "VARCHAR(20)",
+          "modifiers": "PRIMARY KEY, -- 'SWE', 'HRM', 'MD', 'GEN', 'SDM'"
+        },
+        {
+          "name": "last_number",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL DEFAULT 0"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "attendance",
+      "originalSchema": "attendance",
+      "table": "shifts",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "start_time",
+          "type": "TIME",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "end_time",
+          "type": "TIME",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "break_duration_minutes",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL DEFAULT 60"
+        },
+        {
+          "name": "total_working_hours",
+          "type": "NUMERIC(4",
+          "modifiers": ",2) NOT NULL DEFAULT 8.00"
+        },
+        {
+          "name": "grace_period_minutes",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL DEFAULT 15"
+        },
+        {
+          "name": "late_arrival_threshold_minutes",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL DEFAULT 30"
+        },
+        {
+          "name": "early_departure_threshold_minutes",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL DEFAULT 30"
+        },
+        {
+          "name": "half_day_threshold_hours",
+          "type": "NUMERIC(4",
+          "modifiers": ",2) NOT NULL DEFAULT 4.50"
+        },
+        {
+          "name": "full_day_threshold_hours",
+          "type": "NUMERIC(4",
+          "modifiers": ",2) NOT NULL DEFAULT 8.00"
+        },
+        {
+          "name": "weekly_off_days",
+          "type": "INTEGER[]",
+          "modifiers": "NOT NULL DEFAULT '{0,6}', -- 0=Sun, 6=Sat"
+        },
+        {
+          "name": "workdays_count",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL DEFAULT 5"
+        },
+        {
+          "name": "is_overnight",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_shifts_code UNIQUE (code)"
+      ]
+    },
+    {
+      "schema": "attendance",
+      "originalSchema": "attendance",
+      "table": "leave_types",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL, -- AL, SL, CL, ML, PL, LOP, CO"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "is_paid",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "annual_quota_days",
+          "type": "NUMERIC(5",
+          "modifiers": ",2) NOT NULL DEFAULT 12.00"
+        },
+        {
+          "name": "is_carry_forward",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "max_carry_forward_days",
+          "type": "NUMERIC(5",
+          "modifiers": ",2) NOT NULL DEFAULT 0.00"
+        },
+        {
+          "name": "max_consecutive_days",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL DEFAULT 10"
+        },
+        {
+          "name": "allows_half_day",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "requires_doc",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "is_encashable",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "eligibility_criteria",
+          "type": "VARCHAR(255)",
+          "modifiers": "NOT NULL DEFAULT 'All Permanent & Probation Staff'"
+        },
+        {
+          "name": "effective_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL DEFAULT '2026-01-01'"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_leave_types_code UNIQUE (code)"
+      ]
+    },
+    {
+      "schema": "attendance",
+      "originalSchema": "attendance",
+      "table": "holidays",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "branch_id",
+          "type": "UUID",
+          "modifiers": ", -- Null indicates all branches"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "holiday_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "holiday_year",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "is_optional",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "expense",
+      "originalSchema": "expense",
+      "table": "expense_categories",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "max_limit_per_claim",
+          "type": "NUMERIC(15",
+          "modifiers": ",2) NOT NULL DEFAULT 5000.00"
+        },
+        {
+          "name": "requires_receipt",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_expense_categories_code UNIQUE (code)"
+      ]
+    },
+    {
+      "schema": "asset",
+      "originalSchema": "asset",
+      "table": "asset_categories",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "category_type",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL, -- 'Hardware' or 'Software & Digital'"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_asset_categories_name UNIQUE (name)"
+      ]
+    },
+    {
+      "schema": "notification",
+      "originalSchema": "notification",
+      "table": "notification_templates",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "template_key",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "subject",
+          "type": "VARCHAR(255)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "body_text",
+          "type": "TEXT",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "body_html",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "channels",
+          "type": "VARCHAR(50)[]",
+          "modifiers": "NOT NULL DEFAULT '{\"IN_APP\"}'"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_notification_templates_key UNIQUE (template_key)"
+      ]
+    },
+    {
+      "schema": "auth",
+      "originalSchema": "auth",
+      "table": "users",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(255)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR(100)",
+          "modifiers": ""
+        },
+        {
+          "name": "password_hash",
+          "type": "VARCHAR(255)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "role_code",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'employee'"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'ACTIVE', -- ACTIVE, INVITED, SUSPENDED, DEACTIVATED"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": ", -- Authoritative 1:1 relationship with employee.employees(id)"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "last_login_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_auth_users_email UNIQUE (email)",
+        "CONSTRAINT uq_auth_users_employee_id UNIQUE (employee_id)"
+      ]
+    },
+    {
+      "schema": "auth",
+      "originalSchema": "auth",
+      "table": "auth_sessions",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "token_hash",
+          "type": "VARCHAR(255)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "refresh_token",
+          "type": "VARCHAR(255)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "user_type",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'employee'"
+        },
+        {
+          "name": "user_agent",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "ip_address",
+          "type": "INET",
+          "modifiers": ""
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "is_revoked",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_auth_sessions_token_hash UNIQUE (token_hash)",
+        "CONSTRAINT uq_auth_sessions_refresh_token UNIQUE (refresh_token)"
+      ]
+    },
+    {
+      "schema": "auth",
+      "originalSchema": "auth",
+      "table": "role_permissions",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "role_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "permission_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_auth_role_permissions UNIQUE (role_id, permission_id)"
+      ]
+    },
+    {
+      "schema": "auth",
+      "originalSchema": "auth",
+      "table": "user_roles",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "role_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "assigned_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_auth_user_roles UNIQUE (user_id, role_id)"
+      ]
+    },
+    {
+      "schema": "org",
+      "originalSchema": "organization",
+      "table": "departments",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "branch_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "parent_dept_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "head_employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_departments_code UNIQUE (code)"
+      ]
+    },
+    {
+      "schema": "org",
+      "originalSchema": "organization",
+      "table": "designations",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "department_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "level",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL DEFAULT 1"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_designations_code UNIQUE (code)"
+      ]
+    },
+    {
+      "schema": "org",
+      "originalSchema": "organization",
+      "table": "governance_members",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL, -- 'Chairman', 'Independent Director', 'Director', 'Board Member', 'Advisor'"
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(255)",
+          "modifiers": ""
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "avatar_url",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "oversight_target_employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": ", -- Links to MD/CEO employee record"
+        },
+        {
+          "name": "committee_role",
+          "type": "VARCHAR(150)",
+          "modifiers": ""
+        },
+        {
+          "name": "effective_from",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "is_payroll_employee",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "org",
+      "originalSchema": "organization",
+      "table": "governance_history",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "member_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "member_name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "action",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL, -- 'CREATED', 'OVERSIGHT_LINKED', 'ROLE_MODIFIED', 'STATUS_CHANGED'"
+        },
+        {
+          "name": "effective_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "actor_user_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "actor_name",
+          "type": "VARCHAR(150)",
+          "modifiers": ""
+        },
+        {
+          "name": "details",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "org",
+      "originalSchema": "organization",
+      "table": "delegations",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "delegator_user_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "delegator_employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "delegate_user_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "delegate_employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "permitted_actions",
+          "type": "TEXT[]",
+          "modifiers": "NOT NULL, -- APPROVE_LEAVE, APPROVE_ATTENDANCE, etc."
+        },
+        {
+          "name": "applicable_modules",
+          "type": "TEXT[]",
+          "modifiers": "NOT NULL DEFAULT '{\"ALL\"}'"
+        },
+        {
+          "name": "effective_from",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "effective_to",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "reason",
+          "type": "TEXT",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Active', -- Active, Revoked, Expired"
+        },
+        {
+          "name": "revoked_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "revoked_by",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "org",
+      "originalSchema": "organization",
+      "table": "policy_acknowledgements",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "policy_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "version",
+          "type": "VARCHAR(20)",
+          "modifiers": "NOT NULL DEFAULT '1.0'"
+        },
+        {
+          "name": "acknowledged_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "due_date",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "comments",
+          "type": "TEXT",
+          "modifiers": ""
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_policy_acknowledgements UNIQUE (policy_id, employee_id, version)"
+      ]
+    },
+    {
+      "schema": "employee",
+      "originalSchema": "employee",
+      "table": "employees",
+      "pk": "id",
+      "pkType": "VARCHAR(50)",
+      "columns": [
+        {
+          "name": "id",
+          "type": "VARCHAR(50)",
+          "modifiers": "PRIMARY KEY, -- Format: EMP-SWE-0001 or standard EMP-[CODE]-[NUM]"
+        },
+        {
+          "name": "original_legacy_id",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "first_name",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "last_name",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "official_email",
+          "type": "VARCHAR(255)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "personal_email",
+          "type": "VARCHAR(255)",
+          "modifiers": ""
+        },
+        {
+          "name": "personal_phone",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "avatar_url",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "date_of_birth",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "gender",
+          "type": "VARCHAR(20)",
+          "modifiers": ""
+        },
+        {
+          "name": "blood_group",
+          "type": "VARCHAR(10)",
+          "modifiers": ""
+        },
+        {
+          "name": "marital_status",
+          "type": "VARCHAR(20)",
+          "modifiers": ""
+        },
+        {
+          "name": "current_address",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "permanent_address",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "emergency_contact_name",
+          "type": "VARCHAR(150)",
+          "modifiers": ""
+        },
+        {
+          "name": "emergency_contact_relationship",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "emergency_contact_phone",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "department_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "designation_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "branch_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "shift_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "reporting_manager_id",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "employment_type",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Permanent', -- Permanent, Contract, Probation, Intern"
+        },
+        {
+          "name": "employee_category",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL DEFAULT 'Core Staff'"
+        },
+        {
+          "name": "employment_status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Active', -- Active, On Leave, Probation, Notice Period, Separated, Inactive"
+        },
+        {
+          "name": "profile_status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Active', -- Draft, Profile_Incomplete, Pending_Verification, Active, Inactive, Separated"
+        },
+        {
+          "name": "date_of_joining",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "confirmation_date",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "probation_period_days",
+          "type": "INTEGER",
+          "modifiers": "DEFAULT 180"
+        },
+        {
+          "name": "notice_period_days",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL DEFAULT 60"
+        },
+        {
+          "name": "date_of_separation",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "separation_reason",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_employees_official_email UNIQUE (official_email)",
+        "CONSTRAINT uq_employees_user_id UNIQUE (user_id)",
+        "CONSTRAINT uq_employees_legacy_id UNIQUE (original_legacy_id)"
+      ]
+    },
+    {
+      "schema": "employee",
+      "originalSchema": "employee",
+      "table": "employee_bank_details",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "bank_name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "account_holder_name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "account_number",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "ifsc_code",
+          "type": "VARCHAR(20)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "branch_name",
+          "type": "VARCHAR(150)",
+          "modifiers": ""
+        },
+        {
+          "name": "is_primary",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_employee_bank_details UNIQUE (employee_id)"
+      ]
+    },
+    {
+      "schema": "employee",
+      "originalSchema": "employee",
+      "table": "employee_statutory_details",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "pan_number",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "pf_uan",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "esi_number",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "epf_applicable",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "epf_wage_ceiling_applied",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "esi_applicable",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "pt_applicable",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "statutory_exemption_reason",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_employee_statutory_details UNIQUE (employee_id)"
+      ]
+    },
+    {
+      "schema": "employee",
+      "originalSchema": "employee",
+      "table": "employee_documents",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(200)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "document_type",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL, -- 'ID Proof', 'Resume', 'Education Certificate', etc."
+        },
+        {
+          "name": "file_name",
+          "type": "VARCHAR(255)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "file_size_bytes",
+          "type": "BIGINT",
+          "modifiers": "NOT NULL DEFAULT 0"
+        },
+        {
+          "name": "file_url",
+          "type": "TEXT",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "issue_date",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "expiry_date",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "verification_status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Pending', -- Pending, Verified, Rejected"
+        },
+        {
+          "name": "verified_by",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "verified_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "uploaded_by",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "employee",
+      "originalSchema": "employee",
+      "table": "service_records",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "record_type",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL, -- PROMOTION, TRANSFER, CONFIRMATION, DESIGNATION_CHANGE, SALARY_REVISION, SEPARATION, DISCIPLINARY"
+        },
+        {
+          "name": "effective_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "previous_designation_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "new_designation_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "previous_department_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "new_department_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "previous_reporting_manager_id",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "new_reporting_manager_id",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "previous_branch_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "new_branch_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "previous_employment_type",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "new_employment_type",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "previous_salary_amount",
+          "type": "NUMERIC(15",
+          "modifiers": ",2)"
+        },
+        {
+          "name": "new_salary_amount",
+          "type": "NUMERIC(15",
+          "modifiers": ",2)"
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "approval_status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Approved'"
+        },
+        {
+          "name": "approved_by",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "approved_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "employee",
+      "originalSchema": "employee",
+      "table": "insurance_policies",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "policy_type",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL, -- Group Medical Insurance, Group Term Life, Group Accidental"
+        },
+        {
+          "name": "provider",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "policy_name",
+          "type": "VARCHAR(200)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "policy_number",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "group_policy_number",
+          "type": "VARCHAR(100)",
+          "modifiers": ""
+        },
+        {
+          "name": "membership_number",
+          "type": "VARCHAR(100)",
+          "modifiers": ""
+        },
+        {
+          "name": "start_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "end_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "coverage_amount",
+          "type": "NUMERIC(15",
+          "modifiers": ",2) NOT NULL DEFAULT 500000.00"
+        },
+        {
+          "name": "coverage_type",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Self + Family'"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Enrolled', -- Enrolled, Pending, Lapsed, Terminated"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "employee",
+      "originalSchema": "employee",
+      "table": "insurance_dependents",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "policy_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "relationship",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL, -- Spouse, Child, Father, Mother"
+        },
+        {
+          "name": "date_of_birth",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "gender",
+          "type": "VARCHAR(20)",
+          "modifiers": ""
+        },
+        {
+          "name": "coverage_status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Covered', -- Covered, Pending, Excluded"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "employee",
+      "originalSchema": "employee",
+      "table": "insurance_nominees",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "policy_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "full_name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "relationship",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "date_of_birth",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "mobile_number",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(255)",
+          "modifiers": ""
+        },
+        {
+          "name": "address",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "share_percentage",
+          "type": "NUMERIC(5",
+          "modifiers": ",2) NOT NULL DEFAULT 100.00"
+        },
+        {
+          "name": "is_minor",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "guardian_name",
+          "type": "VARCHAR(150)",
+          "modifiers": ""
+        },
+        {
+          "name": "guardian_relationship",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "attendance",
+      "originalSchema": "attendance",
+      "table": "attendance_records",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "attendance_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "shift_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "work_mode",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Office', -- Office, Client_Site, Remote"
+        },
+        {
+          "name": "break_duration_minutes",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL DEFAULT 60"
+        },
+        {
+          "name": "total_working_hours",
+          "type": "NUMERIC(4",
+          "modifiers": ",2) NOT NULL DEFAULT 0.00"
+        },
+        {
+          "name": "overtime_hours",
+          "type": "NUMERIC(4",
+          "modifiers": ",2) NOT NULL DEFAULT 0.00"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Present', -- Present, Late, Half Day, Absent, On Leave, Holiday, Weekly Off"
+        },
+        {
+          "name": "is_late",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "is_early_departure",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "source",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Web', -- Web, Biometric, Mobile, Manual_Entry"
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_attendance_employee_date UNIQUE (employee_id, attendance_date)"
+      ]
+    },
+    {
+      "schema": "attendance",
+      "originalSchema": "attendance",
+      "table": "attendance_regularizations",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "attendance_record_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "target_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "requested_check_in",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "requested_check_out",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "reason",
+          "type": "TEXT",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Pending', -- Pending, Approved, Rejected, Returned for Correction"
+        },
+        {
+          "name": "reviewed_by",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "reviewed_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "review_remarks",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "attendance",
+      "originalSchema": "attendance",
+      "table": "attendance_manual_entries",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "batch_reference",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "entry_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "reason_category",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL, -- Biometric Outage, Power Failure, Field Duty, Mass Regularization"
+        },
+        {
+          "name": "affected_employees_count",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL DEFAULT 1"
+        },
+        {
+          "name": "justification",
+          "type": "TEXT",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "approved_by",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Approved'"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "attendance",
+      "originalSchema": "attendance",
+      "table": "shift_schedules",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "shift_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "effective_from",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "effective_to",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "assigned_by",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "attendance",
+      "originalSchema": "attendance",
+      "table": "overtime_records",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "attendance_record_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "overtime_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "hours",
+          "type": "NUMERIC(4",
+          "modifiers": ",2) NOT NULL"
+        },
+        {
+          "name": "reason",
+          "type": "TEXT",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Pending', -- Pending, Approved, Rejected"
+        },
+        {
+          "name": "approved_by",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "approved_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "remarks",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "attendance",
+      "originalSchema": "attendance",
+      "table": "leave_balances",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "leave_type_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "year",
+          "type": "INTEGER",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "allocated_days",
+          "type": "NUMERIC(5",
+          "modifiers": ",2) NOT NULL"
+        },
+        {
+          "name": "used_days",
+          "type": "NUMERIC(5",
+          "modifiers": ",2) NOT NULL DEFAULT 0.00"
+        },
+        {
+          "name": "pending_days",
+          "type": "NUMERIC(5",
+          "modifiers": ",2) NOT NULL DEFAULT 0.00"
+        },
+        {
+          "name": "carried_forward",
+          "type": "NUMERIC(5",
+          "modifiers": ",2) NOT NULL DEFAULT 0.00"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_leave_balance_employee_type_year UNIQUE (employee_id, leave_type_id, year)"
+      ]
+    },
+    {
+      "schema": "attendance",
+      "originalSchema": "attendance",
+      "table": "leave_applications",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "leave_type_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "start_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "end_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "is_half_day",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "half_day_session",
+          "type": "VARCHAR(20)",
+          "modifiers": ", -- 'First' or 'Second'"
+        },
+        {
+          "name": "total_days",
+          "type": "NUMERIC(5",
+          "modifiers": ",2) NOT NULL"
+        },
+        {
+          "name": "reason",
+          "type": "TEXT",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Pending Approval', -- Pending Approval, Approved, Rejected, Cancelled"
+        },
+        {
+          "name": "approver_id",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "decision_comments",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "decided_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "supporting_document_url",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "expense",
+      "originalSchema": "expense",
+      "table": "expense_claims",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "claim_number",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL, -- EXP-2026-0001"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "category_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "amount",
+          "type": "NUMERIC(15",
+          "modifiers": ",2) NOT NULL"
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR(10)",
+          "modifiers": "NOT NULL DEFAULT 'INR'"
+        },
+        {
+          "name": "expense_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "purpose",
+          "type": "TEXT",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "receipt_url",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "receipt_file_name",
+          "type": "VARCHAR(255)",
+          "modifiers": ""
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Pending Manager Approval'"
+        },
+        {
+          "name": "approver_id",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "manager_remarks",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "manager_action_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "hr_admin_id",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "hr_remarks",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "hr_action_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "reimbursed_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "reimbursement_reference",
+          "type": "VARCHAR(100)",
+          "modifiers": ""
+        },
+        {
+          "name": "is_petty_cash",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "approval_history",
+          "type": "JSONB",
+          "modifiers": "NOT NULL DEFAULT '[]'::jsonb"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_expense_claims_number UNIQUE (claim_number)"
+      ]
+    },
+    {
+      "schema": "expense",
+      "originalSchema": "expense",
+      "table": "advance_petty_cash",
+      "pk": "id",
+      "pkType": "VARCHAR(50)",
+      "columns": [
+        {
+          "name": "id",
+          "type": "VARCHAR(50)",
+          "modifiers": "PRIMARY KEY, -- ADV-2026-101"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "advance_type",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL, -- 'Salary Advance', 'Travel Petty Cash'"
+        },
+        {
+          "name": "amount",
+          "type": "NUMERIC(15",
+          "modifiers": ",2) NOT NULL"
+        },
+        {
+          "name": "approved_amount",
+          "type": "NUMERIC(15",
+          "modifiers": ",2)"
+        },
+        {
+          "name": "recovered_amount",
+          "type": "NUMERIC(15",
+          "modifiers": ",2) DEFAULT 0.00"
+        },
+        {
+          "name": "actual_expense",
+          "type": "NUMERIC(15",
+          "modifiers": ",2)"
+        },
+        {
+          "name": "purpose",
+          "type": "TEXT",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "request_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Pending Approval', -- Pending Approval, Approved, Rejected, Disbursed, Settlement Pending, Settled"
+        },
+        {
+          "name": "payment_reference",
+          "type": "VARCHAR(100)",
+          "modifiers": ""
+        },
+        {
+          "name": "settlement_note",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "disbursed_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "asset",
+      "originalSchema": "asset",
+      "table": "assets",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "asset_tag",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL, -- AST-LAP-001"
+        },
+        {
+          "name": "asset_name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "category_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "category_name",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL, -- Laptop, Monitor, Software License, etc."
+        },
+        {
+          "name": "asset_type",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Hardware', -- 'Hardware', 'Software & Digital'"
+        },
+        {
+          "name": "brand",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "model",
+          "type": "VARCHAR(150)",
+          "modifiers": ""
+        },
+        {
+          "name": "serial_number",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "purchase_date",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "purchase_cost",
+          "type": "NUMERIC(15",
+          "modifiers": ",2)"
+        },
+        {
+          "name": "warranty_expiry",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "license_key",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "total_seats",
+          "type": "INTEGER",
+          "modifiers": ""
+        },
+        {
+          "name": "allocated_seats",
+          "type": "INTEGER",
+          "modifiers": "DEFAULT 0"
+        },
+        {
+          "name": "subscription_expiry",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "renewal_cost",
+          "type": "NUMERIC(15",
+          "modifiers": ",2)"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Available', -- Available, Allocated, In Maintenance, Damaged, Retired, Inactive"
+        },
+        {
+          "name": "current_employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "custody_status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Available', -- Available, Pending Acknowledgement, In Possession, Returned, Disputed"
+        },
+        {
+          "name": "allocated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "acknowledged_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT true"
+        },
+        {
+          "name": "deactivate_reason",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_assets_tag UNIQUE (asset_tag)",
+        "CONSTRAINT uq_assets_serial UNIQUE (serial_number)"
+      ]
+    },
+    {
+      "schema": "asset",
+      "originalSchema": "asset",
+      "table": "asset_allocations",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "asset_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "allocated_by",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "allocated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "condition_on_allocation",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Good', -- Brand New, Good, Fair, Minor Scratches"
+        },
+        {
+          "name": "returned_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "condition_on_return",
+          "type": "VARCHAR(50)",
+          "modifiers": ", -- Brand New, Good, Fair, Minor Scratches, Damaged"
+        },
+        {
+          "name": "return_notes",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "is_exit_cleared",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "client",
+      "originalSchema": "client",
+      "table": "client_organizations",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(200)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "contact_name",
+          "type": "VARCHAR(150)",
+          "modifiers": ""
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(255)",
+          "modifiers": ""
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "address",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "city",
+          "type": "VARCHAR(100)",
+          "modifiers": ""
+        },
+        {
+          "name": "state",
+          "type": "VARCHAR(100)",
+          "modifiers": ""
+        },
+        {
+          "name": "country",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL DEFAULT 'India'"
+        },
+        {
+          "name": "contract_start",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "contract_end",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Active', -- Active, Prospect, Inactive"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_client_org_code UNIQUE (code)"
+      ]
+    },
+    {
+      "schema": "client",
+      "originalSchema": "client",
+      "table": "client_supervisors",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "client_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "full_name",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(255)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "designation",
+          "type": "VARCHAR(150)",
+          "modifiers": ""
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Active', -- Active, Invited, Suspended"
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "modifiers": ", -- Links to auth.users if granted portal login"
+        },
+        {
+          "name": "invitation_status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Accepted', -- Invited, Accepted, Expired, Revoked"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_client_supervisors_email UNIQUE (email)",
+        "CONSTRAINT uq_client_supervisors_user UNIQUE (user_id)"
+      ]
+    },
+    {
+      "schema": "client",
+      "originalSchema": "client",
+      "table": "client_deployments",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "client_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "supervisor_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "project_name",
+          "type": "VARCHAR(200)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "location",
+          "type": "VARCHAR(150)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "work_arrangement",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Onsite', -- Onsite, Remote, Hybrid"
+        },
+        {
+          "name": "start_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "planned_end_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "actual_end_date",
+          "type": "DATE",
+          "modifiers": ""
+        },
+        {
+          "name": "allocation_percentage",
+          "type": "NUMERIC(5",
+          "modifiers": ",2) NOT NULL DEFAULT 100.00"
+        },
+        {
+          "name": "monthly_allowance",
+          "type": "NUMERIC(15",
+          "modifiers": ",2) NOT NULL DEFAULT 0.00"
+        },
+        {
+          "name": "billing_rate_hourly",
+          "type": "NUMERIC(15",
+          "modifiers": ",2)"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Active', -- Scheduled, Active, Extended, On Hold, Completed, Cancelled"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "client",
+      "originalSchema": "client",
+      "table": "client_deployment_extensions",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "deployment_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "extended_by",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "extension_reason",
+          "type": "TEXT",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "previous_end_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "new_end_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "approved_by",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "approved_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "client",
+      "originalSchema": "client",
+      "table": "client_attendance_verifications",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "attendance_record_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL, -- Links to authoritative attendance.attendance_records"
+        },
+        {
+          "name": "deployment_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "client_id",
+          "type": "UUID",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "supervisor_id",
+          "type": "UUID",
+          "modifiers": ""
+        },
+        {
+          "name": "employee_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "verification_date",
+          "type": "DATE",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "period_key",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL, -- e.g. \"2026-11-P1\", \"2026-11-P2\", \"2026-11-M1\""
+        },
+        {
+          "name": "working_hours",
+          "type": "NUMERIC(4",
+          "modifiers": ",2) NOT NULL"
+        },
+        {
+          "name": "work_mode",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Client Site'"
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "client_verification_status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Submitted'"
+        },
+        {
+          "name": "client_verified_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "client_verified_by",
+          "type": "VARCHAR(150)",
+          "modifiers": ""
+        },
+        {
+          "name": "dispute_details",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "company_approval_status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Pending'"
+        },
+        {
+          "name": "company_approved_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "company_approved_by",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "company_comments",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "payroll_eligibility_status",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'Not_Eligible'"
+        },
+        {
+          "name": "approval_history",
+          "type": "JSONB",
+          "modifiers": "NOT NULL DEFAULT '[]'::jsonb"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": [
+        "CONSTRAINT uq_client_attendance_record UNIQUE (attendance_record_id)"
+      ]
+    },
+    {
+      "schema": "notification",
+      "originalSchema": "notification",
+      "table": "notifications",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "recipient_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL, -- User UUID or Employee ID"
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(200)",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "message",
+          "type": "TEXT",
+          "modifiers": "NOT NULL"
+        },
+        {
+          "name": "notification_type",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL DEFAULT 'INFO', -- INFO, SUCCESS, WARNING, ERROR, APPROVAL_REQUEST, ACTION_REQUIRED"
+        },
+        {
+          "name": "priority",
+          "type": "VARCHAR(20)",
+          "modifiers": "NOT NULL DEFAULT 'MEDIUM', -- LOW, MEDIUM, HIGH, URGENT"
+        },
+        {
+          "name": "channel",
+          "type": "VARCHAR(20)",
+          "modifiers": "NOT NULL DEFAULT 'IN_APP', -- IN_APP, EMAIL, SMS, PUSH"
+        },
+        {
+          "name": "is_read",
+          "type": "BOOLEAN",
+          "modifiers": "NOT NULL DEFAULT false"
+        },
+        {
+          "name": "read_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": ""
+        },
+        {
+          "name": "link_url",
+          "type": "TEXT",
+          "modifiers": ""
+        },
+        {
+          "name": "metadata",
+          "type": "JSONB",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "schema": "notification",
+      "originalSchema": "notification",
+      "table": "audit_logs",
+      "pk": "id",
+      "pkType": "UUID",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "modifiers": "PRIMARY KEY DEFAULT gen_random_uuid()"
+        },
+        {
+          "name": "service_name",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL, -- employee-service, auth-service, etc."
+        },
+        {
+          "name": "action",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL, -- USER_LOGIN, LEAVE_APPLY, ATTENDANCE_PUNCH, etc."
+        },
+        {
+          "name": "resource_type",
+          "type": "VARCHAR(100)",
+          "modifiers": "NOT NULL, -- Employee, AttendanceRecord, ExpenseClaim, etc."
+        },
+        {
+          "name": "resource_id",
+          "type": "VARCHAR(100)",
+          "modifiers": ""
+        },
+        {
+          "name": "actor_id",
+          "type": "VARCHAR(50)",
+          "modifiers": "NOT NULL, -- User UUID or Employee ID"
+        },
+        {
+          "name": "actor_role",
+          "type": "VARCHAR(50)",
+          "modifiers": ""
+        },
+        {
+          "name": "actor_ip",
+          "type": "INET",
+          "modifiers": ""
+        },
+        {
+          "name": "details",
+          "type": "JSONB",
+          "modifiers": ""
+        },
+        {
+          "name": "diff",
+          "type": "JSONB",
+          "modifiers": ""
+        },
+        {
+          "name": "correlation_id",
+          "type": "VARCHAR(100)",
+          "modifiers": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "modifiers": "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        }
+      ],
+      "constraints": []
+    }
+  ],
+  "fks": [
+    {
+      "constraint": "fk_auth_sessions_user",
+      "sourceSchema": "auth",
+      "sourceTable": "auth_sessions",
+      "sourceCol": "user_id",
+      "targetSchema": "auth",
+      "targetTable": "users",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_role_permissions_role",
+      "sourceSchema": "auth",
+      "sourceTable": "role_permissions",
+      "sourceCol": "role_id",
+      "targetSchema": "auth",
+      "targetTable": "roles",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_role_permissions_permission",
+      "sourceSchema": "auth",
+      "sourceTable": "role_permissions",
+      "sourceCol": "permission_id",
+      "targetSchema": "auth",
+      "targetTable": "permissions",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_user_roles_user",
+      "sourceSchema": "auth",
+      "sourceTable": "user_roles",
+      "sourceCol": "user_id",
+      "targetSchema": "auth",
+      "targetTable": "users",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_user_roles_role",
+      "sourceSchema": "auth",
+      "sourceTable": "user_roles",
+      "sourceCol": "role_id",
+      "targetSchema": "auth",
+      "targetTable": "roles",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_statutory_company",
+      "sourceSchema": "org",
+      "sourceTable": "statutory_compliance_configs",
+      "sourceCol": "company_id",
+      "targetSchema": "org",
+      "targetTable": "company_profiles",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_branches_company",
+      "sourceSchema": "org",
+      "sourceTable": "branches",
+      "sourceCol": "company_id",
+      "targetSchema": "org",
+      "targetTable": "company_profiles",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_directors_company",
+      "sourceSchema": "org",
+      "sourceTable": "company_directors",
+      "sourceCol": "company_id",
+      "targetSchema": "org",
+      "targetTable": "company_profiles",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_departments_branch",
+      "sourceSchema": "org",
+      "sourceTable": "departments",
+      "sourceCol": "branch_id",
+      "targetSchema": "org",
+      "targetTable": "branches",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_departments_parent",
+      "sourceSchema": "org",
+      "sourceTable": "departments",
+      "sourceCol": "parent_dept_id",
+      "targetSchema": "org",
+      "targetTable": "departments",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_designations_department",
+      "sourceSchema": "org",
+      "sourceTable": "designations",
+      "sourceCol": "department_id",
+      "targetSchema": "org",
+      "targetTable": "departments",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_governance_history_member",
+      "sourceSchema": "org",
+      "sourceTable": "governance_history",
+      "sourceCol": "member_id",
+      "targetSchema": "org",
+      "targetTable": "governance_members",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_delegations_delegator",
+      "sourceSchema": "org",
+      "sourceTable": "delegations",
+      "sourceCol": "delegator_user_id",
+      "targetSchema": "auth",
+      "targetTable": "users",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_delegations_delegate",
+      "sourceSchema": "org",
+      "sourceTable": "delegations",
+      "sourceCol": "delegate_user_id",
+      "targetSchema": "auth",
+      "targetTable": "users",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_policy_acknowledgements_policy",
+      "sourceSchema": "org",
+      "sourceTable": "policy_acknowledgements",
+      "sourceCol": "policy_id",
+      "targetSchema": "org",
+      "targetTable": "policy_rules",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_employees_user",
+      "sourceSchema": "employee",
+      "sourceTable": "employees",
+      "sourceCol": "user_id",
+      "targetSchema": "auth",
+      "targetTable": "users",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_employees_department",
+      "sourceSchema": "employee",
+      "sourceTable": "employees",
+      "sourceCol": "department_id",
+      "targetSchema": "org",
+      "targetTable": "departments",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_employees_designation",
+      "sourceSchema": "employee",
+      "sourceTable": "employees",
+      "sourceCol": "designation_id",
+      "targetSchema": "org",
+      "targetTable": "designations",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_employees_branch",
+      "sourceSchema": "employee",
+      "sourceTable": "employees",
+      "sourceCol": "branch_id",
+      "targetSchema": "org",
+      "targetTable": "branches",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_employees_shift",
+      "sourceSchema": "employee",
+      "sourceTable": "employees",
+      "sourceCol": "shift_id",
+      "targetSchema": "attendance",
+      "targetTable": "shifts",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_employees_reporting_manager",
+      "sourceSchema": "employee",
+      "sourceTable": "employees",
+      "sourceCol": "reporting_manager_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_users_employee",
+      "sourceSchema": "auth",
+      "sourceTable": "users",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_departments_head_employee",
+      "sourceSchema": "org",
+      "sourceTable": "departments",
+      "sourceCol": "head_employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_governance_members_target_emp",
+      "sourceSchema": "org",
+      "sourceTable": "governance_members",
+      "sourceCol": "oversight_target_employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_delegations_delegator_emp",
+      "sourceSchema": "org",
+      "sourceTable": "delegations",
+      "sourceCol": "delegator_employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_delegations_delegate_emp",
+      "sourceSchema": "org",
+      "sourceTable": "delegations",
+      "sourceCol": "delegate_employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_policy_acknowledgements_employee",
+      "sourceSchema": "org",
+      "sourceTable": "policy_acknowledgements",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_bank_details_employee",
+      "sourceSchema": "employee",
+      "sourceTable": "employee_bank_details",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_statutory_details_employee",
+      "sourceSchema": "employee",
+      "sourceTable": "employee_statutory_details",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_documents_employee",
+      "sourceSchema": "employee",
+      "sourceTable": "employee_documents",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_documents_verified_by",
+      "sourceSchema": "employee",
+      "sourceTable": "employee_documents",
+      "sourceCol": "verified_by",
+      "targetSchema": "auth",
+      "targetTable": "users",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_documents_uploaded_by",
+      "sourceSchema": "employee",
+      "sourceTable": "employee_documents",
+      "sourceCol": "uploaded_by",
+      "targetSchema": "auth",
+      "targetTable": "users",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_service_records_employee",
+      "sourceSchema": "employee",
+      "sourceTable": "service_records",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_service_records_prev_desig",
+      "sourceSchema": "employee",
+      "sourceTable": "service_records",
+      "sourceCol": "previous_designation_id",
+      "targetSchema": "org",
+      "targetTable": "designations",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_service_records_new_desig",
+      "sourceSchema": "employee",
+      "sourceTable": "service_records",
+      "sourceCol": "new_designation_id",
+      "targetSchema": "org",
+      "targetTable": "designations",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_service_records_prev_dept",
+      "sourceSchema": "employee",
+      "sourceTable": "service_records",
+      "sourceCol": "previous_department_id",
+      "targetSchema": "org",
+      "targetTable": "departments",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_service_records_new_dept",
+      "sourceSchema": "employee",
+      "sourceTable": "service_records",
+      "sourceCol": "new_department_id",
+      "targetSchema": "org",
+      "targetTable": "departments",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_service_records_prev_mgr",
+      "sourceSchema": "employee",
+      "sourceTable": "service_records",
+      "sourceCol": "previous_reporting_manager_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_service_records_new_mgr",
+      "sourceSchema": "employee",
+      "sourceTable": "service_records",
+      "sourceCol": "new_reporting_manager_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_service_records_prev_branch",
+      "sourceSchema": "employee",
+      "sourceTable": "service_records",
+      "sourceCol": "previous_branch_id",
+      "targetSchema": "org",
+      "targetTable": "branches",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_service_records_new_branch",
+      "sourceSchema": "employee",
+      "sourceTable": "service_records",
+      "sourceCol": "new_branch_id",
+      "targetSchema": "org",
+      "targetTable": "branches",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_insurance_policies_employee",
+      "sourceSchema": "employee",
+      "sourceTable": "insurance_policies",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_insurance_dependents_policy",
+      "sourceSchema": "employee",
+      "sourceTable": "insurance_dependents",
+      "sourceCol": "policy_id",
+      "targetSchema": "employee",
+      "targetTable": "insurance_policies",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_insurance_nominees_policy",
+      "sourceSchema": "employee",
+      "sourceTable": "insurance_nominees",
+      "sourceCol": "policy_id",
+      "targetSchema": "employee",
+      "targetTable": "insurance_policies",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_holidays_branch",
+      "sourceSchema": "attendance",
+      "sourceTable": "holidays",
+      "sourceCol": "branch_id",
+      "targetSchema": "org",
+      "targetTable": "branches",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_attendance_records_employee",
+      "sourceSchema": "attendance",
+      "sourceTable": "attendance_records",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_attendance_records_shift",
+      "sourceSchema": "attendance",
+      "sourceTable": "attendance_records",
+      "sourceCol": "shift_id",
+      "targetSchema": "attendance",
+      "targetTable": "shifts",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_attendance_regularizations_record",
+      "sourceSchema": "attendance",
+      "sourceTable": "attendance_regularizations",
+      "sourceCol": "attendance_record_id",
+      "targetSchema": "attendance",
+      "targetTable": "attendance_records",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_attendance_regularizations_employee",
+      "sourceSchema": "attendance",
+      "sourceTable": "attendance_regularizations",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_attendance_regularizations_reviewer",
+      "sourceSchema": "attendance",
+      "sourceTable": "attendance_regularizations",
+      "sourceCol": "reviewed_by",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_attendance_manual_entries_approver",
+      "sourceSchema": "attendance",
+      "sourceTable": "attendance_manual_entries",
+      "sourceCol": "approved_by",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_shift_schedules_employee",
+      "sourceSchema": "attendance",
+      "sourceTable": "shift_schedules",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_shift_schedules_shift",
+      "sourceSchema": "attendance",
+      "sourceTable": "shift_schedules",
+      "sourceCol": "shift_id",
+      "targetSchema": "attendance",
+      "targetTable": "shifts",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_shift_schedules_assigned_by",
+      "sourceSchema": "attendance",
+      "sourceTable": "shift_schedules",
+      "sourceCol": "assigned_by",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_overtime_records_employee",
+      "sourceSchema": "attendance",
+      "sourceTable": "overtime_records",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_overtime_records_attendance",
+      "sourceSchema": "attendance",
+      "sourceTable": "overtime_records",
+      "sourceCol": "attendance_record_id",
+      "targetSchema": "attendance",
+      "targetTable": "attendance_records",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_overtime_records_approver",
+      "sourceSchema": "attendance",
+      "sourceTable": "overtime_records",
+      "sourceCol": "approved_by",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_leave_balances_employee",
+      "sourceSchema": "attendance",
+      "sourceTable": "leave_balances",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_leave_balances_leave_type",
+      "sourceSchema": "attendance",
+      "sourceTable": "leave_balances",
+      "sourceCol": "leave_type_id",
+      "targetSchema": "attendance",
+      "targetTable": "leave_types",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_leave_applications_employee",
+      "sourceSchema": "attendance",
+      "sourceTable": "leave_applications",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_leave_applications_leave_type",
+      "sourceSchema": "attendance",
+      "sourceTable": "leave_applications",
+      "sourceCol": "leave_type_id",
+      "targetSchema": "attendance",
+      "targetTable": "leave_types",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_leave_applications_approver",
+      "sourceSchema": "attendance",
+      "sourceTable": "leave_applications",
+      "sourceCol": "approver_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_expense_claims_employee",
+      "sourceSchema": "expense",
+      "sourceTable": "expense_claims",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_expense_claims_category",
+      "sourceSchema": "expense",
+      "sourceTable": "expense_claims",
+      "sourceCol": "category_id",
+      "targetSchema": "expense",
+      "targetTable": "expense_categories",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_expense_claims_approver",
+      "sourceSchema": "expense",
+      "sourceTable": "expense_claims",
+      "sourceCol": "approver_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_expense_claims_hr",
+      "sourceSchema": "expense",
+      "sourceTable": "expense_claims",
+      "sourceCol": "hr_admin_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_advance_petty_cash_employee",
+      "sourceSchema": "expense",
+      "sourceTable": "advance_petty_cash",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_assets_category",
+      "sourceSchema": "asset",
+      "sourceTable": "assets",
+      "sourceCol": "category_id",
+      "targetSchema": "asset",
+      "targetTable": "asset_categories",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_assets_current_employee",
+      "sourceSchema": "asset",
+      "sourceTable": "assets",
+      "sourceCol": "current_employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_asset_allocations_asset",
+      "sourceSchema": "asset",
+      "sourceTable": "asset_allocations",
+      "sourceCol": "asset_id",
+      "targetSchema": "asset",
+      "targetTable": "assets",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_asset_allocations_employee",
+      "sourceSchema": "asset",
+      "sourceTable": "asset_allocations",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_asset_allocations_allocated_by",
+      "sourceSchema": "asset",
+      "sourceTable": "asset_allocations",
+      "sourceCol": "allocated_by",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_client_supervisors_client",
+      "sourceSchema": "client",
+      "sourceTable": "client_supervisors",
+      "sourceCol": "client_id",
+      "targetSchema": "client",
+      "targetTable": "client_organizations",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_client_supervisors_user",
+      "sourceSchema": "client",
+      "sourceTable": "client_supervisors",
+      "sourceCol": "user_id",
+      "targetSchema": "auth",
+      "targetTable": "users",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_client_deployments_client",
+      "sourceSchema": "client",
+      "sourceTable": "client_deployments",
+      "sourceCol": "client_id",
+      "targetSchema": "client",
+      "targetTable": "client_organizations",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_client_deployments_employee",
+      "sourceSchema": "client",
+      "sourceTable": "client_deployments",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_client_deployments_supervisor",
+      "sourceSchema": "client",
+      "sourceTable": "client_deployments",
+      "sourceCol": "supervisor_id",
+      "targetSchema": "client",
+      "targetTable": "client_supervisors",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_deployment_extensions_deployment",
+      "sourceSchema": "client",
+      "sourceTable": "client_deployment_extensions",
+      "sourceCol": "deployment_id",
+      "targetSchema": "client",
+      "targetTable": "client_deployments",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_deployment_extensions_extended_by",
+      "sourceSchema": "client",
+      "sourceTable": "client_deployment_extensions",
+      "sourceCol": "extended_by",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_deployment_extensions_approved_by",
+      "sourceSchema": "client",
+      "sourceTable": "client_deployment_extensions",
+      "sourceCol": "approved_by",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_client_attendance_record",
+      "sourceSchema": "client",
+      "sourceTable": "client_attendance_verifications",
+      "sourceCol": "attendance_record_id",
+      "targetSchema": "attendance",
+      "targetTable": "attendance_records",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_client_attendance_deployment",
+      "sourceSchema": "client",
+      "sourceTable": "client_attendance_verifications",
+      "sourceCol": "deployment_id",
+      "targetSchema": "client",
+      "targetTable": "client_deployments",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_client_attendance_client",
+      "sourceSchema": "client",
+      "sourceTable": "client_attendance_verifications",
+      "sourceCol": "client_id",
+      "targetSchema": "client",
+      "targetTable": "client_organizations",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_client_attendance_supervisor",
+      "sourceSchema": "client",
+      "sourceTable": "client_attendance_verifications",
+      "sourceCol": "supervisor_id",
+      "targetSchema": "client",
+      "targetTable": "client_supervisors",
+      "targetCol": "id",
+      "isCross": false
+    },
+    {
+      "constraint": "fk_client_attendance_employee",
+      "sourceSchema": "client",
+      "sourceTable": "client_attendance_verifications",
+      "sourceCol": "employee_id",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    },
+    {
+      "constraint": "fk_client_attendance_approved_by",
+      "sourceSchema": "client",
+      "sourceTable": "client_attendance_verifications",
+      "sourceCol": "company_approved_by",
+      "targetSchema": "employee",
+      "targetTable": "employees",
+      "targetCol": "id",
+      "isCross": true
+    }
+  ],
+  "indexes": [
+    {
+      "isUnique": false,
+      "name": "idx_auth_users_email",
+      "schema": "auth",
+      "table": "users",
+      "columns": "email"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_auth_users_employee_id",
+      "schema": "auth",
+      "table": "users",
+      "columns": "employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_auth_users_role_status",
+      "schema": "auth",
+      "table": "users",
+      "columns": "role_code, status"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_auth_sessions_user_id",
+      "schema": "auth",
+      "table": "auth_sessions",
+      "columns": "user_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_auth_sessions_expires_at",
+      "schema": "auth",
+      "table": "auth_sessions",
+      "columns": "expires_at"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_auth_role_permissions_role",
+      "schema": "auth",
+      "table": "role_permissions",
+      "columns": "role_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_auth_role_permissions_perm",
+      "schema": "auth",
+      "table": "role_permissions",
+      "columns": "permission_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_auth_user_roles_user",
+      "schema": "auth",
+      "table": "user_roles",
+      "columns": "user_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_auth_user_roles_role",
+      "schema": "auth",
+      "table": "user_roles",
+      "columns": "role_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_branches_company_id",
+      "schema": "org",
+      "table": "branches",
+      "columns": "company_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_departments_branch_id",
+      "schema": "org",
+      "table": "departments",
+      "columns": "branch_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_departments_parent_dept_id",
+      "schema": "org",
+      "table": "departments",
+      "columns": "parent_dept_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_departments_head_emp",
+      "schema": "org",
+      "table": "departments",
+      "columns": "head_employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_designations_department_id",
+      "schema": "org",
+      "table": "designations",
+      "columns": "department_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_designations_level",
+      "schema": "org",
+      "table": "designations",
+      "columns": "level"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_governance_members_target_emp",
+      "schema": "org",
+      "table": "governance_members",
+      "columns": "oversight_target_employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_governance_history_member_id",
+      "schema": "org",
+      "table": "governance_history",
+      "columns": "member_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_delegations_delegator_user",
+      "schema": "org",
+      "table": "delegations",
+      "columns": "delegator_user_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_delegations_delegate_user",
+      "schema": "org",
+      "table": "delegations",
+      "columns": "delegate_user_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_delegations_dates_status",
+      "schema": "org",
+      "table": "delegations",
+      "columns": "effective_from, effective_to, status"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_policy_rules_module_status",
+      "schema": "org",
+      "table": "policy_rules",
+      "columns": "module, is_active"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_policy_ack_policy_emp",
+      "schema": "org",
+      "table": "policy_acknowledgements",
+      "columns": "policy_id, employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_employees_department_id",
+      "schema": "employee",
+      "table": "employees",
+      "columns": "department_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_employees_designation_id",
+      "schema": "employee",
+      "table": "employees",
+      "columns": "designation_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_employees_branch_id",
+      "schema": "employee",
+      "table": "employees",
+      "columns": "branch_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_employees_reporting_manager_id",
+      "schema": "employee",
+      "table": "employees",
+      "columns": "reporting_manager_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_employees_status",
+      "schema": "employee",
+      "table": "employees",
+      "columns": "employment_status, profile_status"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_employees_name_search",
+      "schema": "employee",
+      "table": "employees",
+      "columns": "first_name, last_name"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_employee_bank_emp",
+      "schema": "employee",
+      "table": "employee_bank_details",
+      "columns": "employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_employee_statutory_emp",
+      "schema": "employee",
+      "table": "employee_statutory_details",
+      "columns": "employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_employee_docs_employee_id",
+      "schema": "employee",
+      "table": "employee_documents",
+      "columns": "employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_employee_docs_category",
+      "schema": "employee",
+      "table": "employee_documents",
+      "columns": "document_type"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_service_records_employee_id",
+      "schema": "employee",
+      "table": "service_records",
+      "columns": "employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_service_records_effective_date",
+      "schema": "employee",
+      "table": "service_records",
+      "columns": "effective_date DESC"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_insurance_policies_employee_id",
+      "schema": "employee",
+      "table": "insurance_policies",
+      "columns": "employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_insurance_dependents_policy_id",
+      "schema": "employee",
+      "table": "insurance_dependents",
+      "columns": "policy_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_insurance_nominees_policy_id",
+      "schema": "employee",
+      "table": "insurance_nominees",
+      "columns": "policy_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_attendance_records_employee_id",
+      "schema": "attendance",
+      "table": "attendance_records",
+      "columns": "employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_attendance_records_date",
+      "schema": "attendance",
+      "table": "attendance_records",
+      "columns": "attendance_date DESC"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_attendance_records_shift_id",
+      "schema": "attendance",
+      "table": "attendance_records",
+      "columns": "shift_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_attendance_records_emp_date",
+      "schema": "attendance",
+      "table": "attendance_records",
+      "columns": "employee_id, attendance_date"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_attendance_reg_employee_id",
+      "schema": "attendance",
+      "table": "attendance_regularizations",
+      "columns": "employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_attendance_reg_record_id",
+      "schema": "attendance",
+      "table": "attendance_regularizations",
+      "columns": "attendance_record_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_attendance_reg_status",
+      "schema": "attendance",
+      "table": "attendance_regularizations",
+      "columns": "status"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_shift_schedules_emp_dates",
+      "schema": "attendance",
+      "table": "shift_schedules",
+      "columns": "employee_id, effective_from, effective_to"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_overtime_employee_date",
+      "schema": "attendance",
+      "table": "overtime_records",
+      "columns": "employee_id, overtime_date"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_leave_balances_emp_year",
+      "schema": "attendance",
+      "table": "leave_balances",
+      "columns": "employee_id, year"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_leave_apps_employee_id",
+      "schema": "attendance",
+      "table": "leave_applications",
+      "columns": "employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_leave_apps_dates",
+      "schema": "attendance",
+      "table": "leave_applications",
+      "columns": "start_date, end_date"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_leave_apps_status",
+      "schema": "attendance",
+      "table": "leave_applications",
+      "columns": "status"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_holidays_year_branch",
+      "schema": "attendance",
+      "table": "holidays",
+      "columns": "holiday_year, branch_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_expense_claims_employee_id",
+      "schema": "expense",
+      "table": "expense_claims",
+      "columns": "employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_expense_claims_category_id",
+      "schema": "expense",
+      "table": "expense_claims",
+      "columns": "category_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_expense_claims_status",
+      "schema": "expense",
+      "table": "expense_claims",
+      "columns": "status"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_expense_claims_expense_date",
+      "schema": "expense",
+      "table": "expense_claims",
+      "columns": "expense_date DESC"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_advance_petty_cash_emp_status",
+      "schema": "expense",
+      "table": "advance_petty_cash",
+      "columns": "employee_id, status"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_assets_category_id",
+      "schema": "asset",
+      "table": "assets",
+      "columns": "category_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_assets_current_emp",
+      "schema": "asset",
+      "table": "assets",
+      "columns": "current_employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_assets_status_type",
+      "schema": "asset",
+      "table": "assets",
+      "columns": "status, asset_type"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_asset_allocations_asset_id",
+      "schema": "asset",
+      "table": "asset_allocations",
+      "columns": "asset_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_asset_allocations_employee_id",
+      "schema": "asset",
+      "table": "asset_allocations",
+      "columns": "employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_client_supervisors_client_id",
+      "schema": "client",
+      "table": "client_supervisors",
+      "columns": "client_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_client_deployments_client_id",
+      "schema": "client",
+      "table": "client_deployments",
+      "columns": "client_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_client_deployments_employee_id",
+      "schema": "client",
+      "table": "client_deployments",
+      "columns": "employee_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_client_deployments_status",
+      "schema": "client",
+      "table": "client_deployments",
+      "columns": "status"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_client_att_record_id",
+      "schema": "client",
+      "table": "client_attendance_verifications",
+      "columns": "attendance_record_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_client_att_emp_period",
+      "schema": "client",
+      "table": "client_attendance_verifications",
+      "columns": "employee_id, period_key"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_client_att_client_status",
+      "schema": "client",
+      "table": "client_attendance_verifications",
+      "columns": "client_id, client_verification_status"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_notifications_recipient_read",
+      "schema": "notification",
+      "table": "notifications",
+      "columns": "recipient_id, is_read"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_notifications_created_at",
+      "schema": "notification",
+      "table": "notifications",
+      "columns": "created_at DESC"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_audit_logs_service_action",
+      "schema": "notification",
+      "table": "audit_logs",
+      "columns": "service_name, action"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_audit_logs_actor",
+      "schema": "notification",
+      "table": "audit_logs",
+      "columns": "actor_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_audit_logs_resource",
+      "schema": "notification",
+      "table": "audit_logs",
+      "columns": "resource_type, resource_id"
+    },
+    {
+      "isUnique": false,
+      "name": "idx_audit_logs_created_at",
+      "schema": "notification",
+      "table": "audit_logs",
+      "columns": "created_at DESC"
+    }
+  ]
+}

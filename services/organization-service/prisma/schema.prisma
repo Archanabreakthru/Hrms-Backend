@@ -1,77 +1,185 @@
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  schemas    = ["org"]
 }
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/client"
 }
 
-model CompanyProfile {
-  id                    String   @id @default(uuid())
-  legalName             String
-  tradingName           String
-  cinNumber             String?
-  panNumber             String?
-  tanNumber             String?
-  gstin                 String?
-  pfRegistrationNumber  String?
-  esiRegistrationNumber String?
-  registeredAddress     String
-  headquartersAddress   String
-  contactEmail          String
-  contactPhone          String
-  website               String?
-  directors             String?  // JSON stringified array of directors
-  fiscalYearStart       String   @default("04-01")
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+model CompanyProfiles {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  legalName             String   @db.VarChar(255) @map("legal_name")
+  tradingName           String   @db.VarChar(255) @map("trading_name")
+  cinNumber             String?  @db.VarChar(50) @map("cin_number")
+  panNumber             String?  @db.VarChar(50) @map("pan_number")
+  tanNumber             String?  @db.VarChar(50) @map("tan_number")
+  gstin                 String?  @db.VarChar(50) @map("gstin")
+  pfRegistrationNumber  String?  @db.VarChar(50) @map("pf_registration_number")
+  esiRegistrationNumber String?  @db.VarChar(50) @map("esi_registration_number")
+  registeredAddress     String   @db.Text @map("registered_address")
+  headquartersAddress   String   @db.Text @map("headquarters_address")
+  contactEmail          String   @db.VarChar(255) @map("contact_email")
+  contactPhone          String   @db.VarChar(50) @map("contact_phone")
+  website               String?  @db.VarChar(255) @map("website")
+  createdAt             DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt             DateTime @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
 
   @@map("company_profiles")
+  @@schema("org")
 }
 
-model Branch {
-  id              String   @id @default(uuid())
-  code            String   @unique
-  name            String
-  city            String
-  state           String
-  country         String   @default("India")
-  address         String
-  isHeadquarters  Boolean  @default(false)
-  timezone        String   @default("Asia/Kolkata")
-  status          String   @default("Active")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model StatutoryComplianceConfigs {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  jurisdiction    String   @default("IN") @db.VarChar(10) @map("jurisdiction")
+  complianceType  String   @db.VarChar(50) @map("compliance_type")
+  settings        Json     @default("{}") @map("settings")
+  effectiveFrom   DateTime @db.Date @map("effective_from")
+  effectiveTo     DateTime? @db.Date @map("effective_to")
+  createdAt       DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+
+  @@map("statutory_compliance_configs")
+  @@schema("org")
+}
+
+model Branches {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  code           String        @unique(map: "uq_org_branches_code") @db.VarChar(50) @map("code")
+  name           String        @db.VarChar(150) @map("name")
+  city           String        @db.VarChar(100) @map("city")
+  state          String        @db.VarChar(100) @map("state")
+  country        String        @default("India") @db.VarChar(100) @map("country")
+  address        String        @db.Text @map("address")
+  isHeadquarters Boolean       @default(false) @map("is_headquarters")
+  timezone       String        @default("Asia/Kolkata") @db.VarChar(50) @map("timezone")
+  status         String        @default("Active") @db.VarChar(50) @map("status")
+  createdAt      DateTime      @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt      DateTime      @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+  departments    Departments[]
 
   @@map("branches")
+  @@schema("org")
 }
 
-model Department {
-  id              String   @id @default(uuid())
-  code            String   @unique
-  name            String
-  branchId        String?
-  parentDeptId    String?
-  headEmployeeId  String?
-  status          String   @default("Active")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model CompanyDirectors {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  name        String    @db.VarChar(150) @map("name")
+  din         String?   @db.VarChar(50) @map("din")
+  designation String    @db.VarChar(100) @map("designation")
+  appointedDate DateTime? @db.Date @map("appointed_date")
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+
+  @@map("company_directors")
+  @@schema("org")
+}
+
+model PolicyRules {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  name         String    @db.VarChar(150) @map("name")
+  module       String    @db.VarChar(50) @map("module")
+  description  String?   @db.Text @map("description")
+  rulesSummary String?   @db.Text @map("rules_summary")
+  parameters   Json      @default("{}") @map("parameters")
+  effectiveFrom DateTime @db.Date @map("effective_from")
+  effectiveTo   DateTime? @db.Date @map("effective_to")
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+
+  @@map("policy_rules")
+  @@schema("org")
+}
+
+model Departments {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  code           String         @unique(map: "uq_org_departments_code") @db.VarChar(50) @map("code")
+  name           String         @db.VarChar(150) @map("name")
+  branchId       String?        @db.Uuid @map("branch_id")
+  parentDeptId   String?        @db.Uuid @map("parent_dept_id")
+  headEmployeeId String?        @db.VarChar(50) @map("head_employee_id")
+  status         String         @default("Active") @db.VarChar(50) @map("status")
+  createdAt      DateTime       @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt      DateTime       @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+  branch         Branches?      @relation(fields: [branchId], references: [id], onDelete: SetNull, map: "fk_departments_branch")
+  parent         Departments?   @relation("DepartmentHierarchy", fields: [parentDeptId], references: [id], onDelete: SetNull, map: "fk_departments_parent")
+  children       Departments[]  @relation("DepartmentHierarchy")
+  designations   Designations[]
 
   @@map("departments")
+  @@schema("org")
 }
 
-model Designation {
-  id              String   @id @default(uuid())
-  code            String   @unique // e.g. 'SWE', 'MD', 'HRM'
-  title           String
-  departmentId    String?
-  level           Int      @default(1)
-  description     String?
-  status          String   @default("Active")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model Designations {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  code         String        @unique(map: "uq_org_designations_code") @db.VarChar(50) @map("code")
+  title        String        @db.VarChar(150) @map("title")
+  departmentId String?       @db.Uuid @map("department_id")
+  level        Int           @default(1) @map("level")
+  description  String?       @db.Text @map("description")
+  status       String        @default("Active") @db.VarChar(50) @map("status")
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt    DateTime      @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+  department   Departments?  @relation(fields: [departmentId], references: [id], onDelete: SetNull, map: "fk_designations_department")
 
   @@map("designations")
+  @@schema("org")
 }
 
+model GovernanceMembers {
+  id                         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  committeeName              String   @db.VarChar(150) @map("committee_name")
+  oversightTargetEmployeeId  String?  @db.VarChar(50) @map("oversight_target_employee_id")
+  roleTitle                  String   @db.VarChar(100) @map("role_title")
+  effectiveFrom              DateTime @db.Date @map("effective_from")
+  isPayrollEmployee          Boolean  @default(false) @map("is_payroll_employee")
+  notes                      String?  @db.Text @map("notes")
+  isActive                   Boolean  @default(true) @map("is_active")
+  createdAt                  DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt                  DateTime @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+
+  @@map("governance_members")
+  @@schema("org")
+}
+
+model GovernanceHistory {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  actionType     String   @db.VarChar(50) @map("action_type")
+  description    String   @db.Text @map("description")
+  performedBy    String?  @db.VarChar(100) @map("performed_by")
+  payloadSnapshot Json    @default("{}") @map("payload_snapshot")
+  createdAt      DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+
+  @@map("governance_history")
+  @@schema("org")
+}
+
+model Delegations {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  delegatorUserId     String    @db.Uuid @map("delegator_user_id")
+  delegateUserId      String    @db.Uuid @map("delegate_user_id")
+  delegatorEmployeeId String?   @db.VarChar(50) @map("delegator_employee_id")
+  delegateEmployeeId  String?   @db.VarChar(50) @map("delegate_employee_id")
+  scope               String    @db.VarChar(100) @map("scope")
+  startDate           DateTime  @db.Date @map("start_date")
+  endDate             DateTime? @db.Date @map("end_date")
+  status              String    @default("Active") @db.VarChar(50) @map("status")
+  createdAt           DateTime  @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt           DateTime  @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+
+  @@map("delegations")
+  @@schema("org")
+}
+
+model PolicyAcknowledgements {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  policyRuleId   String   @db.Uuid @map("policy_rule_id")
+  employeeId     String   @db.VarChar(50) @map("employee_id")
+  acknowledgedAt DateTime @default(now()) @db.Timestamptz(6) @map("acknowledged_at")
+
+  @@unique([policyRuleId, employeeId], map: "uq_org_policy_acknowledgements")
+  @@map("policy_acknowledgements")
+  @@schema("org")
+}
