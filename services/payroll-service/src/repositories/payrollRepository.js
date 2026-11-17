@@ -45,6 +45,77 @@ class InMemoryPayrollRepository {
         this.salaryStructures.set(structure.employeeId, { ...structure });
         return structure;
     }
+    orgSalaryStructures = [
+        {
+            id: 'STR-LEAD-28L',
+            name: 'Engineering & Delivery Leadership Structure (CTC ₹28L)',
+            description: 'Senior delivery management & leads with taxable allowances and statutory retirement benefits',
+            grossMonthly: 215000,
+            ctcAnnual: 2800000,
+            items: [
+                { componentId: 'COMP-BASIC', componentName: 'Basic Salary', componentCode: 'BASIC', type: 'Earning', amountMonthly: 107500, amountAnnual: 1290000 },
+                { componentId: 'COMP-HRA', componentName: 'House Rent Allowance (HRA)', componentCode: 'HRA', type: 'Earning', amountMonthly: 53750, amountAnnual: 645000 },
+                { componentId: 'COMP-SPEC', componentName: 'Special Allowance', componentCode: 'SPECIAL', type: 'Earning', amountMonthly: 53750, amountAnnual: 645000 }
+            ],
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            id: 'STR-SNR-18L',
+            name: 'Senior Professional Structure (CTC ₹18L)',
+            description: 'Senior Engineers, Leads and Managers with balanced earnings and statutory PF/PT',
+            grossMonthly: 140000,
+            ctcAnnual: 1800000,
+            items: [
+                { componentId: 'COMP-BASIC', componentName: 'Basic Salary', componentCode: 'BASIC', type: 'Earning', amountMonthly: 70000, amountAnnual: 840000 },
+                { componentId: 'COMP-HRA', componentName: 'House Rent Allowance (HRA)', componentCode: 'HRA', type: 'Earning', amountMonthly: 35000, amountAnnual: 420000 },
+                { componentId: 'COMP-SPEC', componentName: 'Special Allowance', componentCode: 'SPECIAL', type: 'Earning', amountMonthly: 35000, amountAnnual: 420000 }
+            ],
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            id: 'STR-SWE-9.6L',
+            name: 'Software Engineer Structure (CTC ₹9.6L)',
+            description: 'Software Engineers, Associates, and Solutions Analysts',
+            grossMonthly: 75000,
+            ctcAnnual: 960000,
+            items: [
+                { componentId: 'COMP-BASIC', componentName: 'Basic Salary', componentCode: 'BASIC', type: 'Earning', amountMonthly: 37500, amountAnnual: 450000 },
+                { componentId: 'COMP-HRA', componentName: 'House Rent Allowance (HRA)', componentCode: 'HRA', type: 'Earning', amountMonthly: 18750, amountAnnual: 225000 },
+                { componentId: 'COMP-SPEC', componentName: 'Special Allowance', componentCode: 'SPECIAL', type: 'Earning', amountMonthly: 18750, amountAnnual: 225000 }
+            ],
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }
+    ];
+    async listOrgSalaryStructures() {
+        return this.orgSalaryStructures;
+    }
+    async createOrgSalaryStructure(data) {
+        const existingIdx = this.orgSalaryStructures.findIndex((s) => s.id === data.id);
+        const struct = {
+            id: data.id || `STR-CUSTOM-${Date.now()}`,
+            name: data.name,
+            description: data.description || '',
+            grossMonthly: data.grossMonthly,
+            ctcAnnual: data.ctcAnnual || data.grossMonthly * 12,
+            items: data.items || [],
+            isActive: data.isActive !== false,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+        if (existingIdx >= 0) {
+            this.orgSalaryStructures[existingIdx] = struct;
+        }
+        else {
+            this.orgSalaryStructures.push(struct);
+        }
+        return struct;
+    }
     async findPayrollRun(periodKey) {
         return this.payrollRuns.get(periodKey) || null;
     }

@@ -206,7 +206,7 @@ const EMPLOYEES = [
 const INITIAL_USERS = [
   {
     email: 'admin.system@orbyx.internal',
-    password: process.env.BOOTSTRAP_ADMIN_PASSWORD || 'OrbyxSuperAdmin@2026',
+    password: process.env.BOOTSTRAP_ADMIN_PASSWORD || 'CelestialSuperAdmin@2026',
     role: 'super_admin',
     employeeId: null,
     status: 'ACTIVE'

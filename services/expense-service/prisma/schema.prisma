@@ -1,61 +1,83 @@
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["expense"]
 }
 
 generator client {
   provider = "prisma-client-js"
-}
-
-enum ClaimStatus {
-  Draft
-  Submitted
-  Approved_By_Manager
-  Approved_By_HR
-  Rejected
-  Reimbursed
+  output   = "../src/generated/client"
 }
 
 model ExpenseCategory {
-  id              String   @id @default(uuid())
-  code            String   @unique // TRAVEL, FOOD, LODGING, MISC
-  name            String
-  description     String?
-  policyLimitMax  Float    @default(5000.0) // per claim limit
-  requiresReceipt Boolean  @default(true)
-  status          String   @default("Active")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code              String         @unique(map: "uq_expense_categories_code") @db.VarChar(50)
+  name              String         @db.VarChar(100)
+  description       String?        @db.Text
+  maxLimitPerClaim  Decimal        @default(5000.00) @map("max_limit_per_claim") @db.Decimal(10, 2)
+  requiresReceipt   Boolean        @default(true) @map("requires_receipt")
+  isActive          Boolean        @default(true) @map("is_active")
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  claims            ExpenseClaim[]
 
   @@map("expense_categories")
+  @@schema("expense")
 }
 
 model ExpenseClaim {
-  id               String      @id @default(uuid())
-  claimNumber      String      @unique // EXP-2026-0001
-  employeeId       String
-  categoryId       String
-  amount           Float
-  currency         String      @default("INR")
-  expenseDate      DateTime
-  purpose          String
-  receiptUrl       String?
-  receiptFileName  String?
-  status           ClaimStatus @default(Submitted)
-  managerId        String?
-  managerRemarks   String?
-  managerActionAt  DateTime?
-  hrAdminId        String?
-  hrRemarks        String?
-  hrActionAt       DateTime?
-  reimbursedAt     DateTime?
-  isPettyCash      Boolean     @default(false)
-  approvalHistory  Json?
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  id                     String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  claimNumber            String          @unique(map: "uq_expense_claims_number") @map("claim_number") @db.VarChar(50)
+  employeeId             String          @map("employee_id") @db.VarChar(50)
+  categoryId             String          @map("category_id") @db.Uuid
+  amount                 Decimal         @db.Decimal(12, 2)
+  currency               String          @default("INR") @db.VarChar(10)
+  expenseDate            DateTime        @map("expense_date") @db.Date
+  purpose                String          @db.Text
+  receiptUrl             String?         @map("receipt_url") @db.Text
+  receiptFileName        String?         @map("receipt_file_name") @db.VarChar(255)
+  status                 String          @default("Pending Manager Approval") @db.VarChar(50)
+  approverId             String?         @map("approver_id") @db.VarChar(50)
+  managerRemarks         String?         @map("manager_remarks") @db.Text
+  managerActionAt        DateTime?       @map("manager_action_at") @db.Timestamptz(6)
+  hrAdminId              String?         @map("hr_admin_id") @db.VarChar(50)
+  hrRemarks              String?         @map("hr_remarks") @db.Text
+  hrActionAt             DateTime?       @map("hr_action_at") @db.Timestamptz(6)
+  reimbursedAt           DateTime?       @map("reimbursed_at") @db.Timestamptz(6)
+  reimbursementReference String?         @map("reimbursement_reference") @db.VarChar(100)
+  isPettyCash            Boolean         @default(false) @map("is_petty_cash")
+  approvalHistory        Json            @default("[]") @map("approval_history")
+  createdAt              DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  @@index([employeeId])
-  @@index([status])
+  category               ExpenseCategory @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([employeeId], map: "idx_expense_claims_employee_id")
+  @@index([categoryId], map: "idx_expense_claims_category_id")
+  @@index([status], map: "idx_expense_claims_status")
+  @@index([expenseDate], map: "idx_expense_claims_expense_date")
   @@map("expense_claims")
+  @@schema("expense")
 }
 
+model AdvancePettyCash {
+  id               String    @id @db.VarChar
+  employeeId       String    @map("employee_id") @db.VarChar
+  advanceType      String    @map("advance_type") @db.VarChar
+  amount           Decimal   @db.Decimal
+  approvedAmount   Decimal?  @map("approved_amount") @db.Decimal
+  recoveredAmount  Decimal?  @default(0.00) @map("recovered_amount") @db.Decimal
+  actualExpense    Decimal?  @map("actual_expense") @db.Decimal
+  purpose          String    @db.Text
+  requestDate      DateTime  @map("request_date") @db.Date
+  status           String    @default("Pending Approval") @db.VarChar
+  paymentReference String?   @map("payment_reference") @db.VarChar
+  settlementNote   String?   @map("settlement_note") @db.Text
+  disbursedAt      DateTime? @map("disbursed_at") @db.Timestamptz(6)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([employeeId, status], map: "idx_advance_petty_cash_emp_status")
+  @@map("advance_petty_cash")
+  @@schema("expense")
+}

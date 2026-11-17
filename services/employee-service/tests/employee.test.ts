@@ -289,4 +289,40 @@ test('EmployeeService field-level RBAC: Self-service vs Manager vs HR restrictio
       name: 'ForbiddenError',
     }
   );
+
+  // 4. Service Records: Creation, retrieval, and status approval
+  const serviceRecord = await service.createServiceRecord(
+    'EMP-SWE-0001',
+    {
+      recordType: 'Promotion',
+      effectiveDate: '2025-01-01',
+      newDesignationId: 'DES-SWE',
+      newSalaryAmount: 1800000,
+      notes: 'Promoted to Senior Software Engineer',
+      approvalStatus: 'Pending',
+    },
+    mockHrAdmin
+  );
+  assert.equal(serviceRecord.recordType, 'Promotion');
+  assert.equal(serviceRecord.approvalStatus, 'Pending');
+
+  const history = await service.getServiceRecords('EMP-SWE-0001', mockHrAdmin);
+  assert.equal(history.length, 1);
+  assert.equal(history[0].id, serviceRecord.id);
+
+  const approved = await service.updateServiceRecordStatus(
+    'EMP-SWE-0001',
+    serviceRecord.id,
+    'Approved',
+    mockHrAdmin
+  );
+  assert.equal(approved.approvalStatus, 'Approved');
+  assert.ok(approved.approvedAt);
+
+  // 5. Search capability in listing
+  const searchResult = await service.list({ search: 'john' }, mockHrAdmin);
+  assert.ok(searchResult.employees.some((e) => e.firstName === 'John'));
+
+  const emptySearch = await service.list({ search: 'NonExistentPerson' }, mockHrAdmin);
+  assert.equal(emptySearch.employees.length, 0);
 });

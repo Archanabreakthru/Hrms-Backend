@@ -14,7 +14,16 @@ const services = [
   { name: 'Notification Service', dir: 'services/notification-service', entry: 'src/server.js', port: 5008 }
 ];
 
-console.log('Starting ORBYX HRMS Microservices...\n');
+console.log('Starting Celestial HRMS Microservices...\n');
+
+console.log('------------------------------------------------------------');
+console.log('🌐 Microservices & API Gateway Endpoints:');
+for (const svc of services) {
+  const url = `http://localhost:${svc.port}`;
+  const note = svc.name === 'API Gateway' ? ' (Central Swagger: ' + url + '/api-docs)' : '';
+  console.log(`  • ${svc.name.padEnd(24)} -> ${url}${note}`);
+}
+console.log('------------------------------------------------------------\n');
 
 const procs = [];
 

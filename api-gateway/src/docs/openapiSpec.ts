@@ -1,5 +1,5 @@
 /**
- * ORBYX HRMS - Centralized OpenAPI 3.0 Specification
+ * Celestial HRMS - Centralized OpenAPI 3.0 Specification
  * 
  * Accurately generated from existing microservices routes, Zod schemas, 
  * RBAC permission requirements, and standard ApiResponse / AppError wrappers.
@@ -8,17 +8,53 @@
 export const openapiSpec = {
   openapi: '3.0.3',
   info: {
-    title: 'ORBYX HRMS API Documentation',
+    title: 'Celestial HRMS API Documentation',
     version: '1.0.0',
-    description: 'Centralized API Gateway and Microservices Documentation for ORBYX HRMS with zero-impact change control.',
+    description: 'Centralized API Gateway and Microservices Documentation for Celestial HRMS with zero-impact change control.',
     contact: {
-      name: 'ORBYX HRMS Engineering',
+      name: 'Celestial HRMS Engineering',
     },
   },
   servers: [
     {
-      url: '/',
-      description: 'API Gateway Server',
+      url: 'http://localhost:5000',
+      description: 'API Gateway (Routes to all microservices)',
+    },
+    {
+      url: 'http://localhost:5001',
+      description: 'Auth Service (Direct :5001)',
+    },
+    {
+      url: 'http://localhost:5002',
+      description: 'Organization Service (Direct :5002)',
+    },
+    {
+      url: 'http://localhost:5003',
+      description: 'Attendance & Leave Service (Direct :5003)',
+    },
+    {
+      url: 'http://localhost:5004',
+      description: 'Payroll Service (Direct :5004)',
+    },
+    {
+      url: 'http://localhost:5005',
+      description: 'Expense Service (Direct :5005)',
+    },
+    {
+      url: 'http://localhost:5006',
+      description: 'Asset Service (Direct :5006)',
+    },
+    {
+      url: 'http://localhost:5007',
+      description: 'Client Service (Direct :5007)',
+    },
+    {
+      url: 'http://localhost:5008',
+      description: 'Notification & Audit Service (Direct :5008)',
+    },
+    {
+      url: 'http://localhost:5009',
+      description: 'Employee Service (Direct :5009)',
     },
   ],
   tags: [

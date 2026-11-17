@@ -9,6 +9,8 @@ import {
   updateEmploymentSchema,
   updateReportingSchema,
   updateSalaryBankSchema,
+  createServiceRecordSchema,
+  updateServiceRecordStatusSchema,
 } from '../validators/employeeValidators';
 import { config } from '../config/env';
 
@@ -18,6 +20,30 @@ export function createEmployeeRouter(employeeController: EmployeeController): Ro
 
   // Listing (Scope-aware filtering)
   router.get('/', authMiddleware, requirePermission('employee.directory.read_basic'), employeeController.list);
+
+  // Service Records for an Employee
+  router.get(
+    '/:id/service-records',
+    authMiddleware,
+    requirePermission('employee.directory.read_basic'),
+    employeeController.getServiceRecords
+  );
+
+  router.post(
+    '/:id/service-records',
+    authMiddleware,
+    requirePermission('employee.profile.edit_employment'),
+    validateRequest(createServiceRecordSchema),
+    employeeController.createServiceRecord
+  );
+
+  router.put(
+    '/:id/service-records/:recordId/status',
+    authMiddleware,
+    requirePermission('employee.profile.edit_employment'),
+    validateRequest(updateServiceRecordStatusSchema),
+    employeeController.updateServiceRecordStatus
+  );
 
   // Single Employee Profile (Redacts sensitive fields based on caller scope)
   router.get('/:id', authMiddleware, requirePermission('employee.directory.read_basic'), employeeController.getById);

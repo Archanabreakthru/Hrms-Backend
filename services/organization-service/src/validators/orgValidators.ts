@@ -30,6 +30,24 @@ export const createBranchSchema = {
   }),
 };
 
+export const updateBranchSchema = {
+  body: z.object({
+    name: z.string().min(2).optional(),
+    city: z.string().min(2).optional(),
+    state: z.string().min(2).optional(),
+    country: z.string().optional(),
+    address: z.string().optional(),
+    isHeadquarters: z.boolean().optional(),
+    status: z.enum(['Active', 'Inactive']).optional(),
+  }),
+};
+
+export const toggleStatusSchema = {
+  body: z.object({
+    isActive: z.boolean(),
+  }),
+};
+
 export const createDepartmentSchema = {
   body: z.object({
     code: z.string().min(2).max(10).toUpperCase(),
@@ -37,6 +55,18 @@ export const createDepartmentSchema = {
     branchId: z.string().optional(),
     parentDeptId: z.string().optional(),
     headEmployeeId: z.string().optional(),
+    description: z.string().optional(),
+  }),
+};
+
+export const updateDepartmentSchema = {
+  body: z.object({
+    name: z.string().min(2).optional(),
+    branchId: z.string().optional(),
+    parentDeptId: z.string().optional(),
+    headEmployeeId: z.string().optional(),
+    description: z.string().optional(),
+    status: z.enum(['Active', 'Inactive']).optional(),
   }),
 };
 
@@ -47,6 +77,43 @@ export const createDesignationSchema = {
     departmentId: z.string().optional(),
     level: z.number().int().min(1).default(1),
     description: z.string().optional(),
+  }),
+};
+
+export const updateDesignationSchema = {
+  body: z.object({
+    title: z.string().min(2).optional(),
+    departmentId: z.string().optional(),
+    level: z.number().int().min(1).optional(),
+    description: z.string().optional(),
+    status: z.enum(['Active', 'Inactive']).optional(),
+  }),
+};
+
+export const updateStatutoryConfigSchema = {
+  body: z.object({
+    epfApplicable: z.boolean().optional(),
+    epfEmployeeRatePercent: z.number().min(0).max(100).optional(),
+    epfEmployerRatePercent: z.number().min(0).max(100).optional(),
+    epfWageCeilingMonthly: z.number().min(0).optional(),
+    epfRestrictToWageCeiling: z.boolean().optional(),
+    epfEffectiveFrom: z.string().optional(),
+    epfExemptionReason: z.string().optional(),
+    esiApplicable: z.boolean().optional(),
+    esiGrossThresholdMonthly: z.number().min(0).optional(),
+    esiEmployeeRatePercent: z.number().min(0).max(100).optional(),
+    esiEmployerRatePercent: z.number().min(0).max(100).optional(),
+    esiEffectiveFrom: z.string().optional(),
+    esiExemptionReason: z.string().optional(),
+    ptApplicable: z.boolean().optional(),
+    ptStateJurisdiction: z.string().optional(),
+    ptMonthlySlabAmount: z.number().min(0).optional(),
+    ptMinGrossThreshold: z.number().min(0).optional(),
+    ptEffectiveFrom: z.string().optional(),
+    tdsApplicable: z.boolean().optional(),
+    tdsFinancialYear: z.string().optional(),
+    tdsDefaultRegime: z.string().optional(),
+    tdsEffectiveFrom: z.string().optional(),
   }),
 };
 

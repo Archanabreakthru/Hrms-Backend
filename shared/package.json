@@ -1,7 +1,7 @@
 {
   "name": "@orbyx/shared",
   "version": "1.0.0",
-  "description": "Orbyx HRMS - Shared Kernel & Contracts",
+  "description": "Celestial HRMS - Shared Kernel & Contracts",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

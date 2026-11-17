@@ -8,6 +8,7 @@ class InMemoryAttendanceRepository {
     leaveBalances = new Map(); // key: `${employeeId}_${leaveTypeId}_${year}`
     leaveApplications = new Map();
     regularizations = new Map();
+    leaveTypes = new Map();
     constructor() {
         this.seedDefaults();
     }
@@ -40,6 +41,69 @@ class InMemoryAttendanceRepository {
             updatedAt: now,
         };
         this.holidays.set(h1.id, h1);
+        const ltCL = {
+            id: 'LT-CL',
+            code: 'CL',
+            name: 'Casual Leave',
+            description: 'Casual leave for personal matters',
+            isPaid: true,
+            annualQuotaDays: 12,
+            isCarryForward: false,
+            maxCarryForward: 0,
+            maxConsecutiveDays: 3,
+            allowsHalfDay: true,
+            requiresDoc: false,
+            isEncashable: false,
+            eligibilityCriteria: 'All Active Employees',
+            effectiveDate: '2026-01-01',
+            isActive: true,
+            createdAt: now,
+            updatedAt: now,
+        };
+        const ltSL = {
+            id: 'LT-SL',
+            code: 'SL',
+            name: 'Sick Leave',
+            description: 'Sick leave for medical illness',
+            isPaid: true,
+            annualQuotaDays: 10,
+            isCarryForward: true,
+            maxCarryForward: 5,
+            maxConsecutiveDays: 7,
+            allowsHalfDay: true,
+            requiresDoc: true,
+            isEncashable: false,
+            eligibilityCriteria: 'All Active Employees',
+            effectiveDate: '2026-01-01',
+            isActive: true,
+            createdAt: now,
+            updatedAt: now,
+        };
+        const ltEL = {
+            id: 'LT-EL',
+            code: 'EL',
+            name: 'Earned Leave',
+            description: 'Privilege / Earned annual vacation leave',
+            isPaid: true,
+            annualQuotaDays: 15,
+            isCarryForward: true,
+            maxCarryForward: 30,
+            maxConsecutiveDays: 14,
+            allowsHalfDay: false,
+            requiresDoc: false,
+            isEncashable: true,
+            eligibilityCriteria: 'All Active Employees',
+            effectiveDate: '2026-01-01',
+            isActive: true,
+            createdAt: now,
+            updatedAt: now,
+        };
+        this.leaveTypes.set(ltCL.id, ltCL);
+        this.leaveTypes.set(ltCL.code, ltCL);
+        this.leaveTypes.set(ltSL.id, ltSL);
+        this.leaveTypes.set(ltSL.code, ltSL);
+        this.leaveTypes.set(ltEL.id, ltEL);
+        this.leaveTypes.set(ltEL.code, ltEL);
     }
     async findRecord(employeeId, date) {
         return this.records.get(`${employeeId}_${date}`) || null;
@@ -88,6 +152,23 @@ class InMemoryAttendanceRepository {
     async saveHoliday(holiday) {
         this.holidays.set(holiday.id, { ...holiday });
         return holiday;
+    }
+    async deleteHoliday(id) {
+        this.holidays.delete(id);
+    }
+    async findLeaveType(id) {
+        return this.leaveTypes.get(id) || null;
+    }
+    async findLeaveTypeByCode(code) {
+        return this.leaveTypes.get(code.toUpperCase().trim()) || null;
+    }
+    async listLeaveTypes() {
+        return Array.from(new Set(this.leaveTypes.values()));
+    }
+    async saveLeaveType(type) {
+        this.leaveTypes.set(type.id, { ...type });
+        this.leaveTypes.set(type.code, { ...type });
+        return type;
     }
     async findLeaveBalance(employeeId, leaveTypeId, year) {
         const key = `${employeeId}_${leaveTypeId}_${year}`;
@@ -151,6 +232,21 @@ class InMemoryAttendanceRepository {
             list = list.filter((r) => r.employeeId === filter.employeeId);
         if (filter.status)
             list = list.filter((r) => r.status === filter.status);
+        return list;
+    }
+    shiftSchedules = new Map();
+    async saveShiftSchedule(schedule) {
+        this.shiftSchedules.set(schedule.id, { ...schedule });
+        return schedule;
+    }
+    async listShiftSchedules(filter) {
+        let list = Array.from(this.shiftSchedules.values());
+        if (filter.employeeId)
+            list = list.filter((s) => s.employeeId === filter.employeeId);
+        if (filter.shiftId)
+            list = list.filter((s) => s.shiftId === filter.shiftId);
+        if (filter.isActive !== undefined)
+            list = list.filter((s) => s.isActive === filter.isActive);
         return list;
     }
 }

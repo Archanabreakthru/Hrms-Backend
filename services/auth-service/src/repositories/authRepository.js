@@ -4,16 +4,81 @@ exports.InMemoryAuthRepository = void 0;
 class InMemoryAuthRepository {
     users = new Map();
     sessions = new Map();
-    async findUserByEmail(email) {
-        const normalized = email.toLowerCase().trim();
+    async findUserByEmail(emailOrUsername) {
+        const normalized = emailOrUsername.toLowerCase().trim();
         for (const u of this.users.values()) {
-            if (u.email.toLowerCase() === normalized)
+            if (u.email.toLowerCase() === normalized || (u.username && u.username.toLowerCase() === normalized))
                 return u;
         }
         return null;
     }
     async findUserById(id) {
         return this.users.get(id) || null;
+    }
+    async findUserByEmployeeId(employeeId) {
+        for (const u of this.users.values()) {
+            if (u.employeeId === employeeId)
+                return u;
+        }
+        return null;
+    }
+    async findUserByActivationTokenHash(tokenHash) {
+        for (const u of this.users.values()) {
+            if (u.activationTokenHash === tokenHash)
+                return u;
+        }
+        return null;
+    }
+    async updateUserActivation(userId, data) {
+        const user = this.users.get(userId);
+        if (!user)
+            throw new Error('User not found');
+        user.passwordHash = data.passwordHash;
+        user.status = data.status;
+        user.invitationStatus = data.invitationStatus;
+        user.activationTokenHash = null;
+        user.activationTokenExpiresAt = null;
+        user.updatedAt = new Date();
+        return user;
+    }
+    async updateInvitationToken(userId, data) {
+        const user = this.users.get(userId);
+        if (!user)
+            throw new Error('User not found');
+        user.activationTokenHash = data.activationTokenHash;
+        user.activationTokenExpiresAt = data.activationTokenExpiresAt;
+        user.invitationStatus = data.invitationStatus;
+        user.updatedAt = new Date();
+        return user;
+    }
+    async findAllUsers() {
+        return Array.from(this.users.values());
+    }
+    async updateUserRole(userId, newRoleCode) {
+        const user = this.users.get(userId);
+        if (!user)
+            throw new Error('User not found');
+        user.role = newRoleCode;
+        user.updatedAt = new Date();
+        return user;
+    }
+    async getUserPermissions(userId, roleCode) {
+        const { ROLE_PERMISSIONS_MAP } = require('../../../../shared/src/constants/roles');
+        return ROLE_PERMISSIONS_MAP[roleCode] || [];
+    }
+    async recordLoginSuccess(userId) {
+        const user = this.users.get(userId);
+        if (user) {
+            user.failedLoginAttempts = 0;
+            user.lockedUntil = null;
+        }
+    }
+    async recordLoginFailure(userId, currentFailedAttempts, lockUntil) {
+        const user = this.users.get(userId);
+        if (user) {
+            user.failedLoginAttempts = currentFailedAttempts + 1;
+            user.lockedUntil = lockUntil || null;
+        }
     }
     async createUser(userData) {
         const id = `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;

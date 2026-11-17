@@ -11,7 +11,8 @@ export function createApp(controller: PayrollController): Application {
   app.use(correlationMiddleware);
 
   // Health check
-  app.get('/health', (req, res) => {
+  app.get('/', (req, res) => res.json({ service: 'payroll-service', status: 'UP', health: '/health' }));
+    app.get('/health', (req, res) => {
     res.json({
       status: 'UP',
       service: 'payroll-service',

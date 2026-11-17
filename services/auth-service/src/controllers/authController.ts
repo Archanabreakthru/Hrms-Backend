@@ -56,5 +56,56 @@ export class AuthController {
       next(err);
     }
   };
+
+  provision = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const result = await this.authService.provision(req.body);
+      // Notice: token is returned only to internal service caller (outbox dispatcher)
+      apiSuccess(res, result, result.isNew ? 201 : 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  activate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { token, password } = req.body;
+      const result = await this.authService.activate(token, password);
+      apiSuccess(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  resendInvite = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { employeeId } = req.body;
+      const actor = req.user as any;
+      const result = await this.authService.resendInvitation(employeeId, actor);
+      apiSuccess(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  listUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const users = await this.authService.listUsers();
+      apiSuccess(res, users, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateRole = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const { role } = req.body;
+      const updated = await this.authService.updateUserRole(id, role);
+      apiSuccess(res, updated, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 

@@ -5,83 +5,71 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-}
-
-enum DeploymentStatus {
-  Active
-  Completed
-  Terminated
-  On_Hold
-}
-
-enum ClientVerificationStatus {
-  Submitted
-  Pending_Client_Verification
-  Client_Approved
-  Client_Rejected
-  Pending_HR_Verification
-  HR_Approved
-  HR_Rejected
-}
-
-enum PayrollEligibilityStatus {
-  Not_Eligible
-  Eligible
-  Disputed
+  output   = "../src/generated/client"
 }
 
 model ClientOrganization {
-  id            String              @id @default(uuid())
-  name          String
-  contactName   String?
-  email         String?
-  phone         String?
-  address       String?
-  contractStart DateTime?
-  contractEnd   DateTime?
-  status        String              @default("Active")
+  id            String              @id @default(uuid()) @db.Uuid
+  name          String              @db.VarChar
+  code          String?             @db.VarChar
+  contactName   String?             @map("contact_name") @db.VarChar
+  email         String?             @db.VarChar
+  phone         String?             @db.VarChar
+  address       String?             @db.Text
+  city          String?             @db.VarChar
+  state         String?             @db.VarChar
+  country       String?             @db.VarChar
+  contractStart DateTime?           @map("contract_start") @db.Date
+  contractEnd   DateTime?           @map("contract_end") @db.Date
+  status        String              @default("Active") @db.VarChar
+  createdAt     DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+
   supervisors   ClientSupervisor[]
   deployments   ClientDeployment[]
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
 
   @@map("client_organizations")
 }
 
 model ClientSupervisor {
-  id           String             @id @default(uuid())
-  clientId     String
-  client       ClientOrganization @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  fullName     String
-  email        String             @unique
-  phone        String?
-  designation  String?
-  status       String             @default("Active") // Active, Invited, Suspended
-  userId       String?            @unique // Linkage to Auth Service user
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  id               String             @id @default(uuid()) @db.Uuid
+  clientId         String             @map("client_id") @db.Uuid
+  client           ClientOrganization @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  fullName         String             @map("full_name") @db.VarChar
+  email            String             @unique @db.VarChar
+  phone            String?            @db.VarChar
+  designation      String?            @db.VarChar
+  status           String             @default("Active") @db.VarChar
+  userId           String?            @unique @map("user_id") @db.Uuid
+  invitationStatus String?            @default("Invited") @map("invitation_status") @db.VarChar
+  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime           @updatedAt @map("updated_at") @db.Timestamptz
+
+  deployments      ClientDeployment[]
 
   @@index([clientId])
   @@map("client_supervisors")
 }
 
 model ClientDeployment {
-  id               String             @id @default(uuid())
-  clientId         String
-  client           ClientOrganization @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  employeeId       String             // Reference to Employee Service
-  supervisorId     String?
-  project          String
-  location         String
-  workMode         String             @default("Client Site")
-  startDate        DateTime
-  plannedEndDate   DateTime
-  actualEndDate    DateTime?
-  allocation       Float              @default(100.0) // %
-  allowanceMonthly Float              @default(0.0)   // Client allowance for payroll
-  status           DeploymentStatus   @default(Active)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  id                   String             @id @default(uuid()) @db.Uuid
+  clientId             String             @map("client_id") @db.Uuid
+  client               ClientOrganization @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  employeeId           String             @map("employee_id") @db.VarChar
+  supervisorId         String?            @map("supervisor_id") @db.Uuid
+  supervisor           ClientSupervisor?  @relation(fields: [supervisorId], references: [id])
+  project              String             @map("project_name") @db.VarChar
+  location             String             @db.VarChar
+  workMode             String             @default("Client Site") @map("work_arrangement") @db.VarChar
+  startDate            DateTime           @map("start_date") @db.Date
+  plannedEndDate       DateTime           @map("planned_end_date") @db.Date
+  actualEndDate        DateTime?          @map("actual_end_date") @db.Date
+  allocation           Decimal            @default(100.0) @map("allocation_percentage") @db.Decimal
+  allowanceMonthly     Decimal            @default(0.0) @map("monthly_allowance") @db.Decimal
+  billingRateHourly    Decimal?           @default(0.0) @map("billing_rate_hourly") @db.Decimal
+  status               String             @default("Active") @db.VarChar
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime           @updatedAt @map("updated_at") @db.Timestamptz
 
   @@index([clientId])
   @@index([employeeId])
@@ -89,32 +77,31 @@ model ClientDeployment {
 }
 
 model ClientAttendanceVerification {
-  id                       String                   @id @default(uuid())
-  attendanceId             String                   @unique // Reference to Attendance Service authoritative punch record
-  employeeId               String
-  clientId                 String
-  deploymentId             String
-  supervisorId             String?
-  date                     DateTime
-  periodKey                String                   // e.g. "2026-11-P1", "2026-11-P2", "2026-11-M1"
-  workingHours             Float
-  workMode                 String                   @default("Client Site")
-  notes                    String?
-  clientVerificationStatus ClientVerificationStatus @default(Submitted)
-  clientVerifiedAt         DateTime?
-  clientVerifiedBy         String?
-  disputeDetails           String?
-  companyApprovalStatus    String                   @default("Pending")
-  companyApprovedAt        DateTime?
-  companyApprovedBy        String?
-  companyComments          String?
-  payrollEligibilityStatus PayrollEligibilityStatus @default(Not_Eligible)
-  approvalHistory          Json?                    // Audit log of decisions
-  createdAt                DateTime                 @default(now())
-  updatedAt                DateTime                 @updatedAt
+  id                       String    @id @default(uuid()) @db.Uuid
+  attendanceId             String    @unique @map("attendance_record_id") @db.Uuid
+  employeeId               String    @map("employee_id") @db.VarChar
+  clientId                 String    @map("client_id") @db.Uuid
+  deploymentId             String    @map("deployment_id") @db.Uuid
+  supervisorId             String?   @map("supervisor_id") @db.Uuid
+  date                     DateTime  @map("verification_date") @db.Date
+  periodKey                String    @map("period_key") @db.VarChar
+  workingHours             Decimal   @map("working_hours") @db.Decimal
+  workMode                 String    @default("Client Site") @map("work_mode") @db.VarChar
+  notes                    String?   @db.Text
+  clientVerificationStatus String    @default("Submitted") @map("client_verification_status") @db.VarChar
+  clientVerifiedAt         DateTime? @map("client_verified_at") @db.Timestamptz
+  clientVerifiedBy         String?   @map("client_verified_by") @db.VarChar
+  disputeDetails           String?   @map("dispute_details") @db.Text
+  companyApprovalStatus    String    @default("Pending") @map("company_approval_status") @db.VarChar
+  companyApprovedAt        DateTime? @map("company_approved_at") @db.Timestamptz
+  companyApprovedBy        String?   @map("company_approved_by") @db.VarChar
+  companyComments          String?   @map("company_comments") @db.Text
+  payrollEligibilityStatus String    @default("Not_Eligible") @map("payroll_eligibility_status") @db.VarChar
+  approvalHistory          Json?     @map("approval_history")
+  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   @@index([clientId, periodKey])
   @@index([employeeId])
-  @@map("client_attendance_records")
+  @@map("client_attendance_verifications")
 }
-

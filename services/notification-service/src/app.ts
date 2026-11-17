@@ -17,7 +17,8 @@ export function createApp(customRepo?: InMemoryNotificationRepository) {
   const service = new NotificationService(repo);
   const controller = new NotificationController(service);
 
-  app.get('/health', (req, res) => {
+  app.get('/', (req, res) => res.json({ service: 'notification-service', status: 'UP', health: '/health' }));
+    app.get('/health', (req, res) => {
     res.status(200).json({ status: 'UP', service: 'notification-service' });
   });
 

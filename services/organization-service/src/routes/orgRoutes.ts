@@ -4,9 +4,14 @@ import { validateRequest } from '../../../../shared/src/middleware/validation';
 import { createAuthMiddleware, requirePermission } from '../../../../shared/src/middleware/auth';
 import {
   updateCompanyProfileSchema,
+  updateStatutoryConfigSchema,
   createBranchSchema,
+  updateBranchSchema,
   createDepartmentSchema,
+  updateDepartmentSchema,
   createDesignationSchema,
+  updateDesignationSchema,
+  toggleStatusSchema,
 } from '../validators/orgValidators';
 import { config } from '../config/env';
 
@@ -24,6 +29,16 @@ export function createOrgRouter(orgController: OrganizationController): Router {
     orgController.updateProfile
   );
 
+  // Statutory Configuration
+  router.get('/statutory', authMiddleware, requirePermission('org.profile.read'), orgController.getStatutoryConfig);
+  router.put(
+    '/statutory',
+    authMiddleware,
+    requirePermission('org.profile.manage'),
+    validateRequest(updateStatutoryConfigSchema),
+    orgController.updateStatutoryConfig
+  );
+
   // Branches
   router.get('/branches', authMiddleware, requirePermission('org.profile.read'), orgController.getBranches);
   router.post(
@@ -32,6 +47,26 @@ export function createOrgRouter(orgController: OrganizationController): Router {
     requirePermission('org.branches.manage'),
     validateRequest(createBranchSchema),
     orgController.createBranch
+  );
+  router.put(
+    '/branches/:id',
+    authMiddleware,
+    requirePermission('org.branches.manage'),
+    validateRequest(updateBranchSchema),
+    orgController.updateBranch
+  );
+  router.patch(
+    '/branches/:id/status',
+    authMiddleware,
+    requirePermission('org.branches.manage'),
+    validateRequest(toggleStatusSchema),
+    orgController.toggleBranchStatus
+  );
+  router.delete(
+    '/branches/:id',
+    authMiddleware,
+    requirePermission('org.branches.manage'),
+    orgController.deleteBranch
   );
 
   // Departments
@@ -43,6 +78,26 @@ export function createOrgRouter(orgController: OrganizationController): Router {
     validateRequest(createDepartmentSchema),
     orgController.createDepartment
   );
+  router.put(
+    '/departments/:id',
+    authMiddleware,
+    requirePermission('org.departments.manage'),
+    validateRequest(updateDepartmentSchema),
+    orgController.updateDepartment
+  );
+  router.patch(
+    '/departments/:id/status',
+    authMiddleware,
+    requirePermission('org.departments.manage'),
+    validateRequest(toggleStatusSchema),
+    orgController.toggleDepartmentStatus
+  );
+  router.delete(
+    '/departments/:id',
+    authMiddleware,
+    requirePermission('org.departments.manage'),
+    orgController.deleteDepartment
+  );
 
   // Designations
   router.get('/designations', authMiddleware, requirePermission('org.profile.read'), orgController.getDesignations);
@@ -52,6 +107,26 @@ export function createOrgRouter(orgController: OrganizationController): Router {
     requirePermission('org.designations.manage'),
     validateRequest(createDesignationSchema),
     orgController.createDesignation
+  );
+  router.put(
+    '/designations/:id',
+    authMiddleware,
+    requirePermission('org.designations.manage'),
+    validateRequest(updateDesignationSchema),
+    orgController.updateDesignation
+  );
+  router.patch(
+    '/designations/:id/status',
+    authMiddleware,
+    requirePermission('org.designations.manage'),
+    validateRequest(toggleStatusSchema),
+    orgController.toggleDesignationStatus
+  );
+  router.delete(
+    '/designations/:id',
+    authMiddleware,
+    requirePermission('org.designations.manage'),
+    orgController.deleteDesignation
   );
 
   // Internal Designation Code Derivation for Employee Service ID Generation

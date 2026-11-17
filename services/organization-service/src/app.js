@@ -13,6 +13,7 @@ function createApp(orgController) {
     app.use(express_1.default.json());
     app.use(correlation_1.correlationMiddleware);
     // Health check
+    app.get('/', (req, res) => res.json({ service: 'organization-service', status: 'UP', health: '/health' }));
     app.get('/health', (req, res) => {
         res.json({
             status: 'UP',
@@ -21,7 +22,8 @@ function createApp(orgController) {
             timestamp: new Date().toISOString(),
         });
     });
-    // Org routes
+    // Org routes (Support canonical /api/v1/organization from API Gateway and legacy /api/v1/org)
+    app.use('/api/v1/organization', (0, orgRoutes_1.createOrgRouter)(orgController));
     app.use('/api/v1/org', (0, orgRoutes_1.createOrgRouter)(orgController));
     // Global error handler
     app.use(errorHandler_1.errorHandler);

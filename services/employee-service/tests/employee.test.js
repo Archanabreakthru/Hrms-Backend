@@ -225,4 +225,26 @@ const mockManagerUser = {
     }, {
         name: 'ForbiddenError',
     });
+    // 4. Service Records: Creation, retrieval, and status approval
+    const serviceRecord = await service.createServiceRecord('EMP-SWE-0001', {
+        recordType: 'Promotion',
+        effectiveDate: '2025-01-01',
+        newDesignationId: 'DES-SWE',
+        newSalaryAmount: 1800000,
+        notes: 'Promoted to Senior Software Engineer',
+        approvalStatus: 'Pending',
+    }, mockHrAdmin);
+    strict_1.default.equal(serviceRecord.recordType, 'Promotion');
+    strict_1.default.equal(serviceRecord.approvalStatus, 'Pending');
+    const history = await service.getServiceRecords('EMP-SWE-0001', mockHrAdmin);
+    strict_1.default.equal(history.length, 1);
+    strict_1.default.equal(history[0].id, serviceRecord.id);
+    const approved = await service.updateServiceRecordStatus('EMP-SWE-0001', serviceRecord.id, 'Approved', mockHrAdmin);
+    strict_1.default.equal(approved.approvalStatus, 'Approved');
+    strict_1.default.ok(approved.approvedAt);
+    // 5. Search capability in listing
+    const searchResult = await service.list({ search: 'john' }, mockHrAdmin);
+    strict_1.default.ok(searchResult.employees.some((e) => e.firstName === 'John'));
+    const emptySearch = await service.list({ search: 'NonExistentPerson' }, mockHrAdmin);
+    strict_1.default.equal(emptySearch.employees.length, 0);
 });

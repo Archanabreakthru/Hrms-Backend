@@ -11,6 +11,10 @@ function createEmployeeRouter(employeeController) {
     const authMiddleware = (0, auth_1.createAuthMiddleware)(env_1.config.jwtSecret, env_1.config.jwtIssuer, env_1.config.jwtAudience);
     // Listing (Scope-aware filtering)
     router.get('/', authMiddleware, (0, auth_1.requirePermission)('employee.directory.read_basic'), employeeController.list);
+    // Service Records for an Employee
+    router.get('/:id/service-records', authMiddleware, (0, auth_1.requirePermission)('employee.directory.read_basic'), employeeController.getServiceRecords);
+    router.post('/:id/service-records', authMiddleware, (0, auth_1.requirePermission)('employee.profile.edit_employment'), (0, validation_1.validateRequest)(employeeValidators_1.createServiceRecordSchema), employeeController.createServiceRecord);
+    router.put('/:id/service-records/:recordId/status', authMiddleware, (0, auth_1.requirePermission)('employee.profile.edit_employment'), (0, validation_1.validateRequest)(employeeValidators_1.updateServiceRecordStatusSchema), employeeController.updateServiceRecordStatus);
     // Single Employee Profile (Redacts sensitive fields based on caller scope)
     router.get('/:id', authMiddleware, (0, auth_1.requirePermission)('employee.directory.read_basic'), employeeController.getById);
     // Draft Creation (Partial info allowed)

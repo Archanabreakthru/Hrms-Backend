@@ -3,12 +3,17 @@ import { UserRole } from '../../../../shared/src/constants/roles';
 export interface UserRecord {
   id: string;
   email: string;
+  username?: string | null;
   passwordHash: string;
   role: UserRole;
-  status: 'ACTIVE' | 'INVITED' | 'SUSPENDED' | 'DEACTIVATED';
+  status: 'ACTIVE' | 'INVITED' | 'PENDING_ACTIVATION' | 'SUSPENDED' | 'DEACTIVATED' | 'DISABLED' | 'TERMINATED';
   employeeId?: string;
   departmentId?: string;
   clientId?: string;
+  isActive?: boolean;
+  failedLoginAttempts?: number;
+  lockedUntil?: Date | null;
+  invitationStatus?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,7 +35,37 @@ export interface SessionRecord {
 export interface IAuthRepository {
   findUserByEmail(email: string): Promise<UserRecord | null>;
   findUserById(id: string): Promise<UserRecord | null>;
-  createUser(user: Omit<UserRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<UserRecord>;
+  findUserByEmployeeId(employeeId: string): Promise<UserRecord | null>;
+  findUserByActivationTokenHash(tokenHash: string): Promise<UserRecord | null>;
+  findAllUsers?(): Promise<UserRecord[]>;
+  updateUserRole?(userId: string, newRoleCode: string): Promise<UserRecord>;
+  getUserPermissions(userId: string, roleCode: string): Promise<string[]>;
+  recordLoginSuccess(userId: string): Promise<void>;
+  recordLoginFailure(userId: string, currentFailedAttempts: number, lockUntil?: Date | null): Promise<void>;
+  createUser(user: Omit<UserRecord, 'id' | 'createdAt' | 'updatedAt'> & {
+    activationTokenHash?: string | null;
+    activationTokenExpiresAt?: Date | null;
+    invitationStatus?: string | null;
+  }): Promise<UserRecord>;
+  updateUserActivation(
+    userId: string,
+    data: {
+      passwordHash: string;
+      status: 'ACTIVE';
+      invitationStatus: 'ACTIVATED';
+      activationTokenHash: null;
+      activationTokenExpiresAt: null;
+    }
+  ): Promise<UserRecord>;
+  updateInvitationToken(
+    userId: string,
+    data: {
+      activationTokenHash: string;
+      activationTokenExpiresAt: Date;
+      invitationStatus: 'SENT' | 'PENDING_INVITE';
+      invitationSentAt: Date;
+    }
+  ): Promise<UserRecord>;
   createSession(session: Omit<SessionRecord, 'id' | 'createdAt' | 'updatedAt' | 'isRevoked'>): Promise<SessionRecord>;
   findSessionByRefreshToken(refreshToken: string): Promise<SessionRecord | null>;
   revokeSession(refreshToken: string): Promise<void>;
@@ -41,16 +76,102 @@ export class InMemoryAuthRepository implements IAuthRepository {
   private users = new Map<string, UserRecord>();
   private sessions = new Map<string, SessionRecord>();
 
-  async findUserByEmail(email: string): Promise<UserRecord | null> {
-    const normalized = email.toLowerCase().trim();
+  async findUserByEmail(emailOrUsername: string): Promise<UserRecord | null> {
+    const normalized = emailOrUsername.toLowerCase().trim();
     for (const u of this.users.values()) {
-      if (u.email.toLowerCase() === normalized) return u;
+      if (u.email.toLowerCase() === normalized || (u.username && u.username.toLowerCase() === normalized)) return u;
     }
     return null;
   }
 
   async findUserById(id: string): Promise<UserRecord | null> {
     return this.users.get(id) || null;
+  }
+
+  async findUserByEmployeeId(employeeId: string): Promise<UserRecord | null> {
+    for (const u of this.users.values()) {
+      if (u.employeeId === employeeId) return u;
+    }
+    return null;
+  }
+
+  async findUserByActivationTokenHash(tokenHash: string): Promise<UserRecord | null> {
+    for (const u of this.users.values()) {
+      if ((u as any).activationTokenHash === tokenHash) return u;
+    }
+    return null;
+  }
+
+  async updateUserActivation(
+    userId: string,
+    data: {
+      passwordHash: string;
+      status: 'ACTIVE';
+      invitationStatus: 'ACTIVATED';
+      activationTokenHash: null;
+      activationTokenExpiresAt: null;
+    }
+  ): Promise<UserRecord> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error('User not found');
+    user.passwordHash = data.passwordHash;
+    user.status = data.status;
+    user.invitationStatus = data.invitationStatus;
+    (user as any).activationTokenHash = null;
+    (user as any).activationTokenExpiresAt = null;
+    user.updatedAt = new Date();
+    return user;
+  }
+
+  async updateInvitationToken(
+    userId: string,
+    data: {
+      activationTokenHash: string;
+      activationTokenExpiresAt: Date;
+      invitationStatus: 'SENT' | 'PENDING_INVITE';
+      invitationSentAt: Date;
+    }
+  ): Promise<UserRecord> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error('User not found');
+    (user as any).activationTokenHash = data.activationTokenHash;
+    (user as any).activationTokenExpiresAt = data.activationTokenExpiresAt;
+    user.invitationStatus = data.invitationStatus;
+    user.updatedAt = new Date();
+    return user;
+  }
+
+  async findAllUsers(): Promise<UserRecord[]> {
+    return Array.from(this.users.values());
+  }
+
+  async updateUserRole(userId: string, newRoleCode: string): Promise<UserRecord> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error('User not found');
+    user.role = newRoleCode as UserRole;
+    user.updatedAt = new Date();
+    return user;
+  }
+
+  async getUserPermissions(userId: string, roleCode: string): Promise<string[]> {
+    const { ROLE_PERMISSIONS_MAP } = require('../../../../shared/src/constants/roles');
+    return ROLE_PERMISSIONS_MAP[roleCode as UserRole] || [];
+  }
+
+  async recordLoginSuccess(userId: string): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.failedLoginAttempts = 0;
+      user.lockedUntil = null;
+    }
+  }
+
+  async recordLoginFailure(userId: string, currentFailedAttempts: number, lockUntil?: Date | null): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.failedLoginAttempts = currentFailedAttempts + 1;
+      user.lockedUntil = lockUntil || null;
+    }
   }
 
   async createUser(userData: Omit<UserRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<UserRecord> {

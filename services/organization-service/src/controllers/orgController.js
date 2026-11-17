@@ -25,6 +25,24 @@ class OrganizationController {
             next(err);
         }
     };
+    getStatutoryConfig = async (req, res, next) => {
+        try {
+            const config = await this.orgService.getStatutoryConfig();
+            (0, apiResponse_1.apiSuccess)(res, config, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    updateStatutoryConfig = async (req, res, next) => {
+        try {
+            const updated = await this.orgService.updateStatutoryConfig(req.body);
+            (0, apiResponse_1.apiSuccess)(res, updated, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
     getBranches = async (req, res, next) => {
         try {
             const branches = await this.orgService.getBranches();
@@ -38,6 +56,24 @@ class OrganizationController {
         try {
             const branch = await this.orgService.createBranch(req.body);
             (0, apiResponse_1.apiSuccess)(res, branch, 201);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    updateBranch = async (req, res, next) => {
+        try {
+            const branch = await this.orgService.updateBranch(req.params.id, req.body);
+            (0, apiResponse_1.apiSuccess)(res, branch, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    toggleBranchStatus = async (req, res, next) => {
+        try {
+            const branch = await this.orgService.toggleBranchStatus(req.params.id, req.body.isActive);
+            (0, apiResponse_1.apiSuccess)(res, branch, 200);
         }
         catch (err) {
             next(err);
@@ -61,6 +97,24 @@ class OrganizationController {
             next(err);
         }
     };
+    updateDepartment = async (req, res, next) => {
+        try {
+            const dept = await this.orgService.updateDepartment(req.params.id, req.body);
+            (0, apiResponse_1.apiSuccess)(res, dept, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    toggleDepartmentStatus = async (req, res, next) => {
+        try {
+            const dept = await this.orgService.toggleDepartmentStatus(req.params.id, req.body.isActive);
+            (0, apiResponse_1.apiSuccess)(res, dept, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
     getDesignations = async (req, res, next) => {
         try {
             const designations = await this.orgService.getDesignations();
@@ -79,11 +133,56 @@ class OrganizationController {
             next(err);
         }
     };
+    updateDesignation = async (req, res, next) => {
+        try {
+            const desig = await this.orgService.updateDesignation(req.params.id, req.body);
+            (0, apiResponse_1.apiSuccess)(res, desig, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    toggleDesignationStatus = async (req, res, next) => {
+        try {
+            const desig = await this.orgService.toggleDesignationStatus(req.params.id, req.body.isActive);
+            (0, apiResponse_1.apiSuccess)(res, desig, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
     getDesignationCode = async (req, res, next) => {
         try {
             const designationId = req.query.designationId;
             const code = await this.orgService.deriveDesignationCode(designationId);
             (0, apiResponse_1.apiSuccess)(res, { code }, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    deleteBranch = async (req, res, next) => {
+        try {
+            await this.orgService.deleteBranch(req.params.id);
+            (0, apiResponse_1.apiSuccess)(res, { deleted: true, id: req.params.id }, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    deleteDepartment = async (req, res, next) => {
+        try {
+            await this.orgService.deleteDepartment(req.params.id);
+            (0, apiResponse_1.apiSuccess)(res, { deleted: true, id: req.params.id }, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    deleteDesignation = async (req, res, next) => {
+        try {
+            await this.orgService.deleteDesignation(req.params.id);
+            (0, apiResponse_1.apiSuccess)(res, { deleted: true, id: req.params.id }, 200);
         }
         catch (err) {
             next(err);

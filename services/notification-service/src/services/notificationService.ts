@@ -1,8 +1,13 @@
 import { INotificationRepository, NotificationRecord, AuditLogRecord } from '../repositories/notificationRepository';
 import { AppError } from '../../../../shared/src/errors/AppError';
+import { EmailService, ActivationEmailData } from './emailService';
 
 export class NotificationService {
-  constructor(private repo: INotificationRepository) {}
+  private emailService: EmailService;
+
+  constructor(private repo: INotificationRepository, emailService?: EmailService) {
+    this.emailService = emailService || new EmailService();
+  }
 
   async sendNotification(data: {
     recipientId: string;
@@ -15,6 +20,26 @@ export class NotificationService {
     linkUrl?: string;
     metadata?: any;
   }): Promise<NotificationRecord> {
+    // 1. If channel is EMAIL, dispatch physical email via EmailService
+    if (data.channel === 'EMAIL' && data.metadata?.activationToken) {
+      const emailData: ActivationEmailData = {
+        recipientEmail: data.metadata.recipientEmail || data.recipientId,
+        employeeName: data.metadata.employeeName || 'Colleague',
+        employeeId: data.metadata.employeeId || data.recipientId,
+        activationToken: data.metadata.activationToken,
+        companyName: data.metadata.companyName,
+      };
+
+      try {
+        await this.emailService.sendActivationEmail(emailData);
+      } catch (err: any) {
+        // Record failure in notification record metadata for delivery tracking
+        if (!data.metadata) data.metadata = {};
+        data.metadata.deliveryError = err.message || 'SMTP delivery failed';
+        data.metadata.deliveryStatus = 'FAILED';
+      }
+    }
+
     return this.repo.createNotification({
       recipientId: data.recipientId,
       tenantId: data.tenantId,

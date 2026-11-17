@@ -35,7 +35,7 @@ async function runVerification() {
 
   // Test 2: Verify Super Admin Login against PostgreSQL
   console.log('\nTest 2: Authenticating Super Admin...');
-  const saLogin = await authService.login('admin.system@orbyx.internal', 'OrbyxSuperAdmin@2026');
+  const saLogin = await authService.login('admin.system@orbyx.internal', 'CelestialSuperAdmin@2026');
   console.log(`✓ Super Admin Authenticated! Role: ${saLogin.user.role}, Permissions count: ${saLogin.permissions.length}`);
   if (!saLogin.permissions.includes('system.config.write')) {
     throw new Error('Missing expected Super Admin permissions');

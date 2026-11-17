@@ -51,6 +51,26 @@ export interface HolidayDTO {
   updatedAt: Date;
 }
 
+export interface LeaveTypeDTO {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  isPaid: boolean;
+  annualQuotaDays: number;
+  isCarryForward: boolean;
+  maxCarryForward: number;
+  maxConsecutiveDays: number;
+  allowsHalfDay: boolean;
+  requiresDoc: boolean;
+  isEncashable: boolean;
+  eligibilityCriteria: string;
+  effectiveDate: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface LeaveBalanceDTO {
   id: string;
   employeeId: string;
@@ -81,14 +101,27 @@ export interface LeaveApplicationDTO {
   updatedAt: Date;
 }
 
+export interface ShiftScheduleDTO {
+  id: string;
+  employeeId: string;
+  shiftId: string;
+  effectiveFrom: string; // YYYY-MM-DD
+  effectiveTo?: string; // YYYY-MM-DD
+  assignedBy: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface RegularizationDTO {
   id: string;
-  attendanceRecordId: string;
+  attendanceRecordId?: string;
   employeeId: string;
+  targetDate?: string;
   requestedCheckIn: string;
   requestedCheckOut: string;
   reason: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  status: string; // 'Pending Manager Approval' | 'Pending HR Approval' | 'HR Approved' | 'Manager Rejected' | 'HR Rejected'
   reviewedBy?: string;
   reviewedAt?: Date;
   reviewRemarks?: string;
@@ -107,8 +140,17 @@ export interface IAttendanceRepository {
   saveShift(shift: ShiftDTO): Promise<ShiftDTO>;
   listShifts(): Promise<ShiftDTO[]>;
 
+  saveShiftSchedule(schedule: ShiftScheduleDTO): Promise<ShiftScheduleDTO>;
+  listShiftSchedules(filter: { employeeId?: string; shiftId?: string; isActive?: boolean }): Promise<ShiftScheduleDTO[]>;
+
   listHolidays(year: number, branchId?: string): Promise<HolidayDTO[]>;
   saveHoliday(holiday: HolidayDTO): Promise<HolidayDTO>;
+  deleteHoliday(id: string): Promise<void>;
+
+  findLeaveType(id: string): Promise<LeaveTypeDTO | null>;
+  findLeaveTypeByCode(code: string): Promise<LeaveTypeDTO | null>;
+  listLeaveTypes(): Promise<LeaveTypeDTO[]>;
+  saveLeaveType(type: LeaveTypeDTO): Promise<LeaveTypeDTO>;
 
   findLeaveBalance(employeeId: string, leaveTypeId: string, year: number): Promise<LeaveBalanceDTO | null>;
   listLeaveBalances(employeeId: string, year: number): Promise<LeaveBalanceDTO[]>;
@@ -130,6 +172,8 @@ export class InMemoryAttendanceRepository implements IAttendanceRepository {
   private leaveBalances = new Map<string, LeaveBalanceDTO>(); // key: `${employeeId}_${leaveTypeId}_${year}`
   private leaveApplications = new Map<string, LeaveApplicationDTO>();
   private regularizations = new Map<string, RegularizationDTO>();
+
+  private leaveTypes = new Map<string, LeaveTypeDTO>();
 
   constructor() {
     this.seedDefaults();
@@ -165,6 +209,70 @@ export class InMemoryAttendanceRepository implements IAttendanceRepository {
       updatedAt: now,
     };
     this.holidays.set(h1.id, h1);
+
+    const ltCL: LeaveTypeDTO = {
+      id: 'LT-CL',
+      code: 'CL',
+      name: 'Casual Leave',
+      description: 'Casual leave for personal matters',
+      isPaid: true,
+      annualQuotaDays: 12,
+      isCarryForward: false,
+      maxCarryForward: 0,
+      maxConsecutiveDays: 3,
+      allowsHalfDay: true,
+      requiresDoc: false,
+      isEncashable: false,
+      eligibilityCriteria: 'All Active Employees',
+      effectiveDate: '2026-01-01',
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const ltSL: LeaveTypeDTO = {
+      id: 'LT-SL',
+      code: 'SL',
+      name: 'Sick Leave',
+      description: 'Sick leave for medical illness',
+      isPaid: true,
+      annualQuotaDays: 10,
+      isCarryForward: true,
+      maxCarryForward: 5,
+      maxConsecutiveDays: 7,
+      allowsHalfDay: true,
+      requiresDoc: true,
+      isEncashable: false,
+      eligibilityCriteria: 'All Active Employees',
+      effectiveDate: '2026-01-01',
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const ltEL: LeaveTypeDTO = {
+      id: 'LT-EL',
+      code: 'EL',
+      name: 'Earned Leave',
+      description: 'Privilege / Earned annual vacation leave',
+      isPaid: true,
+      annualQuotaDays: 15,
+      isCarryForward: true,
+      maxCarryForward: 30,
+      maxConsecutiveDays: 14,
+      allowsHalfDay: false,
+      requiresDoc: false,
+      isEncashable: true,
+      eligibilityCriteria: 'All Active Employees',
+      effectiveDate: '2026-01-01',
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.leaveTypes.set(ltCL.id, ltCL);
+    this.leaveTypes.set(ltCL.code, ltCL);
+    this.leaveTypes.set(ltSL.id, ltSL);
+    this.leaveTypes.set(ltSL.code, ltSL);
+    this.leaveTypes.set(ltEL.id, ltEL);
+    this.leaveTypes.set(ltEL.code, ltEL);
   }
 
   async findRecord(employeeId: string, date: string): Promise<AttendanceRecordDTO | null> {
@@ -218,6 +326,28 @@ export class InMemoryAttendanceRepository implements IAttendanceRepository {
   async saveHoliday(holiday: HolidayDTO): Promise<HolidayDTO> {
     this.holidays.set(holiday.id, { ...holiday });
     return holiday;
+  }
+
+  async deleteHoliday(id: string): Promise<void> {
+    this.holidays.delete(id);
+  }
+
+  async findLeaveType(id: string): Promise<LeaveTypeDTO | null> {
+    return this.leaveTypes.get(id) || null;
+  }
+
+  async findLeaveTypeByCode(code: string): Promise<LeaveTypeDTO | null> {
+    return this.leaveTypes.get(code.toUpperCase().trim()) || null;
+  }
+
+  async listLeaveTypes(): Promise<LeaveTypeDTO[]> {
+    return Array.from(new Set(this.leaveTypes.values()));
+  }
+
+  async saveLeaveType(type: LeaveTypeDTO): Promise<LeaveTypeDTO> {
+    this.leaveTypes.set(type.id, { ...type });
+    this.leaveTypes.set(type.code, { ...type });
+    return type;
   }
 
   async findLeaveBalance(employeeId: string, leaveTypeId: string, year: number): Promise<LeaveBalanceDTO | null> {
@@ -288,6 +418,21 @@ export class InMemoryAttendanceRepository implements IAttendanceRepository {
     let list = Array.from(this.regularizations.values());
     if (filter.employeeId) list = list.filter((r) => r.employeeId === filter.employeeId);
     if (filter.status) list = list.filter((r) => r.status === filter.status);
+    return list;
+  }
+
+  private shiftSchedules = new Map<string, ShiftScheduleDTO>();
+
+  async saveShiftSchedule(schedule: ShiftScheduleDTO): Promise<ShiftScheduleDTO> {
+    this.shiftSchedules.set(schedule.id, { ...schedule });
+    return schedule;
+  }
+
+  async listShiftSchedules(filter: { employeeId?: string; shiftId?: string; isActive?: boolean }): Promise<ShiftScheduleDTO[]> {
+    let list = Array.from(this.shiftSchedules.values());
+    if (filter.employeeId) list = list.filter((s) => s.employeeId === filter.employeeId);
+    if (filter.shiftId) list = list.filter((s) => s.shiftId === filter.shiftId);
+    if (filter.isActive !== undefined) list = list.filter((s) => s.isActive === filter.isActive);
     return list;
   }
 }

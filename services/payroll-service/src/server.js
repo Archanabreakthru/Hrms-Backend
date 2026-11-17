@@ -3,9 +3,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = require("./app");
 const payrollService_1 = require("./services/payrollService");
 const payrollController_1 = require("./controllers/payrollController");
+const prismaPayrollRepository_1 = require("./repositories/prismaPayrollRepository");
 const payrollRepository_1 = require("./repositories/payrollRepository");
+const client_1 = require("./generated/client");
 const env_1 = require("./config/env");
-const repo = new payrollRepository_1.InMemoryPayrollRepository();
+let repo;
+try {
+    const prisma = new client_1.PrismaClient();
+    repo = new prismaPayrollRepository_1.PrismaPayrollRepository(prisma);
+}
+catch {
+    repo = new payrollRepository_1.InMemoryPayrollRepository();
+}
 // Standalone mock clients for HTTP listener mode
 const dummyAttendClient = {
     getPayrollSummary: async () => ({ presentDays: 22, halfDays: 0, absentDays: 0, totalOvertimeHours: 0, lossOfPayDays: 0 }),
