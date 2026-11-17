@@ -2,12 +2,35 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationService = void 0;
 const AppError_1 = require("../../../../shared/src/errors/AppError");
+const emailService_1 = require("./emailService");
 class NotificationService {
     repo;
-    constructor(repo) {
+    emailService;
+    constructor(repo, emailService) {
         this.repo = repo;
+        this.emailService = emailService || new emailService_1.EmailService();
     }
     async sendNotification(data) {
+        // 1. If channel is EMAIL, dispatch physical email via EmailService
+        if (data.channel === 'EMAIL' && data.metadata?.activationToken) {
+            const emailData = {
+                recipientEmail: data.metadata.recipientEmail || data.recipientId,
+                employeeName: data.metadata.employeeName || 'Colleague',
+                employeeId: data.metadata.employeeId || data.recipientId,
+                activationToken: data.metadata.activationToken,
+                companyName: data.metadata.companyName,
+            };
+            try {
+                await this.emailService.sendActivationEmail(emailData);
+            }
+            catch (err) {
+                // Record failure in notification record metadata for delivery tracking
+                if (!data.metadata)
+                    data.metadata = {};
+                data.metadata.deliveryError = err.message || 'SMTP delivery failed';
+                data.metadata.deliveryStatus = 'FAILED';
+            }
+        }
         return this.repo.createNotification({
             recipientId: data.recipientId,
             tenantId: data.tenantId,

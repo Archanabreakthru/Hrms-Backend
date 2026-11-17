@@ -11,7 +11,8 @@ export function createApp(orgController: OrganizationController): Application {
   app.use(correlationMiddleware);
 
   // Health check
-  app.get('/health', (req, res) => {
+  app.get('/', (req, res) => res.json({ service: 'organization-service', status: 'UP', health: '/health' }));
+    app.get('/health', (req, res) => {
     res.json({
       status: 'UP',
       service: 'organization-service',
@@ -20,7 +21,8 @@ export function createApp(orgController: OrganizationController): Application {
     });
   });
 
-  // Org routes
+  // Org routes (Support canonical /api/v1/organization from API Gateway and legacy /api/v1/org)
+  app.use('/api/v1/organization', createOrgRouter(orgController));
   app.use('/api/v1/org', createOrgRouter(orgController));
 
   // Global error handler

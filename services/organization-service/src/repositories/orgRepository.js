@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.InMemoryOrganizationRepository = void 0;
 class InMemoryOrganizationRepository {
     companyProfile = null;
+    statutoryConfig = null;
     branches = new Map();
     departments = new Map();
     designations = new Map();
@@ -98,6 +99,41 @@ class InMemoryOrganizationRepository {
         }
         return this.companyProfile;
     }
+    async getStatutoryConfig() {
+        return this.statutoryConfig;
+    }
+    async saveStatutoryConfig(config) {
+        const now = new Date();
+        this.statutoryConfig = {
+            id: this.statutoryConfig?.id || 'stat-001',
+            companyId: this.statutoryConfig?.companyId || 'org-profile-001',
+            epfApplicable: config.epfApplicable ?? this.statutoryConfig?.epfApplicable ?? true,
+            epfEmployeeRatePercent: config.epfEmployeeRatePercent ?? this.statutoryConfig?.epfEmployeeRatePercent ?? 12,
+            epfEmployerRatePercent: config.epfEmployerRatePercent ?? this.statutoryConfig?.epfEmployerRatePercent ?? 12,
+            epfWageCeilingMonthly: config.epfWageCeilingMonthly ?? this.statutoryConfig?.epfWageCeilingMonthly ?? 15000,
+            epfRestrictToWageCeiling: config.epfRestrictToWageCeiling ?? this.statutoryConfig?.epfRestrictToWageCeiling ?? false,
+            epfEffectiveFrom: config.epfEffectiveFrom ?? this.statutoryConfig?.epfEffectiveFrom ?? now,
+            epfExemptionReason: config.epfExemptionReason ?? this.statutoryConfig?.epfExemptionReason,
+            esiApplicable: config.esiApplicable ?? this.statutoryConfig?.esiApplicable ?? true,
+            esiGrossThresholdMonthly: config.esiGrossThresholdMonthly ?? this.statutoryConfig?.esiGrossThresholdMonthly ?? 21000,
+            esiEmployeeRatePercent: config.esiEmployeeRatePercent ?? this.statutoryConfig?.esiEmployeeRatePercent ?? 0.75,
+            esiEmployerRatePercent: config.esiEmployerRatePercent ?? this.statutoryConfig?.esiEmployerRatePercent ?? 3.25,
+            esiEffectiveFrom: config.esiEffectiveFrom ?? this.statutoryConfig?.esiEffectiveFrom ?? now,
+            esiExemptionReason: config.esiExemptionReason ?? this.statutoryConfig?.esiExemptionReason,
+            ptApplicable: config.ptApplicable ?? this.statutoryConfig?.ptApplicable ?? true,
+            ptStateJurisdiction: config.ptStateJurisdiction ?? this.statutoryConfig?.ptStateJurisdiction ?? 'Karnataka',
+            ptMonthlySlabAmount: config.ptMonthlySlabAmount ?? this.statutoryConfig?.ptMonthlySlabAmount ?? 200,
+            ptMinGrossThreshold: config.ptMinGrossThreshold ?? this.statutoryConfig?.ptMinGrossThreshold ?? 15000,
+            ptEffectiveFrom: config.ptEffectiveFrom ?? this.statutoryConfig?.ptEffectiveFrom ?? now,
+            tdsApplicable: config.tdsApplicable ?? this.statutoryConfig?.tdsApplicable ?? true,
+            tdsFinancialYear: config.tdsFinancialYear ?? this.statutoryConfig?.tdsFinancialYear ?? 'FY 2026-27',
+            tdsDefaultRegime: config.tdsDefaultRegime ?? this.statutoryConfig?.tdsDefaultRegime ?? 'New Regime (FY 2026-27)',
+            tdsEffectiveFrom: config.tdsEffectiveFrom ?? this.statutoryConfig?.tdsEffectiveFrom ?? now,
+            createdAt: this.statutoryConfig?.createdAt || now,
+            updatedAt: now,
+        };
+        return this.statutoryConfig;
+    }
     async getBranches() {
         return Array.from(this.branches.values());
     }
@@ -111,6 +147,14 @@ class InMemoryOrganizationRepository {
         this.branches.set(id, branch);
         return branch;
     }
+    async updateBranch(id, patch) {
+        const existing = await this.getBranchById(id);
+        if (!existing)
+            throw new Error(`Branch ${id} not found`);
+        const updated = { ...existing, ...patch, updatedAt: new Date() };
+        this.branches.set(existing.id, updated);
+        return updated;
+    }
     async getDepartments() {
         return Array.from(this.departments.values());
     }
@@ -123,6 +167,14 @@ class InMemoryOrganizationRepository {
         const dept = { ...deptData, id, createdAt: now, updatedAt: now };
         this.departments.set(id, dept);
         return dept;
+    }
+    async updateDepartment(id, patch) {
+        const existing = await this.getDepartmentById(id);
+        if (!existing)
+            throw new Error(`Department ${id} not found`);
+        const updated = { ...existing, ...patch, updatedAt: new Date() };
+        this.departments.set(existing.id, updated);
+        return updated;
     }
     async getDesignations() {
         return Array.from(this.designations.values());
@@ -144,6 +196,14 @@ class InMemoryOrganizationRepository {
         const desig = { ...desigData, id, createdAt: now, updatedAt: now };
         this.designations.set(id, desig);
         return desig;
+    }
+    async updateDesignation(id, patch) {
+        const existing = await this.getDesignationById(id);
+        if (!existing)
+            throw new Error(`Designation ${id} not found`);
+        const updated = { ...existing, ...patch, updatedAt: new Date() };
+        this.designations.set(existing.id, updated);
+        return updated;
     }
 }
 exports.InMemoryOrganizationRepository = InMemoryOrganizationRepository;

@@ -11,7 +11,7 @@ exports.createNotificationSchema = zod_1.z.object({
     priority: zod_1.z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('MEDIUM'),
     channel: zod_1.z.enum(['IN_APP', 'EMAIL', 'SMS', 'PUSH']).default('IN_APP'),
     linkUrl: zod_1.z.string().optional(),
-    metadata: zod_1.z.record(zod_1.z.string(), zod_1.z.any()).optional(),
+    metadata: zod_1.z.record(zod_1.z.string(), zod_1.z.any()).optional().nullable(),
 });
 exports.createAuditLogSchema = zod_1.z.object({
     serviceName: zod_1.z.string().min(1, 'Service name is required'),

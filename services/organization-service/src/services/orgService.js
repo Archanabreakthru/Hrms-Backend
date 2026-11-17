@@ -10,12 +10,49 @@ class OrganizationService {
     async getCompanyProfile() {
         const profile = await this.orgRepo.getCompanyProfile();
         if (!profile) {
-            throw new AppError_1.NotFoundError('Company profile has not been configured');
+            throw new AppError_1.NotFoundError('Company profile has not been configured', { code: 'PROFILE_NOT_CONFIGURED' });
         }
         return profile;
     }
     async updateCompanyProfile(data) {
         return this.orgRepo.saveCompanyProfile(data);
+    }
+    async getStatutoryConfig() {
+        const config = await this.orgRepo.getStatutoryConfig();
+        if (!config) {
+            // Default initial configuration if not yet persisted
+            const now = new Date('2026-04-01');
+            return {
+                id: 'stat-default',
+                companyId: '00000000-0000-0000-0000-000000000000',
+                epfApplicable: true,
+                epfEmployeeRatePercent: 12,
+                epfEmployerRatePercent: 12,
+                epfWageCeilingMonthly: 15000,
+                epfRestrictToWageCeiling: false,
+                epfEffectiveFrom: now,
+                esiApplicable: true,
+                esiGrossThresholdMonthly: 21000,
+                esiEmployeeRatePercent: 0.75,
+                esiEmployerRatePercent: 3.25,
+                esiEffectiveFrom: now,
+                ptApplicable: true,
+                ptStateJurisdiction: 'Karnataka',
+                ptMonthlySlabAmount: 200,
+                ptMinGrossThreshold: 15000,
+                ptEffectiveFrom: now,
+                tdsApplicable: true,
+                tdsFinancialYear: 'FY 2026-27',
+                tdsDefaultRegime: 'New Regime (FY 2026-27)',
+                tdsEffectiveFrom: now,
+                createdAt: now,
+                updatedAt: now,
+            };
+        }
+        return config;
+    }
+    async updateStatutoryConfig(data) {
+        return this.orgRepo.saveStatutoryConfig(data);
     }
     async getBranches() {
         return this.orgRepo.getBranches();
@@ -27,6 +64,20 @@ class OrganizationService {
         }
         return this.orgRepo.createBranch({ ...data, status: 'Active' });
     }
+    async updateBranch(id, patch) {
+        const existing = await this.orgRepo.getBranchById(id);
+        if (!existing) {
+            throw new AppError_1.NotFoundError(`Branch ${id} not found`);
+        }
+        return this.orgRepo.updateBranch(id, patch);
+    }
+    async toggleBranchStatus(id, isActive) {
+        const existing = await this.orgRepo.getBranchById(id);
+        if (!existing) {
+            throw new AppError_1.NotFoundError(`Branch ${id} not found`);
+        }
+        return this.orgRepo.updateBranch(id, { status: isActive ? 'Active' : 'Inactive' });
+    }
     async getDepartments() {
         return this.orgRepo.getDepartments();
     }
@@ -37,6 +88,20 @@ class OrganizationService {
         }
         return this.orgRepo.createDepartment({ ...data, status: 'Active' });
     }
+    async updateDepartment(id, patch) {
+        const existing = await this.orgRepo.getDepartmentById(id);
+        if (!existing) {
+            throw new AppError_1.NotFoundError(`Department ${id} not found`);
+        }
+        return this.orgRepo.updateDepartment(id, patch);
+    }
+    async toggleDepartmentStatus(id, isActive) {
+        const existing = await this.orgRepo.getDepartmentById(id);
+        if (!existing) {
+            throw new AppError_1.NotFoundError(`Department ${id} not found`);
+        }
+        return this.orgRepo.updateDepartment(id, { status: isActive ? 'Active' : 'Inactive' });
+    }
     async getDesignations() {
         return this.orgRepo.getDesignations();
     }
@@ -46,6 +111,20 @@ class OrganizationService {
             throw new AppError_1.ConflictError(`Designation with code ${data.code} already exists`);
         }
         return this.orgRepo.createDesignation({ ...data, status: 'Active' });
+    }
+    async updateDesignation(id, patch) {
+        const existing = await this.orgRepo.getDesignationById(id);
+        if (!existing) {
+            throw new AppError_1.NotFoundError(`Designation ${id} not found`);
+        }
+        return this.orgRepo.updateDesignation(id, patch);
+    }
+    async toggleDesignationStatus(id, isActive) {
+        const existing = await this.orgRepo.getDesignationById(id);
+        if (!existing) {
+            throw new AppError_1.NotFoundError(`Designation ${id} not found`);
+        }
+        return this.orgRepo.updateDesignation(id, { status: isActive ? 'Active' : 'Inactive' });
     }
     /**
      * Preserves standard designation code logic for employee ID generation

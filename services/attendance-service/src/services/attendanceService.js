@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AttendanceService = void 0;
+const crypto_1 = require("crypto");
 const AppError_1 = require("../../../../shared/src/errors/AppError");
 const roles_1 = require("../../../../shared/src/constants/roles");
 const messaging_1 = require("../../../../shared/src/infrastructure/messaging");
@@ -36,7 +37,7 @@ class AttendanceService {
             const shiftStartMinutes = shiftHour * 60 + shiftMinute + shift.gracePeriodMins;
             const isLate = punchMinutes > shiftStartMinutes;
             const newRecord = {
-                id: `att_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+                id: (0, crypto_1.randomUUID)(),
                 employeeId: params.employeeId,
                 date: params.date,
                 shiftId: shift.id,
@@ -133,55 +134,150 @@ class AttendanceService {
         if (actor.employeeId !== params.employeeId && actor.role !== roles_1.UserRole.HR_ADMIN) {
             throw new AppError_1.ForbiddenError('You can only submit regularization requests for your own attendance');
         }
-        const record = await this.attendanceRepo.findRecordById(params.attendanceRecordId);
-        if (!record)
-            throw new AppError_1.NotFoundError(`Attendance record ${params.attendanceRecordId} not found`);
         const reg = {
-            id: `reg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            id: (0, crypto_1.randomUUID)(),
             attendanceRecordId: params.attendanceRecordId,
             employeeId: params.employeeId,
+            targetDate: params.targetDate || params.requestedCheckIn.split('T')[0],
             requestedCheckIn: params.requestedCheckIn,
             requestedCheckOut: params.requestedCheckOut,
             reason: params.reason,
-            status: 'Pending',
+            status: 'Pending Manager Approval',
             createdAt: new Date(),
             updatedAt: new Date(),
         };
         return this.attendanceRepo.saveRegularization(reg);
     }
     /**
-     * Review Regularization Request (Manager or HR)
+     * Review Regularization Request (Two-Tier Workflow: Manager Review -> HR Final Approval)
      */
-    async reviewRegularization(id, decision, remarks, actor) {
-        const isManagerOrHr = actor.role === roles_1.UserRole.HR_ADMIN ||
-            actor.role === roles_1.UserRole.SUPER_ADMIN ||
-            actor.role === roles_1.UserRole.REPORTING_MANAGER ||
-            actor.role === roles_1.UserRole.SENIOR_MANAGER;
-        if (!isManagerOrHr) {
+    async reviewRegularization(id, decision, remarks, stageOrActor, maybeActor) {
+        const actor = (maybeActor || (typeof stageOrActor === 'object' ? stageOrActor : undefined));
+        const stage = typeof stageOrActor === 'string' ? stageOrActor : undefined;
+        const isHr = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN || actor.role === roles_1.UserRole.SENIOR_MANAGER;
+        const isManager = actor.role === roles_1.UserRole.REPORTING_MANAGER || isHr;
+        if (!isManager) {
             throw new AppError_1.ForbiddenError('Only managers or HR administrators can review regularization requests');
         }
         const reg = await this.attendanceRepo.findRegularization(id);
         if (!reg)
             throw new AppError_1.NotFoundError(`Regularization request ${id} not found`);
-        reg.status = decision;
+        const now = new Date();
         reg.reviewedBy = actor.id;
-        reg.reviewedAt = new Date();
-        reg.reviewRemarks = remarks;
-        reg.updatedAt = new Date();
-        const saved = await this.attendanceRepo.saveRegularization(reg);
-        // If approved, update underlying attendance record
-        if (decision === 'Approved') {
-            const record = await this.attendanceRepo.findRecordById(reg.attendanceRecordId);
-            if (record) {
-                record.checkInTime = reg.requestedCheckIn;
-                record.checkOutTime = reg.requestedCheckOut;
-                record.status = 'Present';
-                record.isLate = false;
-                record.isEarlyDeparture = false;
-                await this.attendanceRepo.saveRecord(record);
+        reg.reviewedAt = now;
+        reg.reviewRemarks = remarks || reg.reviewRemarks;
+        reg.updatedAt = now;
+        // Determine target stage
+        const effectiveStage = stage || (reg.status === 'Pending HR Approval' || isHr ? 'hr' : 'manager');
+        if (effectiveStage === 'manager') {
+            if (decision === 'Approved') {
+                reg.status = 'Pending HR Approval';
+            }
+            else {
+                reg.status = 'Manager Rejected';
             }
         }
-        return saved;
+        else {
+            // HR Stage
+            if (!isHr) {
+                throw new AppError_1.ForbiddenError('Only HR administrators can execute final regularization approval');
+            }
+            if (decision === 'Approved') {
+                reg.status = 'HR Approved';
+                // Update underlying attendance record or create one if missing
+                const targetDateStr = reg.targetDate ? reg.targetDate.split('T')[0] : reg.requestedCheckIn.split('T')[0];
+                let record = reg.attendanceRecordId ? await this.attendanceRepo.findRecordById(reg.attendanceRecordId) : null;
+                if (!record) {
+                    record = await this.attendanceRepo.findRecord(reg.employeeId, targetDateStr);
+                }
+                if (record) {
+                    record.checkInTime = reg.requestedCheckIn;
+                    record.checkOutTime = reg.requestedCheckOut;
+                    record.status = 'Present';
+                    record.isLate = false;
+                    record.isEarlyDeparture = false;
+                    record.notes = (record.notes ? record.notes + '; ' : '') + `Regularized: ${reg.reason}`;
+                    await this.attendanceRepo.saveRecord(record);
+                }
+                else {
+                    // Create new record for the date
+                    const shifts = await this.attendanceRepo.listShifts();
+                    if (shifts.length === 0) {
+                        // Need at least one shift to satisfy foreign key fk_attendance_records_shift
+                        await this.attendanceRepo.saveShift({
+                            id: (0, crypto_1.randomUUID)(),
+                            code: 'GEN-01',
+                            name: 'General Day Shift',
+                            startTime: '09:30',
+                            endTime: '18:30',
+                            gracePeriodMins: 15,
+                            halfDayThreshold: 4.5,
+                            fullDayThreshold: 8.0,
+                            isOvernight: false,
+                            weeklyOffDays: [0, 6],
+                            status: 'Active',
+                            createdAt: now,
+                            updatedAt: now,
+                        });
+                    }
+                    const activeShifts = await this.attendanceRepo.listShifts();
+                    const shiftId = activeShifts[0].id;
+                    const inDate = new Date(reg.requestedCheckIn);
+                    const outDate = new Date(reg.requestedCheckOut);
+                    const diffHours = Math.max(0, (outDate.getTime() - inDate.getTime()) / (1000 * 60 * 60) - 1);
+                    await this.attendanceRepo.saveRecord({
+                        id: (0, crypto_1.randomUUID)(),
+                        employeeId: reg.employeeId,
+                        date: targetDateStr,
+                        shiftId,
+                        workMode: 'Office',
+                        checkInTime: reg.requestedCheckIn,
+                        checkOutTime: reg.requestedCheckOut,
+                        breakDurationMinutes: 60,
+                        totalWorkingHours: Math.round(diffHours * 100) / 100,
+                        overtimeHours: Math.max(0, Math.round((diffHours - 8) * 100) / 100),
+                        status: 'Present',
+                        isLate: false,
+                        isEarlyDeparture: false,
+                        notes: `Regularized: ${reg.reason}`,
+                        createdAt: now,
+                        updatedAt: now,
+                    });
+                }
+            }
+            else {
+                reg.status = 'HR Rejected';
+            }
+        }
+        return this.attendanceRepo.saveRegularization(reg);
+    }
+    /**
+     * Shift Scheduling Management
+     */
+    async createShiftSchedule(data, actor) {
+        const isHr = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
+        if (!isHr) {
+            throw new AppError_1.ForbiddenError('Only HR Administrators can schedule employee shifts');
+        }
+        const shift = await this.attendanceRepo.findShift(data.shiftId);
+        if (!shift)
+            throw new AppError_1.NotFoundError(`Shift ${data.shiftId} not found`);
+        const now = new Date();
+        const schedule = {
+            id: (0, crypto_1.randomUUID)(),
+            employeeId: data.employeeId,
+            shiftId: data.shiftId,
+            effectiveFrom: data.effectiveFrom,
+            effectiveTo: data.effectiveTo,
+            assignedBy: actor.id || 'HR Admin',
+            isActive: true,
+            createdAt: now,
+            updatedAt: now,
+        };
+        return this.attendanceRepo.saveShiftSchedule(schedule);
+    }
+    async listShiftSchedules(filter, actor) {
+        return this.attendanceRepo.listShiftSchedules(filter);
     }
     /**
      * Apply for Leave with Balance Ledger Check
@@ -303,6 +399,324 @@ class AttendanceService {
             totalOvertimeHours: Math.round(totalOvertimeHours * 100) / 100,
             lossOfPayDays,
         };
+    }
+    /**
+     * List attendance records with date range, employee filter, and RBAC scoping
+     */
+    async listAttendanceRecords(filter, actor) {
+        const isHrOrAdmin = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
+        let targetEmployeeId = filter.employeeId;
+        if (!isHrOrAdmin) {
+            if (actor.role === roles_1.UserRole.REPORTING_MANAGER || actor.role === roles_1.UserRole.SENIOR_MANAGER) {
+                // Manager can view self or if an employeeId is provided, their reports
+                if (!targetEmployeeId) {
+                    targetEmployeeId = actor.employeeId;
+                }
+            }
+            else {
+                // Normal employee can ONLY query their own records
+                targetEmployeeId = actor.employeeId;
+            }
+        }
+        return this.attendanceRepo.listRecords({
+            employeeId: targetEmployeeId,
+            startDate: filter.startDate,
+            endDate: filter.endDate,
+        });
+    }
+    /**
+     * Get today's attendance record for authenticated user or specified employee
+     */
+    async getTodayAttendanceRecord(employeeId, actor) {
+        const isSelf = actor.employeeId === employeeId;
+        const isHr = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
+        if (!isSelf && !isHr) {
+            throw new AppError_1.ForbiddenError('You can only view your own attendance record');
+        }
+        const todayStr = new Date().toISOString().split('T')[0];
+        return this.attendanceRepo.findRecord(employeeId, todayStr);
+    }
+    /**
+     * List all configured shifts
+     */
+    async listShifts() {
+        return this.attendanceRepo.listShifts();
+    }
+    /**
+     * Create a new shift definition (HR / Admin only)
+     */
+    async createShift(params, actor) {
+        const isHr = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
+        if (!isHr) {
+            throw new AppError_1.ForbiddenError('Only HR Administrators can configure shifts');
+        }
+        const existing = await this.attendanceRepo.findShiftByCode(params.code);
+        if (existing) {
+            throw new AppError_1.ConflictError(`Shift with code ${params.code} already exists`);
+        }
+        const now = new Date();
+        const newShift = {
+            id: (0, crypto_1.randomUUID)(),
+            code: params.code,
+            name: params.name,
+            startTime: params.startTime,
+            endTime: params.endTime,
+            gracePeriodMins: params.gracePeriodMins ?? 15,
+            halfDayThreshold: params.halfDayThreshold ?? 4.5,
+            fullDayThreshold: params.fullDayThreshold ?? 8.0,
+            isOvernight: params.isOvernight ?? false,
+            weeklyOffDays: params.weeklyOffDays ?? [0, 6],
+            status: 'Active',
+            createdAt: now,
+            updatedAt: now,
+        };
+        return this.attendanceRepo.saveShift(newShift);
+    }
+    /**
+     * List regularizations based on role scope
+     */
+    async listRegularizations(filter, actor) {
+        const isHrOrAdmin = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
+        let employeeId = filter.employeeId;
+        if (!isHrOrAdmin && actor.role !== roles_1.UserRole.REPORTING_MANAGER && actor.role !== roles_1.UserRole.SENIOR_MANAGER) {
+            // Regular employees can only view their own requests
+            employeeId = actor.employeeId;
+        }
+        return this.attendanceRepo.listRegularizations({
+            employeeId,
+            status: filter.status,
+        });
+    }
+    /**
+     * Manual Attendance Entry (HR Admin / Super Admin)
+     */
+    async createManualAttendance(params, actor) {
+        const isHr = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
+        if (!isHr) {
+            throw new AppError_1.ForbiddenError('Only HR Administrators can manually record employee attendance');
+        }
+        const checkIn = new Date(params.checkInTime);
+        const checkOut = new Date(params.checkOutTime);
+        const diffHours = Math.max(0, (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60));
+        let record = await this.attendanceRepo.findRecord(params.employeeId, params.date);
+        const now = new Date();
+        if (!record) {
+            record = {
+                id: (0, crypto_1.randomUUID)(),
+                employeeId: params.employeeId,
+                date: params.date,
+                shiftId: params.shiftId || 'SHIFT-GEN',
+                workMode: params.workMode || 'Office',
+                checkInTime: params.checkInTime,
+                checkOutTime: params.checkOutTime,
+                breakDurationMinutes: 60,
+                totalWorkingHours: Math.round(diffHours * 100) / 100,
+                overtimeHours: diffHours > 9 ? Math.round((diffHours - 9) * 100) / 100 : 0,
+                status: params.status || 'Present',
+                isLate: false,
+                isEarlyDeparture: false,
+                notes: params.notes || `Manually entered by ${actor.email}`,
+                createdAt: now,
+                updatedAt: now,
+            };
+        }
+        else {
+            record.checkInTime = params.checkInTime;
+            record.checkOutTime = params.checkOutTime;
+            record.totalWorkingHours = Math.round(diffHours * 100) / 100;
+            record.overtimeHours = diffHours > 9 ? Math.round((diffHours - 9) * 100) / 100 : 0;
+            if (params.shiftId)
+                record.shiftId = params.shiftId;
+            if (params.workMode)
+                record.workMode = params.workMode;
+            if (params.status)
+                record.status = params.status;
+            record.notes = params.notes || `Updated manually by ${actor.email}`;
+            record.updatedAt = now;
+        }
+        return this.attendanceRepo.saveRecord(record);
+    }
+    /**
+     * List Leave Applications (Scoped to Employee self, Manager reports, or HR org)
+     */
+    async listLeaveApplications(filter, actor) {
+        const isHrOrAdmin = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
+        let employeeId = filter.employeeId;
+        if (!isHrOrAdmin) {
+            if (actor.role === roles_1.UserRole.REPORTING_MANAGER || actor.role === roles_1.UserRole.SENIOR_MANAGER) {
+                if (!employeeId)
+                    employeeId = actor.employeeId;
+            }
+            else {
+                employeeId = actor.employeeId;
+            }
+        }
+        return this.attendanceRepo.listLeaveApplications({
+            employeeId,
+            status: filter.status,
+        });
+    }
+    /**
+     * Cancel or Withdraw Leave Application
+     */
+    async cancelLeave(applicationId, reason, actor) {
+        const app = await this.attendanceRepo.findLeaveApplication(applicationId);
+        if (!app)
+            throw new AppError_1.NotFoundError(`Leave application ${applicationId} not found`);
+        const isSelf = actor.employeeId === app.employeeId;
+        const isHr = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
+        if (!isSelf && !isHr) {
+            throw new AppError_1.ForbiddenError('You can only cancel your own leave requests or be an HR Administrator');
+        }
+        if (app.status === 'Cancelled' || app.status === 'Rejected') {
+            throw new AppError_1.ValidationError(`Leave request is already ${app.status.toLowerCase()}`);
+        }
+        const year = new Date(app.startDate).getFullYear();
+        const balance = await this.attendanceRepo.findLeaveBalance(app.employeeId, app.leaveTypeId, year);
+        if (app.status === 'Pending') {
+            // Pending request withdrawal restores pendingDays
+            if (balance) {
+                balance.pendingDays = Math.max(0, balance.pendingDays - app.totalDays);
+                await this.attendanceRepo.saveLeaveBalance(balance);
+            }
+        }
+        else if (app.status === 'Approved') {
+            // Approved future leave cancellation (only HR or employee before start) restores usedDays
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (app.startDate < todayStr && !isHr) {
+                throw new AppError_1.ValidationError('Past or ongoing approved leave can only be modified by HR Administration');
+            }
+            if (balance) {
+                balance.usedDays = Math.max(0, balance.usedDays - app.totalDays);
+                await this.attendanceRepo.saveLeaveBalance(balance);
+            }
+            // Publish event for calendar and payroll restoration
+            if (this.eventBus) {
+                await this.eventBus.publish('leave.cancelled', (0, messaging_1.createEvent)('LEAVE_CANCELLED', app.id, 'Leave', {
+                    leaveApplicationId: app.id,
+                    employeeId: app.employeeId,
+                    startDate: app.startDate,
+                    endDate: app.endDate,
+                    totalDays: app.totalDays,
+                    leaveTypeId: app.leaveTypeId,
+                    cancelledBy: actor.id,
+                }));
+            }
+        }
+        app.status = 'Cancelled';
+        app.rejectionReason = reason || `Cancelled by ${actor.email}`;
+        app.updatedAt = new Date();
+        return this.attendanceRepo.saveLeaveApplication(app);
+    }
+    /**
+     * List Employee Leave Balances
+     */
+    async listLeaveBalances(employeeId, year, actor) {
+        const isHrOrAdmin = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
+        let targetEmployeeId = employeeId || actor.employeeId;
+        if (!targetEmployeeId) {
+            return [];
+        }
+        if (!isHrOrAdmin && actor.employeeId !== targetEmployeeId) {
+            throw new AppError_1.ForbiddenError('You can only view your own leave balances');
+        }
+        const targetYear = year || new Date().getFullYear();
+        return this.attendanceRepo.listLeaveBalances(targetEmployeeId, targetYear);
+    }
+    /**
+     * List Leave Types
+     */
+    async listLeaveTypes() {
+        return this.attendanceRepo.listLeaveTypes();
+    }
+    /**
+     * Create Leave Type (HR Admin / Super Admin)
+     */
+    async createLeaveType(params, actor) {
+        const isHr = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
+        if (!isHr)
+            throw new AppError_1.ForbiddenError('Only HR Administrators can configure leave types');
+        const existing = await this.attendanceRepo.findLeaveTypeByCode(params.code);
+        if (existing) {
+            throw new AppError_1.ConflictError(`Leave type with code ${params.code} already exists`);
+        }
+        const now = new Date();
+        const newType = {
+            id: `LT-${params.code.toUpperCase()}`,
+            code: params.code.toUpperCase(),
+            name: params.name,
+            description: params.description,
+            isPaid: params.isPaid ?? true,
+            annualQuotaDays: params.annualQuotaDays,
+            isCarryForward: params.isCarryForward ?? false,
+            maxCarryForward: params.maxCarryForward ?? 0,
+            maxConsecutiveDays: params.maxConsecutiveDays ?? 30,
+            allowsHalfDay: params.allowsHalfDay ?? true,
+            requiresDoc: params.requiresDoc ?? false,
+            isEncashable: params.isEncashable ?? false,
+            eligibilityCriteria: params.eligibilityCriteria || 'All Active Employees',
+            effectiveDate: params.effectiveDate || new Date().toISOString().split('T')[0],
+            isActive: true,
+            createdAt: now,
+            updatedAt: now,
+        };
+        return this.attendanceRepo.saveLeaveType(newType);
+    }
+    /**
+     * Update Leave Type
+     */
+    async updateLeaveType(id, params, actor) {
+        const isHr = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
+        if (!isHr)
+            throw new AppError_1.ForbiddenError('Only HR Administrators can update leave types');
+        const existing = await this.attendanceRepo.findLeaveType(id);
+        if (!existing)
+            throw new AppError_1.NotFoundError(`Leave type ${id} not found`);
+        const updated = {
+            ...existing,
+            ...params,
+            id: existing.id,
+            code: existing.code,
+            updatedAt: new Date(),
+        };
+        return this.attendanceRepo.saveLeaveType(updated);
+    }
+    /**
+     * List Holidays for a year
+     */
+    async listHolidays(year, branchId) {
+        const targetYear = year || new Date().getFullYear();
+        return this.attendanceRepo.listHolidays(targetYear, branchId);
+    }
+    /**
+     * Create Holiday
+     */
+    async createHoliday(params, actor) {
+        const isHr = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
+        if (!isHr)
+            throw new AppError_1.ForbiddenError('Only HR Administrators can configure company holidays');
+        const now = new Date();
+        const holiday = {
+            id: `HOL-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            name: params.name,
+            date: params.date,
+            branchId: params.branchId,
+            isOptional: params.isOptional ?? false,
+            year: params.year,
+            description: params.description,
+            createdAt: now,
+            updatedAt: now,
+        };
+        return this.attendanceRepo.saveHoliday(holiday);
+    }
+    /**
+     * Delete Holiday
+     */
+    async deleteHoliday(id, actor) {
+        const isHr = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
+        if (!isHr)
+            throw new AppError_1.ForbiddenError('Only HR Administrators can delete company holidays');
+        await this.attendanceRepo.deleteHoliday(id);
     }
 }
 exports.AttendanceService = AttendanceService;

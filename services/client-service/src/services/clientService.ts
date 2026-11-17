@@ -1,6 +1,7 @@
 import {
   IClientRepository,
   ClientOrgDTO,
+  ClientSupervisorDTO,
   ClientDeploymentDTO,
   ClientAttendanceVerificationDTO,
 } from '../repositories/clientRepository';
@@ -13,6 +14,7 @@ import {
 import { AuthenticatedUser } from '../../../../shared/src/contracts/auth';
 import { UserRole } from '../../../../shared/src/constants/roles';
 import { EventPublisher, createEvent } from '../../../../shared/src/infrastructure/messaging';
+import { randomUUID } from 'crypto';
 
 export class ClientService {
   constructor(
@@ -35,10 +37,269 @@ export class ClientService {
     return day <= 15 ? `${year}-${month}-P1` : `${year}-${month}-P2`;
   }
 
-  /**
-   * Ingest Attendance Punch Event from Attendance Service (Step 1 & 2)
-   * Client Service references attendanceId without duplicating attendance records.
-   */
+  // ==========================================
+  // Client Organizations Management
+  // ==========================================
+
+  async listClients(status?: string, search?: string): Promise<ClientOrgDTO[]> {
+    let clients = await this.clientRepo.listClients();
+    if (status) {
+      clients = clients.filter((c) => c.status.toLowerCase() === status.toLowerCase());
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      clients = clients.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.contactName?.toLowerCase().includes(q) ||
+          c.email?.toLowerCase().includes(q)
+      );
+    }
+    return clients;
+  }
+
+  async getClientById(id: string): Promise<ClientOrgDTO> {
+    const client = await this.clientRepo.findClientById(id);
+    if (!client) {
+      throw new NotFoundError(`Client organization ${id} not found`);
+    }
+    return client;
+  }
+
+  async createClient(data: {
+    name: string;
+    contactName?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    contractStart?: string;
+    contractEnd?: string;
+    status?: string;
+  }): Promise<ClientOrgDTO> {
+    const now = new Date();
+    const newClient: ClientOrgDTO = {
+      id: randomUUID(),
+      name: data.name,
+      contactName: data.contactName,
+      email: data.email,
+      phone: data.phone,
+      address: data.address,
+      contractStart: data.contractStart,
+      contractEnd: data.contractEnd,
+      status: data.status || 'Active',
+      createdAt: now,
+      updatedAt: now,
+    };
+    return this.clientRepo.saveClient(newClient);
+  }
+
+  async updateClient(
+    id: string,
+    updates: Partial<{
+      name: string;
+      contactName?: string;
+      email?: string;
+      phone?: string;
+      address?: string;
+      contractStart?: string;
+      contractEnd?: string;
+      status?: string;
+    }>
+  ): Promise<ClientOrgDTO> {
+    const existing = await this.clientRepo.findClientById(id);
+    if (!existing) {
+      throw new NotFoundError(`Client organization ${id} not found`);
+    }
+
+    const updated: ClientOrgDTO = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    return this.clientRepo.saveClient(updated);
+  }
+
+  // ==========================================
+  // Client Supervisors Management
+  // ==========================================
+
+  async listSupervisors(clientId?: string, actor?: AuthenticatedUser): Promise<ClientSupervisorDTO[]> {
+    let effectiveClientId = clientId;
+    if (actor && actor.role === UserRole.CLIENT_SUPERVISOR) {
+      effectiveClientId = actor.clientId;
+    }
+    return this.clientRepo.listSupervisors(effectiveClientId);
+  }
+
+  async createSupervisor(data: {
+    clientId: string;
+    fullName: string;
+    email: string;
+    phone?: string;
+    designation?: string;
+    status?: string;
+    userId?: string;
+  }): Promise<ClientSupervisorDTO> {
+    const client = await this.clientRepo.findClientById(data.clientId);
+    if (!client) {
+      throw new NotFoundError(`Client organization ${data.clientId} not found`);
+    }
+
+    const now = new Date();
+    const supervisor: ClientSupervisorDTO = {
+      id: randomUUID(),
+      clientId: data.clientId,
+      fullName: data.fullName,
+      email: data.email.toLowerCase().trim(),
+      phone: data.phone,
+      designation: data.designation,
+      status: data.status || 'Active',
+      userId: data.userId,
+      createdAt: now,
+      updatedAt: now,
+    };
+    return this.clientRepo.saveSupervisor(supervisor);
+  }
+
+  async updateSupervisor(
+    id: string,
+    updates: Partial<{
+      fullName?: string;
+      email?: string;
+      phone?: string;
+      designation?: string;
+      status?: string;
+      userId?: string;
+    }>
+  ): Promise<ClientSupervisorDTO> {
+    const existing = await this.clientRepo.findSupervisorById(id);
+    if (!existing) {
+      throw new NotFoundError(`Supervisor ${id} not found`);
+    }
+
+    const updated: ClientSupervisorDTO = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    return this.clientRepo.saveSupervisor(updated);
+  }
+
+  // ==========================================
+  // Employee Deployments Management
+  // ==========================================
+
+  async listDeployments(
+    filter: { clientId?: string; employeeId?: string; status?: string },
+    actor: AuthenticatedUser
+  ): Promise<ClientDeploymentDTO[]> {
+    const effectiveFilter = { ...filter };
+    // Strict tenant isolation: Supervisor can only view deployments matching their clientId
+    if (actor.role === UserRole.CLIENT_SUPERVISOR) {
+      if (!actor.clientId) {
+        throw new ForbiddenError('Client supervisor account is not assigned to a client organization');
+      }
+      effectiveFilter.clientId = actor.clientId;
+    }
+
+    return this.clientRepo.listDeployments(effectiveFilter);
+  }
+
+  async createDeployment(
+    data: {
+      clientId: string;
+      employeeId: string;
+      supervisorId?: string;
+      project: string;
+      location: string;
+      workMode?: string;
+      startDate: string;
+      plannedEndDate: string;
+      allocation?: number;
+      allowanceMonthly?: number;
+      status?: 'Active' | 'Completed' | 'Terminated' | 'On_Hold';
+    },
+    actor: AuthenticatedUser
+  ): Promise<ClientDeploymentDTO> {
+    if (actor.role !== UserRole.HR_ADMIN && actor.role !== UserRole.SUPER_ADMIN) {
+      throw new ForbiddenError('Only HR Administrators can deploy employees to client sites');
+    }
+
+    const client = await this.clientRepo.findClientById(data.clientId);
+    if (!client) {
+      throw new NotFoundError(`Client organization ${data.clientId} not found`);
+    }
+
+    const now = new Date();
+    const deployment: ClientDeploymentDTO = {
+      id: randomUUID(),
+      clientId: data.clientId,
+      employeeId: data.employeeId,
+      supervisorId: data.supervisorId,
+      project: data.project,
+      location: data.location,
+      workMode: data.workMode || 'Client Site',
+      startDate: data.startDate,
+      plannedEndDate: data.plannedEndDate,
+      allocation: data.allocation !== undefined ? data.allocation : 100,
+      allowanceMonthly: data.allowanceMonthly !== undefined ? data.allowanceMonthly : 0,
+      status: data.status || 'Active',
+      createdAt: now,
+      updatedAt: now,
+    };
+    return this.clientRepo.saveDeployment(deployment);
+  }
+
+  async updateDeployment(
+    id: string,
+    updates: Partial<{
+      supervisorId?: string;
+      project?: string;
+      location?: string;
+      workMode?: string;
+      plannedEndDate?: string;
+      actualEndDate?: string;
+      allocation?: number;
+      allowanceMonthly?: number;
+      status?: 'Active' | 'Completed' | 'Terminated' | 'On_Hold';
+    }>,
+    actor: AuthenticatedUser
+  ): Promise<ClientDeploymentDTO> {
+    if (actor.role !== UserRole.HR_ADMIN && actor.role !== UserRole.SUPER_ADMIN) {
+      throw new ForbiddenError('Only HR Administrators can modify client deployments');
+    }
+
+    const existing = await this.clientRepo.findDeploymentById(id);
+    if (!existing) {
+      throw new NotFoundError(`Deployment ${id} not found`);
+    }
+
+    const updated: ClientDeploymentDTO = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    return this.clientRepo.saveDeployment(updated);
+  }
+
+  // ==========================================
+  // Attendance Verification & Workflow
+  // ==========================================
+
+  async listVerifications(
+    filter: { clientId?: string; employeeId?: string; periodKey?: string; status?: string },
+    actor: AuthenticatedUser
+  ): Promise<ClientAttendanceVerificationDTO[]> {
+    const effectiveFilter = { ...filter };
+    if (actor.role === UserRole.CLIENT_SUPERVISOR) {
+      if (!actor.clientId) {
+        throw new ForbiddenError('Client supervisor account is not assigned to a client organization');
+      }
+      effectiveFilter.clientId = actor.clientId;
+    }
+    return this.clientRepo.listVerifications(effectiveFilter);
+  }
+
   async handleAttendancePunchedEvent(event: {
     attendanceId: string;
     employeeId: string;
@@ -47,10 +308,9 @@ export class ClientService {
     workingHours?: number;
     status?: string;
   }): Promise<ClientAttendanceVerificationDTO | null> {
-    // 1. Evaluate deployment eligibility on exact attendance date
     const deployment = await this.clientRepo.findActiveDeploymentForDate(event.employeeId, event.date);
     if (!deployment || deployment.status !== 'Active') {
-      return null; // Not deployed to a client on this date
+      return null;
     }
 
     const existing = await this.clientRepo.findVerificationByAttendanceId(event.attendanceId);
@@ -58,14 +318,13 @@ export class ClientService {
     const now = new Date();
 
     if (existing) {
-      // Update hours if clocked out
       existing.workingHours = event.workingHours || existing.workingHours;
       existing.updatedAt = now;
       return this.clientRepo.saveVerification(existing);
     }
 
     const verif: ClientAttendanceVerificationDTO = {
-      id: `VERIF-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      id: randomUUID(),
       attendanceId: event.attendanceId,
       employeeId: event.employeeId,
       clientId: deployment.clientId,
@@ -94,10 +353,6 @@ export class ClientService {
     return this.clientRepo.saveVerification(verif);
   }
 
-  /**
-   * Client Supervisor Verification (Step 3)
-   * External supervisor tenant-isolated by clientId.
-   */
   async supervisorVerify(
     verificationId: string,
     decision: 'Approved' | 'Rejected',
@@ -107,7 +362,6 @@ export class ClientService {
     const verif = await this.clientRepo.findVerificationById(verificationId);
     if (!verif) throw new NotFoundError(`Verification record ${verificationId} not found`);
 
-    // Strict tenant isolation: Supervisor can only act on records matching their clientId
     if (actor.role === UserRole.CLIENT_SUPERVISOR && actor.clientId !== verif.clientId) {
       throw new ForbiddenError('Tenant isolation violation: Access denied to other client records');
     }
@@ -135,10 +389,6 @@ export class ClientService {
     return this.clientRepo.saveVerification(verif);
   }
 
-  /**
-   * HR Dual-Approval & Dispute Resolution (Step 4 & 5)
-   * Transitions status to HR_Approved and marks Eligible for Payroll.
-   */
   async hrResolveAndApprove(
     verificationId: string,
     decision: 'Approved' | 'Rejected',
@@ -173,7 +423,6 @@ export class ClientService {
 
     const saved = await this.clientRepo.saveVerification(verif);
 
-    // Step 5: Publish Event to inform Payroll Service
     if (this.eventBus && decision === 'Approved') {
       await this.eventBus.publish(
         'client.attendance.verified',
@@ -191,38 +440,38 @@ export class ClientService {
     return saved;
   }
 
-  /**
-   * Internal Payroll Service Query for Verified Client Hours & Onsite Allowances
-   */
   async getVerifiedHoursAndAllowancesForPayroll(
     employeeId: string,
     periodKey: string
   ): Promise<{
-    verifiedHours: number;
-    allowanceMonthly: number;
-    isEligible: boolean;
+    employeeId: string;
+    periodKey: string;
+    totalVerifiedHours: number;
+    verifiedHours?: number;
+    monthlyAllowance: number;
+    allowanceMonthly?: number;
+    eligibleForPayroll: boolean;
+    isEligible?: boolean;
   }> {
-    const list = await this.clientRepo.listVerifications({ employeeId, periodKey });
-    let verifiedHours = 0;
-    let isEligible = list.length > 0;
+    const verifs = await this.clientRepo.listVerifications({ employeeId, periodKey });
+    const eligibleVerifs = verifs.filter((v) => v.payrollEligibilityStatus === 'Eligible');
+    const totalVerifiedHours = eligibleVerifs.reduce((sum, v) => sum + v.workingHours, 0);
 
-    for (const v of list) {
-      if (v.payrollEligibilityStatus === 'Eligible') {
-        verifiedHours += v.workingHours;
-      } else {
-        isEligible = false;
-      }
+    let monthlyAllowance = 0;
+    if (verifs.length > 0) {
+      const dep = await this.clientRepo.findDeploymentById(verifs[0].deploymentId);
+      if (dep) monthlyAllowance = dep.allowanceMonthly;
     }
 
-    // Query deployment allowance
-    const deployments = await this.clientRepo.listDeployments({ employeeId, status: 'Active' });
-    const allowance = deployments.length > 0 ? deployments[0].allowanceMonthly : 0;
-
     return {
-      verifiedHours: Math.round(verifiedHours * 100) / 100,
-      allowanceMonthly: allowance,
-      isEligible,
+      employeeId,
+      periodKey,
+      totalVerifiedHours,
+      verifiedHours: totalVerifiedHours,
+      monthlyAllowance,
+      allowanceMonthly: monthlyAllowance,
+      eligibleForPayroll: eligibleVerifs.length > 0,
+      isEligible: eligibleVerifs.length > 0,
     };
   }
 }
-

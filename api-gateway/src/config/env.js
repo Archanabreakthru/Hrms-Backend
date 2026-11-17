@@ -1,9 +1,14 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.gatewayConfig = void 0;
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 exports.gatewayConfig = {
     port: parseInt(process.env.GATEWAY_PORT || '5000', 10),
-    jwtSecret: process.env.JWT_SECRET || 'orbyx_super_secret_jwt_key_2026_dev_mode_only',
+    jwtSecret: process.env.JWT_SECRET || 'orbyx-super-secure-jwt-secret-key-32chars',
     corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
     services: {
         auth: process.env.AUTH_SERVICE_URL || 'http://localhost:5001',

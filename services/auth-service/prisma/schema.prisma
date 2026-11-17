@@ -39,23 +39,46 @@ model Permissions {
 }
 
 model Users {
-  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
-  email        String        @unique(map: "uq_auth_users_email") @db.VarChar(255) @map("email")
-  passwordHash String        @db.VarChar(255) @map("password_hash")
-  roleCode     String        @db.VarChar(50) @map("role_code")
-  status       String        @default("ACTIVE") @db.VarChar(50) @map("status")
-  employeeId   String?       @unique(map: "uq_auth_users_employee_id") @db.VarChar(50) @map("employee_id")
-  departmentId String?       @db.VarChar(50) @map("department_id")
-  clientId     String?       @db.VarChar(50) @map("client_id")
-  createdAt    DateTime      @default(now()) @db.Timestamptz(6) @map("created_at")
-  updatedAt    DateTime      @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
-  sessions     AuthSessions[]
-  userRoles    UserRoles[]
+  id                         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  email                      String        @unique(map: "uq_auth_users_email") @db.VarChar(255) @map("email")
+  username                   String?       @db.VarChar(100) @map("username")
+  passwordHash               String        @db.VarChar(255) @map("password_hash")
+  roleCode                   String        @db.VarChar(50) @map("role_code")
+  status                     String        @default("ACTIVE") @db.VarChar(50) @map("status")
+  employeeId                 String?       @unique(map: "uq_auth_users_employee_id") @db.VarChar(50) @map("employee_id")
+  departmentId               String?       @db.VarChar(50) @map("department_id")
+  clientId                   String?       @db.VarChar(50) @map("client_id")
+  isActive                   Boolean       @default(true) @map("is_active")
+  lastLoginAt                DateTime?     @db.Timestamptz(6) @map("last_login_at")
+  createdAt                  DateTime      @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt                  DateTime      @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+
+  activationTokenHash        String?       @db.VarChar(255) @map("activation_token_hash")
+  activationTokenExpiresAt   DateTime?     @db.Timestamptz(6) @map("activation_token_expires_at")
+  invitationStatus           String?       @db.VarChar(50) @map("invitation_status")
+  invitationSentAt           DateTime?     @db.Timestamptz(6) @map("invitation_sent_at")
+  invitationDeliveryAttempts Int           @default(0) @map("invitation_delivery_attempts")
+  invitationLastError        String?       @db.Text @map("invitation_last_error")
+  failedLoginAttempts        Int           @default(0) @map("failed_login_attempts")
+  lockedUntil                DateTime?     @db.Timestamptz(6) @map("locked_until")
+
+  sessions                   AuthSessions[]
+  userRoles                  UserRoles[]
 
   @@index([email], map: "idx_auth_users_email")
   @@index([employeeId], map: "idx_auth_users_employee_id")
   @@index([roleCode, status], map: "idx_auth_users_role_status")
   @@map("users")
+  @@schema("auth")
+}
+
+model ServiceNonces {
+  nonce       String   @id @db.VarChar(100) @map("nonce")
+  serviceName String   @db.VarChar(100) @map("service_name")
+  createdAt   DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+
+  @@index([createdAt], map: "idx_auth_service_nonces_created")
+  @@map("service_nonces")
   @@schema("auth")
 }
 

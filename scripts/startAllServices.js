@@ -16,6 +16,15 @@ const services = [
 
 console.log('Starting ORBYX HRMS Microservices...\n');
 
+console.log('------------------------------------------------------------');
+console.log('🌐 Microservices & API Gateway Endpoints:');
+for (const svc of services) {
+  const url = `http://localhost:${svc.port}`;
+  const note = svc.name === 'API Gateway' ? ' (Central Swagger: ' + url + '/api-docs)' : '';
+  console.log(`  • ${svc.name.padEnd(24)} -> ${url}${note}`);
+}
+console.log('------------------------------------------------------------\n');
+
 const procs = [];
 
 for (const svc of services) {

@@ -57,3 +57,33 @@ const orgRepository_1 = require("../src/repositories/orgRepository");
     const fallback = await service.deriveDesignationCode(undefined);
     strict_1.default.equal(fallback, 'GEN');
 });
+(0, node_test_1.default)('OrganizationService manages statutory compliance and branch/dept/desig updates', async () => {
+    const repo = new orgRepository_1.InMemoryOrganizationRepository();
+    const service = new orgService_1.OrganizationService(repo);
+    // Statutory configuration
+    const statutory = await service.getStatutoryConfig();
+    strict_1.default.equal(statutory.epfApplicable, true);
+    strict_1.default.equal(statutory.epfEmployeeRatePercent, 12);
+    const updatedStat = await service.updateStatutoryConfig({
+        epfEmployeeRatePercent: 10,
+        esiApplicable: false,
+    });
+    strict_1.default.equal(updatedStat.epfEmployeeRatePercent, 10);
+    strict_1.default.equal(updatedStat.esiApplicable, false);
+    // Branch update and status toggle
+    const updatedBranch = await service.updateBranch('BR-BLR', { name: 'Bengaluru Global Campus' });
+    strict_1.default.equal(updatedBranch.name, 'Bengaluru Global Campus');
+    const toggledBranch = await service.toggleBranchStatus('BR-BLR', false);
+    strict_1.default.equal(toggledBranch.status, 'Inactive');
+    // Department update and status toggle
+    const updatedDept = await service.updateDepartment('DEP-ENG', { name: 'Core Platform Engineering' });
+    strict_1.default.equal(updatedDept.name, 'Core Platform Engineering');
+    const toggledDept = await service.toggleDepartmentStatus('DEP-ENG', false);
+    strict_1.default.equal(toggledDept.status, 'Inactive');
+    // Designation update and status toggle
+    const updatedDesig = await service.updateDesignation('DES-SWE', { title: 'Principal Engineer', level: 6 });
+    strict_1.default.equal(updatedDesig.title, 'Principal Engineer');
+    strict_1.default.equal(updatedDesig.level, 6);
+    const toggledDesig = await service.toggleDesignationStatus('DES-SWE', false);
+    strict_1.default.equal(toggledDesig.status, 'Inactive');
+});

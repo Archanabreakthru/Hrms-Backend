@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateSalaryBankSchema = exports.updateReportingSchema = exports.updateEmploymentSchema = exports.updatePersonalSchema = exports.enrollEmployeeSchema = exports.draftEmployeeSchema = exports.PHONE_REGEX = exports.PAN_REGEX = void 0;
+exports.updateServiceRecordStatusSchema = exports.createServiceRecordSchema = exports.updateSalaryBankSchema = exports.updateReportingSchema = exports.updateEmploymentSchema = exports.updatePersonalSchema = exports.enrollEmployeeSchema = exports.draftEmployeeSchema = exports.PHONE_REGEX = exports.PAN_REGEX = void 0;
 const zod_1 = require("zod");
 exports.PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 exports.PHONE_REGEX = /^\+?[0-9\s\-]{8,15}$/;
@@ -104,5 +104,30 @@ exports.updateSalaryBankSchema = {
         salaryStructureId: zod_1.z.string().optional(),
         epfApplicable: zod_1.z.boolean().optional(),
         esiApplicable: zod_1.z.boolean().optional(),
+    }),
+};
+exports.createServiceRecordSchema = {
+    body: zod_1.z.object({
+        recordType: zod_1.z.string().min(1, 'Record type is required'),
+        effectiveDate: zod_1.z.string().min(1, 'Effective date is required'),
+        previousDesignationId: zod_1.z.string().optional(),
+        newDesignationId: zod_1.z.string().optional(),
+        previousDepartmentId: zod_1.z.string().optional(),
+        newDepartmentId: zod_1.z.string().optional(),
+        previousReportingManagerId: zod_1.z.string().optional(),
+        newReportingManagerId: zod_1.z.string().optional(),
+        previousBranchId: zod_1.z.string().optional(),
+        newBranchId: zod_1.z.string().optional(),
+        previousEmploymentType: zod_1.z.string().optional(),
+        newEmploymentType: zod_1.z.string().optional(),
+        previousSalaryAmount: zod_1.z.number().optional(),
+        newSalaryAmount: zod_1.z.number().optional(),
+        notes: zod_1.z.string().optional(),
+        approvalStatus: zod_1.z.enum(['Pending', 'Approved', 'Rejected']).default('Approved'),
+    }),
+};
+exports.updateServiceRecordStatusSchema = {
+    body: zod_1.z.object({
+        approvalStatus: zod_1.z.enum(['Approved', 'Rejected']),
     }),
 };

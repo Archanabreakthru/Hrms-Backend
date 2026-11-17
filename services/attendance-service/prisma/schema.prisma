@@ -5,6 +5,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/client"
 }
 
 enum WorkMode {
@@ -35,33 +36,34 @@ enum LeaveStatus {
 }
 
 model Shift {
-  id               String   @id @default(uuid())
-  code             String   @unique
+  id               String    @id @default(uuid())
+  code             String    @unique
   name             String
-  startTime        String   // "09:30"
-  endTime          String   // "18:30"
-  gracePeriodMins  Int      @default(15)
-  halfDayThreshold Float    @default(4.5) // hours
-  fullDayThreshold Float    @default(8.0) // hours
-  isOvernight      Boolean  @default(false)
-  weeklyOffDays    Int[]    @default([0, 6]) // 0=Sunday, 6=Saturday
-  status           String   @default("Active")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  startTime        DateTime  @map("start_time") @db.Time
+  endTime          DateTime  @map("end_time") @db.Time
+  gracePeriodMins  Int       @default(15) @map("grace_period_minutes")
+  halfDayThreshold Float     @default(4.5) @map("half_day_threshold_hours")
+  fullDayThreshold Float     @default(8.0) @map("full_day_threshold_hours")
+  isOvernight      Boolean   @default(false) @map("is_overnight")
+  weeklyOffDays    Int[]     @default([0, 6]) @map("weekly_off_days")
+  status           Boolean   @default(true) @map("is_active")
+  createdAt        DateTime? @default(now()) @map("created_at")
+  updatedAt        DateTime? @updatedAt @map("updated_at")
 
   @@map("shifts")
 }
 
 model Holiday {
   id          String   @id @default(uuid())
+  branchId    String?  @map("branch_id")
   name        String
-  date        DateTime
-  branchId    String?  // null = all branches
-  isOptional  Boolean  @default(false)
-  year        Int
+  date        DateTime @map("holiday_date")
+  year        Int      @map("holiday_year")
+  isOptional  Boolean  @default(false) @map("is_optional")
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@unique([date, branchId])
   @@map("holidays")
@@ -69,27 +71,28 @@ model Holiday {
 
 model AttendanceRecord {
   id                   String      @id @default(uuid())
-  employeeId           String
-  date                 DateTime
-  shiftId              String
-  workMode             WorkMode    @default(Office)
-  checkInTime          DateTime?
-  checkOutTime         DateTime?
-  breakDurationMinutes Int         @default(60)
-  totalWorkingHours    Float       @default(0.0)
-  overtimeHours        Float       @default(0.0)
-  status               PunchStatus @default(Present)
-  isLate               Boolean     @default(false)
-  isEarlyDeparture     Boolean     @default(false)
-  checkInPhotoUrl      String?
-  checkOutPhotoUrl     String?
-  checkInLatitude      Float?
-  checkInLongitude     Float?
-  checkOutLatitude     Float?
-  checkOutLongitude    Float?
-  notes                String?
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+  employeeId           String      @map("employee_id")
+  date                 DateTime    @map("attendance_date")
+  shiftId              String      @map("shift_id")
+  workMode             String      @default("Office") @map("work_mode")
+  checkInTime          DateTime?   @map("check_in_time")
+  checkOutTime         DateTime?   @map("check_out_time")
+  breakDurationMinutes Int         @default(60) @map("break_duration_minutes")
+  totalWorkingHours    Float       @default(0.0) @map("total_working_hours")
+  overtimeHours        Float       @default(0.0) @map("overtime_hours")
+  status               String      @default("Present") @map("status")
+  isLate               Boolean     @default(false) @map("is_late")
+  isEarlyDeparture     Boolean     @default(false) @map("is_early_departure")
+  checkInPhotoUrl      String?     @map("check_in_photo_url")
+  checkOutPhotoUrl     String?     @map("check_out_photo_url")
+  checkInLatitude      Float?      @map("check_in_latitude")
+  checkInLongitude     Float?      @map("check_in_longitude")
+  checkOutLatitude     Float?      @map("check_out_latitude")
+  checkOutLongitude    Float?      @map("check_out_longitude")
+  source               String?     @map("source")
+  notes                String?     @map("notes")
+  createdAt            DateTime    @default(now()) @map("created_at")
+  updatedAt            DateTime    @updatedAt @map("updated_at")
 
   @@unique([employeeId, date])
   @@index([employeeId])
@@ -98,52 +101,74 @@ model AttendanceRecord {
 }
 
 model AttendanceRegularization {
-  id                 String           @id @default(uuid())
-  attendanceRecordId String
-  employeeId         String
-  requestedCheckIn   DateTime
-  requestedCheckOut  DateTime
+  id                 String    @id @default(uuid())
+  attendanceRecordId String?   @map("attendance_record_id")
+  employeeId         String    @map("employee_id")
+  targetDate         DateTime? @map("target_date")
+  requestedCheckIn   DateTime  @map("requested_check_in")
+  requestedCheckOut  DateTime  @map("requested_check_out")
   reason             String
-  status             CorrectionStatus @default(Pending)
-  reviewedBy         String?          // Manager or HR user ID
-  reviewedAt         DateTime?
-  reviewRemarks      String?
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
+  status             String    @default("Pending Manager Approval")
+  reviewedBy         String?   @map("reviewed_by")
+  reviewedAt         DateTime? @map("reviewed_at")
+  reviewRemarks      String?   @map("review_remarks")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
 
   @@index([employeeId])
   @@index([attendanceRecordId])
   @@map("attendance_regularizations")
 }
 
+model ShiftSchedule {
+  id            String    @id @default(uuid())
+  employeeId    String    @map("employee_id")
+  shiftId       String    @map("shift_id")
+  effectiveFrom DateTime  @map("effective_from")
+  effectiveTo   DateTime? @map("effective_to")
+  assignedBy    String    @map("assigned_by")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([employeeId])
+  @@index([shiftId])
+  @@map("shift_schedules")
+}
+
 model LeaveType {
   id               String   @id @default(uuid())
   code             String   @unique // "CL", "SL", "EL", "ML", "PL", "CO", "LOP"
   name             String
-  annualQuotaDays  Float
-  isCarryForward   Boolean  @default(false)
-  maxCarryForward  Float    @default(0)
-  isEncashable     Boolean  @default(false)
-  isUnpaid         Boolean  @default(false)
-  requiresApproval Boolean  @default(true)
-  status           String   @default("Active")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  description      String?
+  isPaid           Boolean  @default(true) @map("is_paid")
+  annualQuotaDays  Float    @map("annual_quota_days")
+  isCarryForward   Boolean  @default(false) @map("is_carry_forward")
+  maxCarryForward  Float    @default(0) @map("max_carry_forward_days")
+  maxConsecutiveDays Int    @default(30) @map("max_consecutive_days")
+  allowsHalfDay    Boolean  @default(true) @map("allows_half_day")
+  requiresDoc      Boolean  @default(false) @map("requires_doc")
+  isEncashable     Boolean  @default(false) @map("is_encashable")
+  eligibilityCriteria String @default("All Active Employees") @map("eligibility_criteria")
+  effectiveDate    DateTime @default(now()) @map("effective_date")
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   @@map("leave_types")
 }
 
 model LeaveBalance {
   id             String   @id @default(uuid())
-  employeeId     String
-  leaveTypeId    String
+  employeeId     String   @map("employee_id")
+  leaveTypeId    String   @map("leave_type_id")
   year           Int
-  allocatedDays  Float
-  usedDays       Float    @default(0)
-  pendingDays    Float    @default(0)
-  carriedForward Float    @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  allocatedDays  Float    @map("allocated_days")
+  usedDays       Float    @default(0) @map("used_days")
+  pendingDays    Float    @default(0) @map("pending_days")
+  carriedForward Float    @default(0) @map("carried_forward")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@unique([employeeId, leaveTypeId, year])
   @@index([employeeId])
@@ -151,21 +176,22 @@ model LeaveBalance {
 }
 
 model LeaveApplication {
-  id              String      @id @default(uuid())
-  employeeId      String
-  leaveTypeId     String
-  startDate       DateTime
-  endDate         DateTime
-  isHalfDay       Boolean     @default(false)
-  halfDaySession  String?     // "First" | "Second"
-  totalDays       Float
-  reason          String
-  status          LeaveStatus @default(Pending)
-  approvedBy      String?
-  approvedAt      DateTime?
-  rejectionReason String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id                    String      @id @default(uuid())
+  employeeId            String      @map("employee_id")
+  leaveTypeId           String      @map("leave_type_id")
+  startDate             DateTime    @map("start_date")
+  endDate               DateTime    @map("end_date")
+  isHalfDay             Boolean     @default(false) @map("is_half_day")
+  halfDaySession        String?     @map("half_day_session") // "First" | "Second"
+  totalDays             Float       @map("total_days")
+  reason                String
+  status                String      @default("Pending")
+  approvedBy            String?     @map("approver_id")
+  approvedAt            DateTime?   @map("decided_at")
+  rejectionReason       String?     @map("decision_comments")
+  supportingDocumentUrl String?     @map("supporting_document_url")
+  createdAt             DateTime    @default(now()) @map("created_at")
+  updatedAt             DateTime    @updatedAt @map("updated_at")
 
   @@index([employeeId])
   @@index([startDate, endDate])

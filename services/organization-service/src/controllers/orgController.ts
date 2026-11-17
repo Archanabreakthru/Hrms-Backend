@@ -23,6 +23,24 @@ export class OrganizationController {
     }
   };
 
+  getStatutoryConfig = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const config = await this.orgService.getStatutoryConfig();
+      apiSuccess(res, config, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateStatutoryConfig = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const updated = await this.orgService.updateStatutoryConfig(req.body);
+      apiSuccess(res, updated, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
   getBranches = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const branches = await this.orgService.getBranches();
@@ -36,6 +54,24 @@ export class OrganizationController {
     try {
       const branch = await this.orgService.createBranch(req.body);
       apiSuccess(res, branch, 201);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateBranch = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const branch = await this.orgService.updateBranch(req.params.id, req.body);
+      apiSuccess(res, branch, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  toggleBranchStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const branch = await this.orgService.toggleBranchStatus(req.params.id, req.body.isActive);
+      apiSuccess(res, branch, 200);
     } catch (err) {
       next(err);
     }
@@ -59,6 +95,24 @@ export class OrganizationController {
     }
   };
 
+  updateDepartment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const dept = await this.orgService.updateDepartment(req.params.id, req.body);
+      apiSuccess(res, dept, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  toggleDepartmentStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const dept = await this.orgService.toggleDepartmentStatus(req.params.id, req.body.isActive);
+      apiSuccess(res, dept, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
   getDesignations = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const designations = await this.orgService.getDesignations();
@@ -72,6 +126,24 @@ export class OrganizationController {
     try {
       const desig = await this.orgService.createDesignation(req.body);
       apiSuccess(res, desig, 201);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateDesignation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const desig = await this.orgService.updateDesignation(req.params.id, req.body);
+      apiSuccess(res, desig, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  toggleDesignationStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const desig = await this.orgService.toggleDesignationStatus(req.params.id, req.body.isActive);
+      apiSuccess(res, desig, 200);
     } catch (err) {
       next(err);
     }

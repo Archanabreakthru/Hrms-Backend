@@ -1,6 +1,9 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 export const gatewayConfig = {
   port: parseInt(process.env.GATEWAY_PORT || '5000', 10),
-  jwtSecret: process.env.JWT_SECRET || 'orbyx_super_secret_jwt_key_2026_dev_mode_only',
+  jwtSecret: process.env.JWT_SECRET || 'orbyx-super-secure-jwt-secret-key-32chars',
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   services: {
     auth: process.env.AUTH_SERVICE_URL || 'http://localhost:5001',
@@ -14,4 +17,5 @@ export const gatewayConfig = {
     employee: process.env.EMPLOYEE_SERVICE_URL || 'http://localhost:5009',
   },
 };
+
 

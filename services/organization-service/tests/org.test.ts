@@ -67,3 +67,42 @@ test('OrganizationService derives designation codes for Employee Service sequent
   assert.equal(fallback, 'GEN');
 });
 
+test('OrganizationService manages statutory compliance and branch/dept/desig updates', async () => {
+  const repo = new InMemoryOrganizationRepository();
+  const service = new OrganizationService(repo);
+
+  // Statutory configuration
+  const statutory = await service.getStatutoryConfig();
+  assert.equal(statutory.epfApplicable, true);
+  assert.equal(statutory.epfEmployeeRatePercent, 12);
+
+  const updatedStat = await service.updateStatutoryConfig({
+    epfEmployeeRatePercent: 10,
+    esiApplicable: false,
+  });
+  assert.equal(updatedStat.epfEmployeeRatePercent, 10);
+  assert.equal(updatedStat.esiApplicable, false);
+
+  // Branch update and status toggle
+  const updatedBranch = await service.updateBranch('BR-BLR', { name: 'Bengaluru Global Campus' });
+  assert.equal(updatedBranch.name, 'Bengaluru Global Campus');
+
+  const toggledBranch = await service.toggleBranchStatus('BR-BLR', false);
+  assert.equal(toggledBranch.status, 'Inactive');
+
+  // Department update and status toggle
+  const updatedDept = await service.updateDepartment('DEP-ENG', { name: 'Core Platform Engineering' });
+  assert.equal(updatedDept.name, 'Core Platform Engineering');
+
+  const toggledDept = await service.toggleDepartmentStatus('DEP-ENG', false);
+  assert.equal(toggledDept.status, 'Inactive');
+
+  // Designation update and status toggle
+  const updatedDesig = await service.updateDesignation('DES-SWE', { title: 'Principal Engineer', level: 6 });
+  assert.equal(updatedDesig.title, 'Principal Engineer');
+  assert.equal(updatedDesig.level, 6);
+
+  const toggledDesig = await service.toggleDesignationStatus('DES-SWE', false);
+  assert.equal(toggledDesig.status, 'Inactive');
+});
+

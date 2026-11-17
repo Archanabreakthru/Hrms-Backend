@@ -20,6 +20,7 @@ function createApp(customRepo) {
     const repo = customRepo || new notificationRepository_1.InMemoryNotificationRepository();
     const service = new notificationService_1.NotificationService(repo);
     const controller = new notificationController_1.NotificationController(service);
+    app.get('/', (req, res) => res.json({ service: 'notification-service', status: 'UP', health: '/health' }));
     app.get('/health', (req, res) => {
         res.status(200).json({ status: 'UP', service: 'notification-service' });
     });

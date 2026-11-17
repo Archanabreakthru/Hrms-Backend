@@ -5,7 +5,8 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx watch src/index.ts",
+    "dev:gateway": "tsx watch api-gateway/src/server.ts",
+    "dev": "tsx watch api-gateway/src/server.ts",
     "start": "node scripts/startAllServices.js",
     "test": "node --test services/asset-service/tests/asset.test.js services/attendance-service/tests/attendance.test.js services/auth-service/tests/auth.test.js services/client-service/tests/client.test.js services/employee-service/tests/employee.test.js services/expense-service/tests/expense.test.js services/notification-service/tests/notification.test.js services/organization-service/tests/org.test.js services/payroll-service/tests/payroll.test.js api-gateway/tests/gateway.test.js shared/tests/shared.test.js",
     "prisma:generate:auth": "prisma generate --schema=services/auth-service/prisma/schema.prisma",
@@ -22,10 +23,12 @@
     "@prisma/client": "^6.19.3",
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/nodemailer": "^8.0.2",
     "cors": "^2.8.6",
     "dotenv": "^18.0.10",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^10.5.0",
     "swagger-ui-express": "^5.0.1",
     "zod": "^4.6.7"
   },

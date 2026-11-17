@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.InMemoryEmployeeRepository = void 0;
 class InMemoryEmployeeRepository {
     employees = new Map();
+    serviceRecords = new Map();
     sequences = new Map();
     // Mutex lock per designation code for concurrency-safe allocation
     sequenceLocks = new Map();
@@ -44,6 +45,13 @@ class InMemoryEmployeeRepository {
             list = list.filter((e) => e.profileStatus === filter.profileStatus);
         if (filter?.reportingManagerId)
             list = list.filter((e) => e.reportingManagerId === filter.reportingManagerId);
+        if (filter?.search) {
+            const q = filter.search.toLowerCase().trim();
+            list = list.filter((e) => e.firstName.toLowerCase().includes(q) ||
+                e.lastName.toLowerCase().includes(q) ||
+                e.email.toLowerCase().includes(q) ||
+                e.id.toLowerCase().includes(q));
+        }
         const total = list.length;
         const page = filter?.page || 1;
         const limit = filter?.limit || 50;
@@ -108,6 +116,37 @@ class InMemoryEmployeeRepository {
     }
     async getDirectReports(managerId) {
         return Array.from(this.employees.values()).filter((e) => e.reportingManagerId === managerId);
+    }
+    async getServiceRecords(employeeId) {
+        return Array.from(this.serviceRecords.values())
+            .filter((r) => r.employeeId === employeeId)
+            .sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime());
+    }
+    async createServiceRecord(record) {
+        const id = `sr-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const now = new Date();
+        const newEntry = {
+            ...record,
+            id,
+            createdAt: now,
+            updatedAt: now,
+        };
+        this.serviceRecords.set(id, newEntry);
+        return newEntry;
+    }
+    async updateServiceRecordStatus(recordId, status, approvedBy) {
+        const existing = this.serviceRecords.get(recordId);
+        if (!existing)
+            throw new Error(`Service record ${recordId} not found`);
+        const updated = {
+            ...existing,
+            approvalStatus: status,
+            approvedBy: approvedBy || existing.approvedBy,
+            approvedAt: status === 'Approved' ? new Date() : existing.approvedAt,
+            updatedAt: new Date(),
+        };
+        this.serviceRecords.set(recordId, updated);
+        return updated;
     }
 }
 exports.InMemoryEmployeeRepository = InMemoryEmployeeRepository;

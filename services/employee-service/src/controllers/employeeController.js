@@ -77,6 +77,7 @@ class EmployeeController {
                 branchId: req.query.branchId,
                 status: req.query.status,
                 profileStatus: req.query.profileStatus,
+                search: req.query.search,
                 page: req.query.page ? parseInt(req.query.page, 10) : 1,
                 limit: req.query.limit ? parseInt(req.query.limit, 10) : 50,
             };
@@ -86,6 +87,33 @@ class EmployeeController {
                 limit: result.limit,
                 total: result.total,
             });
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    getServiceRecords = async (req, res, next) => {
+        try {
+            const records = await this.employeeService.getServiceRecords(req.params.id, req.user);
+            (0, apiResponse_1.apiSuccess)(res, records, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    createServiceRecord = async (req, res, next) => {
+        try {
+            const record = await this.employeeService.createServiceRecord(req.params.id, req.body, req.user);
+            (0, apiResponse_1.apiSuccess)(res, record, 201);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    updateServiceRecordStatus = async (req, res, next) => {
+        try {
+            const record = await this.employeeService.updateServiceRecordStatus(req.params.id, req.params.recordId, req.body.approvalStatus, req.user);
+            (0, apiResponse_1.apiSuccess)(res, record, 200);
         }
         catch (err) {
             next(err);

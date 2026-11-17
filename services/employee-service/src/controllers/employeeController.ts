@@ -75,6 +75,7 @@ export class EmployeeController {
         branchId: req.query.branchId as string,
         status: req.query.status as string,
         profileStatus: req.query.profileStatus as string,
+        search: req.query.search as string,
         page: req.query.page ? parseInt(req.query.page as string, 10) : 1,
         limit: req.query.limit ? parseInt(req.query.limit as string, 10) : 50,
       };
@@ -85,6 +86,38 @@ export class EmployeeController {
         limit: result.limit,
         total: result.total,
       });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getServiceRecords = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const records = await this.employeeService.getServiceRecords(req.params.id, req.user!);
+      apiSuccess(res, records, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  createServiceRecord = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const record = await this.employeeService.createServiceRecord(req.params.id, req.body, req.user!);
+      apiSuccess(res, record, 201);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateServiceRecordStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const record = await this.employeeService.updateServiceRecordStatus(
+        req.params.id,
+        req.params.recordId,
+        req.body.approvalStatus,
+        req.user!
+      );
+      apiSuccess(res, record, 200);
     } catch (err) {
       next(err);
     }

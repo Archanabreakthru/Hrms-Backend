@@ -17,8 +17,44 @@ export const openapiSpec = {
   },
   servers: [
     {
-      url: '/',
-      description: 'API Gateway Server',
+      url: 'http://localhost:5000',
+      description: 'API Gateway (Routes to all microservices)',
+    },
+    {
+      url: 'http://localhost:5001',
+      description: 'Auth Service (Direct :5001)',
+    },
+    {
+      url: 'http://localhost:5002',
+      description: 'Organization Service (Direct :5002)',
+    },
+    {
+      url: 'http://localhost:5003',
+      description: 'Attendance & Leave Service (Direct :5003)',
+    },
+    {
+      url: 'http://localhost:5004',
+      description: 'Payroll Service (Direct :5004)',
+    },
+    {
+      url: 'http://localhost:5005',
+      description: 'Expense Service (Direct :5005)',
+    },
+    {
+      url: 'http://localhost:5006',
+      description: 'Asset Service (Direct :5006)',
+    },
+    {
+      url: 'http://localhost:5007',
+      description: 'Client Service (Direct :5007)',
+    },
+    {
+      url: 'http://localhost:5008',
+      description: 'Notification & Audit Service (Direct :5008)',
+    },
+    {
+      url: 'http://localhost:5009',
+      description: 'Employee Service (Direct :5009)',
     },
   ],
   tags: [

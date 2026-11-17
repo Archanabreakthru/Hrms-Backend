@@ -11,7 +11,8 @@ export function createApp(controller: AssetController): Application {
   app.use(correlationMiddleware);
 
   // Health check
-  app.get('/health', (req, res) => {
+  app.get('/', (req, res) => res.json({ service: 'asset-service', status: 'UP', health: '/health' }));
+    app.get('/health', (req, res) => {
     res.json({
       status: 'UP',
       service: 'asset-service',

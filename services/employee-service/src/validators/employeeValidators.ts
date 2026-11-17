@@ -111,3 +111,31 @@ export const updateSalaryBankSchema = {
   }),
 };
 
+export const createServiceRecordSchema = {
+  body: z.object({
+    recordType: z.string().min(1, 'Record type is required'),
+    effectiveDate: z.string().min(1, 'Effective date is required'),
+    previousDesignationId: z.string().optional(),
+    newDesignationId: z.string().optional(),
+    previousDepartmentId: z.string().optional(),
+    newDepartmentId: z.string().optional(),
+    previousReportingManagerId: z.string().optional(),
+    newReportingManagerId: z.string().optional(),
+    previousBranchId: z.string().optional(),
+    newBranchId: z.string().optional(),
+    previousEmploymentType: z.string().optional(),
+    newEmploymentType: z.string().optional(),
+    previousSalaryAmount: z.number().optional(),
+    newSalaryAmount: z.number().optional(),
+    notes: z.string().optional(),
+    approvalStatus: z.enum(['Pending', 'Approved', 'Rejected']).default('Approved'),
+  }),
+};
+
+export const updateServiceRecordStatusSchema = {
+  body: z.object({
+    approvalStatus: z.enum(['Approved', 'Rejected']),
+  }),
+};
+
+

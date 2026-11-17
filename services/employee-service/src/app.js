@@ -13,6 +13,7 @@ function createApp(employeeController) {
     app.use(express_1.default.json());
     app.use(correlation_1.correlationMiddleware);
     // Health check
+    app.get('/', (req, res) => res.json({ service: 'employee-service', status: 'UP', health: '/health' }));
     app.get('/health', (req, res) => {
         res.json({
             status: 'UP',
