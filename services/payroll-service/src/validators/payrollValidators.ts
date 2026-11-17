@@ -7,19 +7,15 @@ export const runPayrollSchema = {
   }),
 };
 
-export const updateSalaryStructureSchema = {
+export const createSalaryStructureSchema = {
   body: z.object({
-    employeeId: z.string().min(1),
-    effectiveFrom: z.string().min(1),
-    grossSalaryMonthly: z.number().min(0),
-    baseSalaryAnnual: z.number().min(0),
-    items: z.array(
-      z.object({
-        code: z.string(),
-        amountMonthly: z.number().min(0),
-        type: z.enum(['Earning', 'Deduction', 'Employer_Contribution']),
-      })
-    ),
+    id: z.string().optional(),
+    name: z.string().min(1, 'Structure name is required'),
+    description: z.string().optional().default(''),
+    grossMonthly: z.number().positive('Monthly gross salary must be positive'),
+    ctcAnnual: z.number().optional(),
+    items: z.array(z.any()).optional().default([]),
+    isActive: z.boolean().optional().default(true),
   }),
 };
 

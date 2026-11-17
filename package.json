@@ -1,7 +1,7 @@
 {
   "name": "orbyx-hrms-backend",
   "version": "1.0.0",
-  "description": "Orbyx HRMS - Backend Service",
+  "description": "Celestial HRMS - Backend Service",
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",

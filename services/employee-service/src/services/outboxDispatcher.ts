@@ -122,7 +122,7 @@ export class OutboxDispatcher {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 recipientId: item.email,
-                title: 'Welcome to Orbyx - Your HRMS Account Is Ready',
+                title: 'Welcome to Celestial - Your HRMS Account Is Ready',
                 message: 'Your official HRMS account has been provisioned. Please activate your account within 24 hours.',
                 channel: 'EMAIL',
                 metadata: {

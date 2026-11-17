@@ -126,6 +126,24 @@ class OrganizationService {
         }
         return this.orgRepo.updateDesignation(id, { status: isActive ? 'Active' : 'Inactive' });
     }
+    async deleteBranch(id) {
+        const existing = await this.orgRepo.getBranchById(id);
+        if (!existing)
+            throw new AppError_1.NotFoundError(`Branch ${id} not found`);
+        return this.orgRepo.deleteBranch(id);
+    }
+    async deleteDepartment(id) {
+        const existing = await this.orgRepo.getDepartmentById(id);
+        if (!existing)
+            throw new AppError_1.NotFoundError(`Department ${id} not found`);
+        return this.orgRepo.deleteDepartment(id);
+    }
+    async deleteDesignation(id) {
+        const existing = await this.orgRepo.getDesignationById(id);
+        if (!existing)
+            throw new AppError_1.NotFoundError(`Designation ${id} not found`);
+        return this.orgRepo.deleteDesignation(id);
+    }
     /**
      * Preserves standard designation code logic for employee ID generation
      * Formats: EMP-[DESIGNATION CODE]-[SEQ] (e.g. EMP-SWE-0001, EMP-MD-0002)

@@ -4,22 +4,7 @@ exports.InMemoryAssetRepository = void 0;
 class InMemoryAssetRepository {
     assets = new Map();
     constructor() {
-        this.seedDefaults();
-    }
-    seedDefaults() {
-        const a1 = {
-            id: 'AST-001',
-            assetTag: 'AST-LAP-001',
-            category: 'Laptop',
-            brand: 'Apple',
-            model: 'MacBook Pro M3 16"',
-            serialNumber: 'SN-APPL-99881',
-            status: 'Available',
-            custodyStatus: 'Available',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-        this.assets.set(a1.id, a1);
+        // Zero mock assets: clean start
     }
     async findAssetById(id) {
         return this.assets.get(id) || null;

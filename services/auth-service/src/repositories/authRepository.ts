@@ -3,6 +3,7 @@ import { UserRole } from '../../../../shared/src/constants/roles';
 export interface UserRecord {
   id: string;
   email: string;
+  username?: string | null;
   passwordHash: string;
   role: UserRole;
   status: 'ACTIVE' | 'INVITED' | 'PENDING_ACTIVATION' | 'SUSPENDED' | 'DEACTIVATED' | 'DISABLED' | 'TERMINATED';
@@ -36,6 +37,8 @@ export interface IAuthRepository {
   findUserById(id: string): Promise<UserRecord | null>;
   findUserByEmployeeId(employeeId: string): Promise<UserRecord | null>;
   findUserByActivationTokenHash(tokenHash: string): Promise<UserRecord | null>;
+  findAllUsers?(): Promise<UserRecord[]>;
+  updateUserRole?(userId: string, newRoleCode: string): Promise<UserRecord>;
   getUserPermissions(userId: string, roleCode: string): Promise<string[]>;
   recordLoginSuccess(userId: string): Promise<void>;
   recordLoginFailure(userId: string, currentFailedAttempts: number, lockUntil?: Date | null): Promise<void>;
@@ -73,10 +76,10 @@ export class InMemoryAuthRepository implements IAuthRepository {
   private users = new Map<string, UserRecord>();
   private sessions = new Map<string, SessionRecord>();
 
-  async findUserByEmail(email: string): Promise<UserRecord | null> {
-    const normalized = email.toLowerCase().trim();
+  async findUserByEmail(emailOrUsername: string): Promise<UserRecord | null> {
+    const normalized = emailOrUsername.toLowerCase().trim();
     for (const u of this.users.values()) {
-      if (u.email.toLowerCase() === normalized) return u;
+      if (u.email.toLowerCase() === normalized || (u.username && u.username.toLowerCase() === normalized)) return u;
     }
     return null;
   }
@@ -134,6 +137,18 @@ export class InMemoryAuthRepository implements IAuthRepository {
     (user as any).activationTokenHash = data.activationTokenHash;
     (user as any).activationTokenExpiresAt = data.activationTokenExpiresAt;
     user.invitationStatus = data.invitationStatus;
+    user.updatedAt = new Date();
+    return user;
+  }
+
+  async findAllUsers(): Promise<UserRecord[]> {
+    return Array.from(this.users.values());
+  }
+
+  async updateUserRole(userId: string, newRoleCode: string): Promise<UserRecord> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error('User not found');
+    user.role = newRoleCode as UserRole;
     user.updatedAt = new Date();
     return user;
   }

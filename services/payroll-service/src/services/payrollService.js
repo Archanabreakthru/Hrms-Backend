@@ -129,5 +129,44 @@ class PayrollService {
         }
         return saved;
     }
+    async listSalaryStructures() {
+        if (this.payrollRepo.listOrgSalaryStructures) {
+            return await this.payrollRepo.listOrgSalaryStructures();
+        }
+        return [];
+    }
+    async createSalaryStructure(data) {
+        if (!data.name || !data.grossMonthly) {
+            throw new AppError_1.ValidationError('Structure name and grossMonthly are required');
+        }
+        const gross = Number(data.grossMonthly);
+        const basic = Math.round(gross * 0.5);
+        const hra = Math.round(gross * 0.25);
+        const special = gross - basic - hra;
+        const items = data.items && data.items.length > 0 ? data.items : [
+            { componentId: 'COMP-BASIC', componentName: 'Basic Salary', componentCode: 'BASIC', type: 'Earning', amountMonthly: basic, amountAnnual: basic * 12 },
+            { componentId: 'COMP-HRA', componentName: 'House Rent Allowance (HRA)', componentCode: 'HRA', type: 'Earning', amountMonthly: hra, amountAnnual: hra * 12 },
+            { componentId: 'COMP-SPEC', componentName: 'Special Allowance', componentCode: 'SPECIAL', type: 'Earning', amountMonthly: special, amountAnnual: special * 12 },
+        ];
+        const payload = {
+            id: data.id || `STR-CUSTOM-${Date.now()}`,
+            name: data.name.trim(),
+            description: data.description ? data.description.trim() : '',
+            grossMonthly: gross,
+            ctcAnnual: data.ctcAnnual || gross * 12,
+            items,
+            isActive: data.isActive !== false,
+        };
+        if (this.payrollRepo.createOrgSalaryStructure) {
+            return await this.payrollRepo.createOrgSalaryStructure(payload);
+        }
+        return payload;
+    }
+    async deleteSalaryStructure(id) {
+        if (this.payrollRepo.deleteOrgSalaryStructure) {
+            return await this.payrollRepo.deleteOrgSalaryStructure(id);
+        }
+        return true;
+    }
 }
 exports.PayrollService = PayrollService;

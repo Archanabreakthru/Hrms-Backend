@@ -23,5 +23,8 @@ function createAuthRouter(authController) {
     router.post('/register', authMiddleware, (0, auth_1.requirePermission)('auth.users.manage'), (0, validation_1.validateRequest)(authValidators_1.registerUserSchema), authController.register);
     // Current session info
     router.get('/me', authMiddleware, authController.me);
+    // User & Role Management endpoints for Super Admin / authorized operators
+    router.get('/users', authMiddleware, (0, auth_1.requirePermission)('auth.users.manage', 'org.profile.manage'), authController.listUsers);
+    router.put('/users/:id/role', authMiddleware, (0, auth_1.requirePermission)('auth.users.manage'), authController.updateRole);
     return router;
 }

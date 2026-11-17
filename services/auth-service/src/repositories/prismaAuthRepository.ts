@@ -9,6 +9,7 @@ export class PrismaAuthRepository implements IAuthRepository {
     return {
       id: raw.id,
       email: raw.email,
+      username: raw.username ?? undefined,
       passwordHash: raw.passwordHash,
       role: raw.roleCode as UserRole,
       status: raw.status as any,
@@ -40,9 +41,15 @@ export class PrismaAuthRepository implements IAuthRepository {
     };
   }
 
-  async findUserByEmail(email: string): Promise<UserRecord | null> {
-    const raw = await this.prisma.users.findUnique({
-      where: { email: email.toLowerCase().trim() },
+  async findUserByEmail(emailOrUsername: string): Promise<UserRecord | null> {
+    const term = emailOrUsername.toLowerCase().trim();
+    const raw = await this.prisma.users.findFirst({
+      where: {
+        OR: [
+          { email: term },
+          { username: term }
+        ]
+      },
     });
     return raw ? this.mapUser(raw) : null;
   }
@@ -243,6 +250,45 @@ export class PrismaAuthRepository implements IAuthRepository {
       where: { userId },
       data: { isRevoked: true },
     });
+  }
+
+  async findAllUsers(): Promise<UserRecord[]> {
+    const rawList = await this.prisma.users.findMany({
+      orderBy: { createdAt: 'asc' },
+    });
+    return rawList.map((r) => this.mapUser(r));
+  }
+
+  async updateUserRole(userId: string, newRoleCode: string): Promise<UserRecord> {
+    const raw = await this.prisma.users.update({
+      where: { id: userId },
+      data: { roleCode: newRoleCode },
+    });
+
+    try {
+      const roleRow = await this.prisma.roles.findUnique({
+        where: { code: newRoleCode },
+      });
+      if (roleRow) {
+        const existingUR = await this.prisma.userRoles.findFirst({
+          where: { userId },
+        });
+        if (existingUR) {
+          await this.prisma.userRoles.update({
+            where: { id: existingUR.id },
+            data: { roleId: roleRow.id },
+          });
+        } else {
+          await this.prisma.userRoles.create({
+            data: { userId, roleId: roleRow.id },
+          });
+        }
+      }
+    } catch {
+      // Non-blocking
+    }
+
+    return this.mapUser(raw);
   }
 }
 

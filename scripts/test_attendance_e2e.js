@@ -1,3 +1,4 @@
+
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -22,7 +23,7 @@ const secret = 'supersecret_jwt_key_replace_in_production';
 const employeeToken = jwt.sign({
   sub: 'c17aedab-7e34-4c24-97c9-dcbd0342b77a',
   email: 'archana@orbyx.internal',
-  employeeId: 'EMP-SWE-0004',
+  employeeId: 'EMP-007',
   role: 'employee',
   permissions: [
     'attendance.punch_self',
@@ -34,7 +35,7 @@ const employeeToken = jwt.sign({
 const managerToken = jwt.sign({
   sub: '1d06eb46-4f00-4c04-baf6-940bf8486891',
   email: 'krishnaraj@orbyx.internal',
-  employeeId: 'EMP-SDM-0003',
+  employeeId: 'EMP-004',
   role: 'reporting_manager',
   permissions: [
     'attendance.punch_self',
@@ -46,7 +47,7 @@ const managerToken = jwt.sign({
 const hrToken = jwt.sign({
   sub: '278ceece-42da-45fc-8679-5ee22621f3ee',
   email: 'raseedh@orbyx.internal',
-  employeeId: 'EMP-HRM-0012',
+  employeeId: 'EMP-005',
   role: 'hr_admin',
   permissions: [
     'attendance.punch_self',
@@ -81,7 +82,7 @@ async function request(options, postData) {
 
 async function runSuite() {
   console.log('================================================================');
-  console.log('ORBYX HRMS STAGE 3, PHASE 1 - E2E INTEGRATION & VERIFICATION');
+  console.log('Celestial HRMS STAGE 3, PHASE 1 - E2E INTEGRATION & VERIFICATION');
   console.log('================================================================');
 
   // Test 1: HR Admin Shifts Listing
@@ -110,24 +111,22 @@ async function runSuite() {
       }
     },
     {
-      employeeId: 'EMP-SWE-0004',
+      employeeId: 'EMP-007',
       shiftId: testShift ? testShift.id : 'd3b07384-d113-4e00-bf7d-9442fa6054be',
       effectiveFrom: '2026-11-16',
       effectiveTo: '2026-11-30'
     }
   );
-  const schedData = schedRes.data?.data || schedRes.data;
-  console.log(`✓ Schedule creation status: ${schedRes.status}, id: ${schedData?.id}`);
+  console.log(`✓ Schedule creation status: ${schedRes.status}, id: ${schedRes.data.id}`);
 
   const getScheds = await request({
     hostname: 'localhost',
     port: 5000,
-    path: '/api/v1/attendance/schedules?employeeId=EMP-SWE-0004',
+    path: '/api/v1/attendance/schedules?employeeId=EMP-007',
     method: 'GET',
     headers: { Authorization: `Bearer ${hrToken}` }
   });
-  const schedsList = getScheds.data?.data || getScheds.data;
-  console.log(`✓ Retrieved schedules for EMP-SWE-0004: ${Array.isArray(schedsList) ? schedsList.length : 0}`);
+  console.log(`✓ Retrieved schedules for EMP-007: ${getScheds.data.length}`);
 
   // Test 3: Employee Self-Service Punch (Clock-In)
   console.log('\n[3/7] Employee Web Punch (Clock-In to PostgreSQL)');
@@ -143,7 +142,7 @@ async function runSuite() {
       }
     },
     {
-      employeeId: 'EMP-SWE-0004',
+      employeeId: 'EMP-007',
       date: new Date().toISOString().split('T')[0],
       punchType: 'IN',
       timestamp: new Date().toISOString(),
@@ -151,8 +150,7 @@ async function runSuite() {
       shiftId: testShift ? testShift.id : 'd3b07384-d113-4e00-bf7d-9442fa6054be'
     }
   );
-  const punchData = punchRes.data?.data || punchRes.data;
-  console.log(`✓ Clock-In status: ${punchRes.status}, attendance record ID: ${punchData?.id}`);
+  console.log(`✓ Clock-In status: ${punchRes.status}, attendance record ID: ${punchRes.data?.data?.id || punchRes.data?.id}`);
 
   // Test 4: Two-Tier Regularization Workflow - Tier 0: Employee Submission
   console.log('\n[4/7] Two-Tier Attendance Regularization - Employee Submission');
@@ -169,7 +167,7 @@ async function runSuite() {
       }
     },
     {
-      employeeId: 'EMP-SWE-0004',
+      employeeId: 'EMP-007',
       targetDate: targetDate,
       requestedCheckIn: `${targetDate}T09:30:00.000Z`,
       requestedCheckOut: `${targetDate}T18:30:00.000Z`,
@@ -185,11 +183,11 @@ async function runSuite() {
   const preCheck = await request({
     hostname: 'localhost',
     port: 5000,
-    path: `/api/v1/attendance/records?date=${targetDate}&employeeId=EMP-SWE-0004`,
+    path: `/api/v1/attendance/records?date=${targetDate}&employeeId=EMP-007`,
     method: 'GET',
     headers: { Authorization: `Bearer ${hrToken}` }
   });
-  const recordsBefore = Array.isArray(preCheck.data?.data || preCheck.data) ? (preCheck.data?.data || preCheck.data) : [];
+  const recordsBefore = Array.isArray(preCheck.data) ? preCheck.data : [];
   console.log(`✓ Attendance records on ${targetDate} before approval: ${recordsBefore.length} (Verified: No premature record creation)`);
 
   // Test 6: Two-Tier Regularization - Tier 1: Reporting Manager Approval
@@ -211,8 +209,7 @@ async function runSuite() {
       stage: 'manager'
     }
   );
-  const mgrData = mgrReview.data?.data || mgrReview.data;
-  console.log(`✓ Manager Review status: ${mgrReview.status}, transitioned status: "${mgrData?.status}"`);
+  console.log(`✓ Manager Review status: ${mgrReview.status}, transitioned status: "${mgrReview.data.status}"`);
 
   // Test 7: Two-Tier Regularization - Tier 2: HR Final Approval
   console.log('\n[7/7] Tier 2: HR Administrator Final Approval (raseedh@orbyx.internal)');
@@ -233,21 +230,20 @@ async function runSuite() {
       stage: 'hr'
     }
   );
-  const hrData = hrReview.data?.data || hrReview.data;
-  console.log(`✓ HR Final Review status: ${hrReview.status}, final status: "${hrData?.status}"`);
+  console.log(`✓ HR Final Review status: ${hrReview.status}, final status: "${hrReview.data.status}"`);
 
   // Verify attendance record exists and is "Present" with proper working hours
   const postCheck = await request({
     hostname: 'localhost',
     port: 5000,
-    path: `/api/v1/attendance/records?date=${targetDate}&employeeId=EMP-SWE-0004`,
+    path: `/api/v1/attendance/records?date=${targetDate}&employeeId=EMP-007`,
     method: 'GET',
     headers: { Authorization: `Bearer ${hrToken}` }
   });
-  const recordsAfter = Array.isArray(postCheck.data?.data || postCheck.data) ? (postCheck.data?.data || postCheck.data) : [];
+  const recordsAfter = Array.isArray(postCheck.data) ? postCheck.data : [];
   console.log(`✓ Attendance records on ${targetDate} after HR approval: ${recordsAfter.length}`);
   if (recordsAfter.length > 0) {
-    console.log(`✓ Final Punch in PostgreSQL: Record ID=${recordsAfter[0].id}, Date=${recordsAfter[0].date}, Status=${recordsAfter[0].status}, NetHours=${recordsAfter[0].totalWorkingHours}`);
+    console.log(`✓ Final Punch in PostgreSQL: Record ID=${recordsAfter[0].id}, Date=${recordsAfter[0].date}, Status=${recordsAfter[0].status}, NetHours=${recordsAfter[0].totalHoursWorked}`);
   }
 
   // Non-destructive cleanup of test records created during this run
@@ -259,11 +255,11 @@ async function runSuite() {
   if (regId) {
     await q(`DELETE FROM attendance.attendance_regularizations WHERE id = '${regId}'::uuid;`);
   }
-  if (schedData?.id) {
-    await q(`DELETE FROM attendance.shift_schedules WHERE id = '${schedData.id}'::uuid;`);
+  if (schedRes.data?.id) {
+    await q(`DELETE FROM attendance.shift_schedules WHERE id = '${schedRes.data.id}'::uuid;`);
   }
-  if (punchData?.id) {
-    await q(`DELETE FROM attendance.attendance_records WHERE id = '${punchData.id}'::uuid;`);
+  if (punchRes.data?.id) {
+    await q(`DELETE FROM attendance.attendance_records WHERE id = '${punchRes.data.id}'::uuid;`);
   }
   console.log('✓ Test records cleaned up successfully.');
 

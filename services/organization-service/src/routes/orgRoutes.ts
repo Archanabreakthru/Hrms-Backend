@@ -62,6 +62,12 @@ export function createOrgRouter(orgController: OrganizationController): Router {
     validateRequest(toggleStatusSchema),
     orgController.toggleBranchStatus
   );
+  router.delete(
+    '/branches/:id',
+    authMiddleware,
+    requirePermission('org.branches.manage'),
+    orgController.deleteBranch
+  );
 
   // Departments
   router.get('/departments', authMiddleware, requirePermission('org.profile.read'), orgController.getDepartments);
@@ -86,6 +92,12 @@ export function createOrgRouter(orgController: OrganizationController): Router {
     validateRequest(toggleStatusSchema),
     orgController.toggleDepartmentStatus
   );
+  router.delete(
+    '/departments/:id',
+    authMiddleware,
+    requirePermission('org.departments.manage'),
+    orgController.deleteDepartment
+  );
 
   // Designations
   router.get('/designations', authMiddleware, requirePermission('org.profile.read'), orgController.getDesignations);
@@ -109,6 +121,12 @@ export function createOrgRouter(orgController: OrganizationController): Router {
     requirePermission('org.designations.manage'),
     validateRequest(toggleStatusSchema),
     orgController.toggleDesignationStatus
+  );
+  router.delete(
+    '/designations/:id',
+    authMiddleware,
+    requirePermission('org.designations.manage'),
+    orgController.deleteDesignation
   );
 
   // Internal Designation Code Derivation for Employee Service ID Generation

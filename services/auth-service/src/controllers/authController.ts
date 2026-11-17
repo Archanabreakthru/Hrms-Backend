@@ -87,5 +87,25 @@ export class AuthController {
       next(err);
     }
   };
+
+  listUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const users = await this.authService.listUsers();
+      apiSuccess(res, users, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateRole = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const { role } = req.body;
+      const updated = await this.authService.updateUserRole(id, role);
+      apiSuccess(res, updated, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 

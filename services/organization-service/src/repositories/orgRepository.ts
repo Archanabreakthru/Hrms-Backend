@@ -96,17 +96,20 @@ export interface IOrganizationRepository {
   getBranchById(id: string): Promise<BranchRecord | null>;
   createBranch(branch: Omit<BranchRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<BranchRecord>;
   updateBranch(id: string, patch: Partial<BranchRecord>): Promise<BranchRecord>;
+  deleteBranch(id: string): Promise<boolean>;
 
   getDepartments(): Promise<DepartmentRecord[]>;
   getDepartmentById(id: string): Promise<DepartmentRecord | null>;
   createDepartment(dept: Omit<DepartmentRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<DepartmentRecord>;
   updateDepartment(id: string, patch: Partial<DepartmentRecord>): Promise<DepartmentRecord>;
+  deleteDepartment(id: string): Promise<boolean>;
 
   getDesignations(): Promise<DesignationRecord[]>;
   getDesignationById(id: string): Promise<DesignationRecord | null>;
   getDesignationByCode(code: string): Promise<DesignationRecord | null>;
   createDesignation(desig: Omit<DesignationRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<DesignationRecord>;
   updateDesignation(id: string, patch: Partial<DesignationRecord>): Promise<DesignationRecord>;
+  deleteDesignation(id: string): Promise<boolean>;
 }
 
 export class InMemoryOrganizationRepository implements IOrganizationRepository {
@@ -124,8 +127,8 @@ export class InMemoryOrganizationRepository implements IOrganizationRepository {
     const now = new Date();
     this.companyProfile = {
       id: 'org-profile-001',
-      legalName: 'Orbyx Technologies Private Limited',
-      tradingName: 'Orbyx Technologies',
+      legalName: 'Celestial Technologies Private Limited',
+      tradingName: 'Celestial Technologies',
       cinNumber: 'U72200KA2020PTC134567',
       panNumber: 'AABCO1234F',
       tanNumber: 'BLRO12345E',
@@ -194,8 +197,8 @@ export class InMemoryOrganizationRepository implements IOrganizationRepository {
     if (!this.companyProfile) {
       this.companyProfile = {
         id: 'org-profile-001',
-        legalName: profile.legalName || 'Orbyx Technologies',
-        tradingName: profile.tradingName || 'Orbyx',
+        legalName: profile.legalName || 'Celestial Technologies',
+        tradingName: profile.tradingName || 'Celestial',
         registeredAddress: profile.registeredAddress || '',
         headquartersAddress: profile.headquartersAddress || '',
         contactEmail: profile.contactEmail || 'admin@orbyx.io',
@@ -329,5 +332,17 @@ export class InMemoryOrganizationRepository implements IOrganizationRepository {
     const updated = { ...existing, ...patch, updatedAt: new Date() };
     this.designations.set(existing.id, updated);
     return updated;
+  }
+
+  async deleteBranch(id: string): Promise<boolean> {
+    return this.branches.delete(id);
+  }
+
+  async deleteDepartment(id: string): Promise<boolean> {
+    return this.departments.delete(id);
+  }
+
+  async deleteDesignation(id: string): Promise<boolean> {
+    return this.designations.delete(id);
   }
 }

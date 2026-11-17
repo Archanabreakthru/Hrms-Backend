@@ -4,10 +4,10 @@ exports.InMemoryAuthRepository = void 0;
 class InMemoryAuthRepository {
     users = new Map();
     sessions = new Map();
-    async findUserByEmail(email) {
-        const normalized = email.toLowerCase().trim();
+    async findUserByEmail(emailOrUsername) {
+        const normalized = emailOrUsername.toLowerCase().trim();
         for (const u of this.users.values()) {
-            if (u.email.toLowerCase() === normalized)
+            if (u.email.toLowerCase() === normalized || (u.username && u.username.toLowerCase() === normalized))
                 return u;
         }
         return null;
@@ -48,6 +48,17 @@ class InMemoryAuthRepository {
         user.activationTokenHash = data.activationTokenHash;
         user.activationTokenExpiresAt = data.activationTokenExpiresAt;
         user.invitationStatus = data.invitationStatus;
+        user.updatedAt = new Date();
+        return user;
+    }
+    async findAllUsers() {
+        return Array.from(this.users.values());
+    }
+    async updateUserRole(userId, newRoleCode) {
+        const user = this.users.get(userId);
+        if (!user)
+            throw new Error('User not found');
+        user.role = newRoleCode;
         user.updatedAt = new Date();
         return user;
     }

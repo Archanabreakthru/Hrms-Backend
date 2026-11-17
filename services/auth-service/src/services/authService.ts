@@ -437,5 +437,22 @@ export class AuthService {
       invitationStatus: 'SENT',
     };
   }
+
+  async listUsers(): Promise<Array<Omit<UserRecord, 'passwordHash'>>> {
+    if (this.authRepo.findAllUsers) {
+      const all = await this.authRepo.findAllUsers();
+      return all.map(({ passwordHash, ...rest }) => rest);
+    }
+    return [];
+  }
+
+  async updateUserRole(userId: string, newRoleCode: string): Promise<Omit<UserRecord, 'passwordHash'>> {
+    if (this.authRepo.updateUserRole) {
+      const updated = await this.authRepo.updateUserRole(userId, newRoleCode);
+      const { passwordHash, ...rest } = updated;
+      return rest;
+    }
+    throw new Error('updateUserRole not supported on this repository');
+  }
 }
 

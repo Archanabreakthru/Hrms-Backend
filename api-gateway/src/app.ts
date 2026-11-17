@@ -65,7 +65,7 @@ export function createGatewayApp() {
   });
 
   app.use('/api-docs', docsAuthMiddleware, swaggerUi.serve, swaggerUi.setup(openapiSpec, {
-    customSiteTitle: 'ORBYX HRMS - API Documentation',
+    customSiteTitle: 'Celestial HRMS - API Documentation',
   }));
 
   // Block external public access to internal-only service routes

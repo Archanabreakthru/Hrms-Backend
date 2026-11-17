@@ -163,7 +163,7 @@ class AttendanceService {
         if (!reg)
             throw new AppError_1.NotFoundError(`Regularization request ${id} not found`);
         const now = new Date();
-        reg.reviewedBy = actor.id;
+        reg.reviewedBy = actor.employeeId || actor.id;
         reg.reviewedAt = now;
         reg.reviewRemarks = remarks || reg.reviewRemarks;
         reg.updatedAt = now;
@@ -269,7 +269,7 @@ class AttendanceService {
             shiftId: data.shiftId,
             effectiveFrom: data.effectiveFrom,
             effectiveTo: data.effectiveTo,
-            assignedBy: actor.id || 'HR Admin',
+            assignedBy: actor.employeeId || actor.id || 'HR Admin',
             isActive: true,
             createdAt: now,
             updatedAt: now,

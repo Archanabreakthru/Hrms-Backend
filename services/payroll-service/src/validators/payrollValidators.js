@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateSalaryStructureSchema = exports.runPayrollSchema = void 0;
+exports.createSalaryStructureSchema = exports.runPayrollSchema = void 0;
 const zod_1 = require("zod");
 exports.runPayrollSchema = {
     body: zod_1.z.object({
@@ -8,16 +8,14 @@ exports.runPayrollSchema = {
         year: zod_1.z.number().int().min(2020),
     }),
 };
-exports.updateSalaryStructureSchema = {
+exports.createSalaryStructureSchema = {
     body: zod_1.z.object({
-        employeeId: zod_1.z.string().min(1),
-        effectiveFrom: zod_1.z.string().min(1),
-        grossSalaryMonthly: zod_1.z.number().min(0),
-        baseSalaryAnnual: zod_1.z.number().min(0),
-        items: zod_1.z.array(zod_1.z.object({
-            code: zod_1.z.string(),
-            amountMonthly: zod_1.z.number().min(0),
-            type: zod_1.z.enum(['Earning', 'Deduction', 'Employer_Contribution']),
-        })),
+        id: zod_1.z.string().optional(),
+        name: zod_1.z.string().min(1, 'Structure name is required'),
+        description: zod_1.z.string().optional().default(''),
+        grossMonthly: zod_1.z.number().positive('Monthly gross salary must be positive'),
+        ctcAnnual: zod_1.z.number().optional(),
+        items: zod_1.z.array(zod_1.z.any()).optional().default([]),
+        isActive: zod_1.z.boolean().optional().default(true),
     }),
 };

@@ -161,5 +161,32 @@ class OrganizationController {
             next(err);
         }
     };
+    deleteBranch = async (req, res, next) => {
+        try {
+            await this.orgService.deleteBranch(req.params.id);
+            (0, apiResponse_1.apiSuccess)(res, { deleted: true, id: req.params.id }, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    deleteDepartment = async (req, res, next) => {
+        try {
+            await this.orgService.deleteDepartment(req.params.id);
+            (0, apiResponse_1.apiSuccess)(res, { deleted: true, id: req.params.id }, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    deleteDesignation = async (req, res, next) => {
+        try {
+            await this.orgService.deleteDesignation(req.params.id);
+            (0, apiResponse_1.apiSuccess)(res, { deleted: true, id: req.params.id }, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
 }
 exports.OrganizationController = OrganizationController;

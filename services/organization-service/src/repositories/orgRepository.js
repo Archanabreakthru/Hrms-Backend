@@ -14,8 +14,8 @@ class InMemoryOrganizationRepository {
         const now = new Date();
         this.companyProfile = {
             id: 'org-profile-001',
-            legalName: 'Orbyx Technologies Private Limited',
-            tradingName: 'Orbyx Technologies',
+            legalName: 'Celestial Technologies Private Limited',
+            tradingName: 'Celestial Technologies',
             cinNumber: 'U72200KA2020PTC134567',
             panNumber: 'AABCO1234F',
             tanNumber: 'BLRO12345E',
@@ -79,8 +79,8 @@ class InMemoryOrganizationRepository {
         if (!this.companyProfile) {
             this.companyProfile = {
                 id: 'org-profile-001',
-                legalName: profile.legalName || 'Orbyx Technologies',
-                tradingName: profile.tradingName || 'Orbyx',
+                legalName: profile.legalName || 'Celestial Technologies',
+                tradingName: profile.tradingName || 'Celestial',
                 registeredAddress: profile.registeredAddress || '',
                 headquartersAddress: profile.headquartersAddress || '',
                 contactEmail: profile.contactEmail || 'admin@orbyx.io',
@@ -204,6 +204,15 @@ class InMemoryOrganizationRepository {
         const updated = { ...existing, ...patch, updatedAt: new Date() };
         this.designations.set(existing.id, updated);
         return updated;
+    }
+    async deleteBranch(id) {
+        return this.branches.delete(id);
+    }
+    async deleteDepartment(id) {
+        return this.departments.delete(id);
+    }
+    async deleteDesignation(id) {
+        return this.designations.delete(id);
     }
 }
 exports.InMemoryOrganizationRepository = InMemoryOrganizationRepository;

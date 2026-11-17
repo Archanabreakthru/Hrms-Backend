@@ -109,17 +109,24 @@ export class PrismaAttendanceRepository implements IAttendanceRepository {
   }
 
   async saveShift(shift: ShiftDTO): Promise<ShiftDTO> {
-    const data = {
+    const parseTime = (t: string): Date => {
+      const [h, m] = t.split(':').map(Number);
+      const d = new Date(0);
+      d.setUTCHours(h, m, 0, 0);
+      return d;
+    };
+
+    const data: any = {
       code: shift.code.toUpperCase(),
       name: shift.name,
-      startTime: shift.startTime,
-      endTime: shift.endTime,
+      startTime: parseTime(shift.startTime),
+      endTime: parseTime(shift.endTime),
       gracePeriodMins: shift.gracePeriodMins,
       halfDayThreshold: shift.halfDayThreshold,
       fullDayThreshold: shift.fullDayThreshold,
       isOvernight: shift.isOvernight,
       weeklyOffDays: shift.weeklyOffDays,
-      status: shift.status || 'Active',
+      status: shift.status === 'Active' || (shift.status as any) === true,
     };
 
     const saved = await this.prisma.shift.upsert({
@@ -531,18 +538,29 @@ export class PrismaAttendanceRepository implements IAttendanceRepository {
   }
 
   private mapShift(s: any): ShiftDTO {
+    const formatTime = (t: any): string => {
+      if (!t) return '09:30';
+      if (typeof t === 'string') return t.substring(0, 5);
+      if (t instanceof Date) {
+        const h = String(t.getUTCHours()).padStart(2, '0');
+        const m = String(t.getUTCMinutes()).padStart(2, '0');
+        return `${h}:${m}`;
+      }
+      return String(t);
+    };
+
     return {
       id: s.id,
       code: s.code,
       name: s.name,
-      startTime: s.startTime,
-      endTime: s.endTime,
+      startTime: formatTime(s.startTime),
+      endTime: formatTime(s.endTime),
       gracePeriodMins: s.gracePeriodMins,
       halfDayThreshold: s.halfDayThreshold,
       fullDayThreshold: s.fullDayThreshold,
       isOvernight: s.isOvernight,
       weeklyOffDays: s.weeklyOffDays,
-      status: s.status,
+      status: s.status ? 'Active' : 'Inactive',
       createdAt: s.createdAt,
       updatedAt: s.updatedAt,
     };

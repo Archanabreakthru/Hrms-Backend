@@ -18,12 +18,8 @@ async function check() {
   const q = prisma['$queryRawUnsafe'].bind(prisma);
   const cols = await q(`SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'employee' AND table_name = 'employees';`);
   console.log('COLUMNS:', cols);
-  try {
-    const s = await q(`INSERT INTO attendance.shifts (id, code, name, start_time, end_time, grace_period_minutes, half_day_threshold_hours, full_day_threshold_hours, is_overnight, weekly_off_days, is_active) VALUES ('d3b07384-d113-4e00-bf7d-9442fa6054be'::uuid, 'GEN-01', 'General Day Shift', '09:30:00'::time, '18:30:00'::time, 15, 4.5, 8.0, false, ARRAY[0,6], true) ON CONFLICT (code) DO NOTHING RETURNING *;`);
-    console.log('INSERT SHIFT RESULT:', s);
-  } catch (err) {
-    console.error('ERROR CREATING SHIFT VIA RAW SQL:', err);
-  }
+  const fksToEmp = await q(`SELECT tc.table_schema, tc.table_name, kcu.column_name, tc.constraint_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema WHERE tc.constraint_type = 'FOREIGN KEY' AND ccu.table_schema = 'employee' AND ccu.table_name = 'employees';`);
+  console.log('FOREIGN KEYS POINTING TO employee.employees:', fksToEmp);
   await prisma['$disconnect']();
 }
 

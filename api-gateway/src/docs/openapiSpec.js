@@ -1,6 +1,6 @@
 "use strict";
 /**
- * ORBYX HRMS - Centralized OpenAPI 3.0 Specification
+ * Celestial HRMS - Centralized OpenAPI 3.0 Specification
  *
  * Accurately generated from existing microservices routes, Zod schemas,
  * RBAC permission requirements, and standard ApiResponse / AppError wrappers.
@@ -10,11 +10,11 @@ exports.openapiSpec = void 0;
 exports.openapiSpec = {
     openapi: '3.0.3',
     info: {
-        title: 'ORBYX HRMS API Documentation',
+        title: 'Celestial HRMS API Documentation',
         version: '1.0.0',
-        description: 'Centralized API Gateway and Microservices Documentation for ORBYX HRMS with zero-impact change control.',
+        description: 'Centralized API Gateway and Microservices Documentation for Celestial HRMS with zero-impact change control.',
         contact: {
-            name: 'ORBYX HRMS Engineering',
+            name: 'Celestial HRMS Engineering',
         },
     },
     servers: [

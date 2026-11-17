@@ -1,5 +1,5 @@
 /**
- * ORBYX HRMS - Organization Master Seed Script
+ * Celestial HRMS - Organization Master Seed Script
  * Prepares and validates canonical enterprise records for PostgreSQL schema `org`.
  * 
  * EXECUTION SAFETY CONTROLS:
@@ -37,8 +37,8 @@ const prisma = new PrismaClient({
 // Canonical Seed Datasets
 const CANONICAL_ORG_DATA = {
   companyProfile: {
-    legalName: 'ORBYX ENTERPRISE SOLUTIONS PRIVATE LIMITED',
-    tradingName: 'ORBYX HRMS',
+    legalName: 'Celestial ENTERPRISE SOLUTIONS PRIVATE LIMITED',
+    tradingName: 'Celestial HRMS',
     cinNumber: 'U72900KA2021PTC149821',
     panNumber: 'AAACB9876F',
     tanNumber: 'BLRA12345E',
@@ -114,7 +114,7 @@ async function validateOrExecute() {
   const isExecutionMode = process.argv.includes('--execute');
 
   console.log('====================================================');
-  console.log(`ORBYX HRMS - Organization Seed Tool [Mode: ${isExecutionMode ? 'EXECUTION' : 'DRY RUN / VALIDATION'}]`);
+  console.log(`Celestial HRMS - Organization Seed Tool [Mode: ${isExecutionMode ? 'EXECUTION' : 'DRY RUN / VALIDATION'}]`);
   console.log('====================================================\n');
 
   // Pre-seed assertion: check current table counts

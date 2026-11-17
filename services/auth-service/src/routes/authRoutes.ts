@@ -57,6 +57,20 @@ export function createAuthRouter(authController: AuthController): Router {
   // Current session info
   router.get('/me', authMiddleware, authController.me);
 
+  // User & Role Management endpoints for Super Admin / authorized operators
+  router.get(
+    '/users',
+    authMiddleware,
+    requirePermission('auth.users.manage', 'org.profile.manage'),
+    authController.listUsers
+  );
+  router.put(
+    '/users/:id/role',
+    authMiddleware,
+    requirePermission('auth.users.manage'),
+    authController.updateRole
+  );
+
   return router;
 }
 

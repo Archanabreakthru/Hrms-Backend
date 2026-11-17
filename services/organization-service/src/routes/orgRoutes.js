@@ -20,16 +20,19 @@ function createOrgRouter(orgController) {
     router.post('/branches', authMiddleware, (0, auth_1.requirePermission)('org.branches.manage'), (0, validation_1.validateRequest)(orgValidators_1.createBranchSchema), orgController.createBranch);
     router.put('/branches/:id', authMiddleware, (0, auth_1.requirePermission)('org.branches.manage'), (0, validation_1.validateRequest)(orgValidators_1.updateBranchSchema), orgController.updateBranch);
     router.patch('/branches/:id/status', authMiddleware, (0, auth_1.requirePermission)('org.branches.manage'), (0, validation_1.validateRequest)(orgValidators_1.toggleStatusSchema), orgController.toggleBranchStatus);
+    router.delete('/branches/:id', authMiddleware, (0, auth_1.requirePermission)('org.branches.manage'), orgController.deleteBranch);
     // Departments
     router.get('/departments', authMiddleware, (0, auth_1.requirePermission)('org.profile.read'), orgController.getDepartments);
     router.post('/departments', authMiddleware, (0, auth_1.requirePermission)('org.departments.manage'), (0, validation_1.validateRequest)(orgValidators_1.createDepartmentSchema), orgController.createDepartment);
     router.put('/departments/:id', authMiddleware, (0, auth_1.requirePermission)('org.departments.manage'), (0, validation_1.validateRequest)(orgValidators_1.updateDepartmentSchema), orgController.updateDepartment);
     router.patch('/departments/:id/status', authMiddleware, (0, auth_1.requirePermission)('org.departments.manage'), (0, validation_1.validateRequest)(orgValidators_1.toggleStatusSchema), orgController.toggleDepartmentStatus);
+    router.delete('/departments/:id', authMiddleware, (0, auth_1.requirePermission)('org.departments.manage'), orgController.deleteDepartment);
     // Designations
     router.get('/designations', authMiddleware, (0, auth_1.requirePermission)('org.profile.read'), orgController.getDesignations);
     router.post('/designations', authMiddleware, (0, auth_1.requirePermission)('org.designations.manage'), (0, validation_1.validateRequest)(orgValidators_1.createDesignationSchema), orgController.createDesignation);
     router.put('/designations/:id', authMiddleware, (0, auth_1.requirePermission)('org.designations.manage'), (0, validation_1.validateRequest)(orgValidators_1.updateDesignationSchema), orgController.updateDesignation);
     router.patch('/designations/:id/status', authMiddleware, (0, auth_1.requirePermission)('org.designations.manage'), (0, validation_1.validateRequest)(orgValidators_1.toggleStatusSchema), orgController.toggleDesignationStatus);
+    router.delete('/designations/:id', authMiddleware, (0, auth_1.requirePermission)('org.designations.manage'), orgController.deleteDesignation);
     // Internal Designation Code Derivation for Employee Service ID Generation
     router.get('/designations/derive-code', authMiddleware, orgController.getDesignationCode);
     return router;

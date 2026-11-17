@@ -89,5 +89,25 @@ class AuthController {
             next(err);
         }
     };
+    listUsers = async (req, res, next) => {
+        try {
+            const users = await this.authService.listUsers();
+            (0, apiResponse_1.apiSuccess)(res, users, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    updateRole = async (req, res, next) => {
+        try {
+            const { id } = req.params;
+            const { role } = req.body;
+            const updated = await this.authService.updateUserRole(id, role);
+            (0, apiResponse_1.apiSuccess)(res, updated, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
 }
 exports.AuthController = AuthController;

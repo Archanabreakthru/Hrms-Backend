@@ -8,12 +8,12 @@ test('OrganizationService gets and updates company profile', async () => {
   const service = new OrganizationService(repo);
 
   const profile = await service.getCompanyProfile();
-  assert.equal(profile.legalName, 'Orbyx Technologies Private Limited');
+  assert.equal(profile.legalName, 'Celestial Technologies Private Limited');
 
   const updated = await service.updateCompanyProfile({
-    tradingName: 'Orbyx Tech Inc.',
+    tradingName: 'Celestial Tech Inc.',
   });
-  assert.equal(updated.tradingName, 'Orbyx Tech Inc.');
+  assert.equal(updated.tradingName, 'Celestial Tech Inc.');
 });
 
 test('OrganizationService manages branches and prevents duplicate codes', async () => {

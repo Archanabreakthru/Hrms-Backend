@@ -11,11 +11,11 @@ const orgRepository_1 = require("../src/repositories/orgRepository");
     const repo = new orgRepository_1.InMemoryOrganizationRepository();
     const service = new orgService_1.OrganizationService(repo);
     const profile = await service.getCompanyProfile();
-    strict_1.default.equal(profile.legalName, 'Orbyx Technologies Private Limited');
+    strict_1.default.equal(profile.legalName, 'Celestial Technologies Private Limited');
     const updated = await service.updateCompanyProfile({
-        tradingName: 'Orbyx Tech Inc.',
+        tradingName: 'Celestial Tech Inc.',
     });
-    strict_1.default.equal(updated.tradingName, 'Orbyx Tech Inc.');
+    strict_1.default.equal(updated.tradingName, 'Celestial Tech Inc.');
 });
 (0, node_test_1.default)('OrganizationService manages branches and prevents duplicate codes', async () => {
     const repo = new orgRepository_1.InMemoryOrganizationRepository();

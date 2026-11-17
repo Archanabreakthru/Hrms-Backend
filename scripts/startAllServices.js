@@ -14,7 +14,7 @@ const services = [
   { name: 'Notification Service', dir: 'services/notification-service', entry: 'src/server.js', port: 5008 }
 ];
 
-console.log('Starting ORBYX HRMS Microservices...\n');
+console.log('Starting Celestial HRMS Microservices...\n');
 
 console.log('------------------------------------------------------------');
 console.log('🌐 Microservices & API Gateway Endpoints:');

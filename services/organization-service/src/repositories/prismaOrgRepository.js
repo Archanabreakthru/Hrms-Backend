@@ -1,6 +1,30 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaOrgRepository = void 0;
+/** Convert a statutory effective date to a Prisma-compatible DateTime. */
+function toPrismaDate(value) {
+    if (!value)
+        return new Date('2026-04-01T00:00:00.000Z');
+    if (value instanceof Date) {
+        if (Number.isNaN(value.getTime()))
+            return new Date('2026-04-01T00:00:00.000Z');
+        return value;
+    }
+    const str = String(value).trim();
+    if (!str)
+        return new Date('2026-04-01T00:00:00.000Z');
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        const date = new Date(`${str}T00:00:00.000Z`);
+        if (!Number.isNaN(date.getTime())) {
+            return date;
+        }
+    }
+    const date = new Date(str);
+    if (Number.isNaN(date.getTime())) {
+        return new Date('2026-04-01T00:00:00.000Z');
+    }
+    return date;
+}
 class PrismaOrgRepository {
     prisma;
     constructor(prisma) {
@@ -126,8 +150,8 @@ class PrismaOrgRepository {
         else {
             const raw = await this.prisma.companyProfiles.create({
                 data: {
-                    legalName: profile.legalName || 'Orbyx Technologies Ltd.',
-                    tradingName: profile.tradingName || 'Orbyx Tech',
+                    legalName: profile.legalName || 'Celestial Technologies Ltd.',
+                    tradingName: profile.tradingName || 'Celestial Tech',
                     registrationNumber: profile.cinNumber ?? null,
                     panNumber: profile.panNumber ?? null,
                     tanNumber: profile.tanNumber ?? null,
@@ -167,23 +191,23 @@ class PrismaOrgRepository {
                     epfEmployerRatePercent: config.epfEmployerRatePercent !== undefined ? config.epfEmployerRatePercent : existing.epfEmployerRatePercent,
                     epfWageCeilingMonthly: config.epfWageCeilingMonthly !== undefined ? config.epfWageCeilingMonthly : existing.epfWageCeilingMonthly,
                     epfRestrictToWageCeiling: config.epfRestrictToWageCeiling ?? existing.epfRestrictToWageCeiling,
-                    epfEffectiveFrom: config.epfEffectiveFrom ?? existing.epfEffectiveFrom,
+                    epfEffectiveFrom: toPrismaDate(config.epfEffectiveFrom ?? existing.epfEffectiveFrom),
                     epfExemptionReason: config.epfExemptionReason !== undefined ? config.epfExemptionReason : existing.epfExemptionReason,
                     esiApplicable: config.esiApplicable ?? existing.esiApplicable,
                     esiGrossThresholdMonthly: config.esiGrossThresholdMonthly !== undefined ? config.esiGrossThresholdMonthly : existing.esiGrossThresholdMonthly,
                     esiEmployeeRatePercent: config.esiEmployeeRatePercent !== undefined ? config.esiEmployeeRatePercent : existing.esiEmployeeRatePercent,
                     esiEmployerRatePercent: config.esiEmployerRatePercent !== undefined ? config.esiEmployerRatePercent : existing.esiEmployerRatePercent,
-                    esiEffectiveFrom: config.esiEffectiveFrom ?? existing.esiEffectiveFrom,
+                    esiEffectiveFrom: toPrismaDate(config.esiEffectiveFrom ?? existing.esiEffectiveFrom),
                     esiExemptionReason: config.esiExemptionReason !== undefined ? config.esiExemptionReason : existing.esiExemptionReason,
                     ptApplicable: config.ptApplicable ?? existing.ptApplicable,
                     ptStateJurisdiction: config.ptStateJurisdiction ?? existing.ptStateJurisdiction,
                     ptMonthlySlabAmount: config.ptMonthlySlabAmount !== undefined ? config.ptMonthlySlabAmount : existing.ptMonthlySlabAmount,
                     ptMinGrossThreshold: config.ptMinGrossThreshold !== undefined ? config.ptMinGrossThreshold : existing.ptMinGrossThreshold,
-                    ptEffectiveFrom: config.ptEffectiveFrom ?? existing.ptEffectiveFrom,
+                    ptEffectiveFrom: toPrismaDate(config.ptEffectiveFrom ?? existing.ptEffectiveFrom),
                     tdsApplicable: config.tdsApplicable ?? existing.tdsApplicable,
                     tdsFinancialYear: config.tdsFinancialYear ?? existing.tdsFinancialYear,
                     tdsDefaultRegime: config.tdsDefaultRegime ?? existing.tdsDefaultRegime,
-                    tdsEffectiveFrom: config.tdsEffectiveFrom ?? existing.tdsEffectiveFrom,
+                    tdsEffectiveFrom: toPrismaDate(config.tdsEffectiveFrom ?? existing.tdsEffectiveFrom),
                 },
             });
             return this.mapStatutoryConfig(raw);
@@ -197,23 +221,23 @@ class PrismaOrgRepository {
                     epfEmployerRatePercent: config.epfEmployerRatePercent ?? 12,
                     epfWageCeilingMonthly: config.epfWageCeilingMonthly ?? 15000,
                     epfRestrictToWageCeiling: config.epfRestrictToWageCeiling ?? false,
-                    epfEffectiveFrom: config.epfEffectiveFrom ?? new Date('2026-04-01'),
+                    epfEffectiveFrom: toPrismaDate(config.epfEffectiveFrom ?? '2026-04-01'),
                     epfExemptionReason: config.epfExemptionReason ?? null,
                     esiApplicable: config.esiApplicable ?? true,
                     esiGrossThresholdMonthly: config.esiGrossThresholdMonthly ?? 21000,
                     esiEmployeeRatePercent: config.esiEmployeeRatePercent ?? 0.75,
                     esiEmployerRatePercent: config.esiEmployerRatePercent ?? 3.25,
-                    esiEffectiveFrom: config.esiEffectiveFrom ?? new Date('2026-04-01'),
+                    esiEffectiveFrom: toPrismaDate(config.esiEffectiveFrom ?? '2026-04-01'),
                     esiExemptionReason: config.esiExemptionReason ?? null,
                     ptApplicable: config.ptApplicable ?? true,
                     ptStateJurisdiction: config.ptStateJurisdiction ?? 'Karnataka',
                     ptMonthlySlabAmount: config.ptMonthlySlabAmount ?? 200,
                     ptMinGrossThreshold: config.ptMinGrossThreshold ?? 15000,
-                    ptEffectiveFrom: config.ptEffectiveFrom ?? new Date('2026-04-01'),
+                    ptEffectiveFrom: toPrismaDate(config.ptEffectiveFrom ?? '2026-04-01'),
                     tdsApplicable: config.tdsApplicable ?? true,
                     tdsFinancialYear: config.tdsFinancialYear ?? 'FY 2026-27',
                     tdsDefaultRegime: config.tdsDefaultRegime ?? 'New Regime (FY 2026-27)',
-                    tdsEffectiveFrom: config.tdsEffectiveFrom ?? new Date('2026-04-01'),
+                    tdsEffectiveFrom: toPrismaDate(config.tdsEffectiveFrom ?? '2026-04-01'),
                 },
             });
             return this.mapStatutoryConfig(raw);
@@ -372,6 +396,42 @@ class PrismaOrgRepository {
     async getDesignationByCode(code) {
         const raw = await this.prisma.designations.findFirst({ where: { code } });
         return raw ? this.mapDesignation(raw) : null;
+    }
+    async deleteBranch(id) {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUuid) {
+            await this.prisma.branches.delete({ where: { id } });
+        }
+        else {
+            const b = await this.prisma.branches.findFirst({ where: { code: id } });
+            if (b)
+                await this.prisma.branches.delete({ where: { id: b.id } });
+        }
+        return true;
+    }
+    async deleteDepartment(id) {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUuid) {
+            await this.prisma.departments.delete({ where: { id } });
+        }
+        else {
+            const d = await this.prisma.departments.findFirst({ where: { code: id.replace(/^DEP-/i, '') } });
+            if (d)
+                await this.prisma.departments.delete({ where: { id: d.id } });
+        }
+        return true;
+    }
+    async deleteDesignation(id) {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUuid) {
+            await this.prisma.designations.delete({ where: { id } });
+        }
+        else {
+            const d = await this.prisma.designations.findFirst({ where: { code: id.replace(/^DES-/i, '') } });
+            if (d)
+                await this.prisma.designations.delete({ where: { id: d.id } });
+        }
+        return true;
     }
 }
 exports.PrismaOrgRepository = PrismaOrgRepository;
