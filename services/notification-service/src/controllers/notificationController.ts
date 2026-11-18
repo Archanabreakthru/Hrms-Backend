@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { NotificationService } from '../services/notificationService';
-import { sendSuccess } from '../../../../shared/src/utils/apiResponse';
+import { sendSuccess } from '../../../../shared/src/utilities/apiResponse';
 import { AppError } from '../../../../shared/src/errors/AppError';
 
 export class NotificationController {

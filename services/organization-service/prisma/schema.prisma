@@ -1,77 +1,142 @@
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  schemas    = ["organization"]
 }
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/client"
 }
 
-model CompanyProfile {
-  id                    String   @id @default(uuid())
-  legalName             String
-  tradingName           String
-  cinNumber             String?
-  panNumber             String?
-  tanNumber             String?
-  gstin                 String?
-  pfRegistrationNumber  String?
-  esiRegistrationNumber String?
-  registeredAddress     String
-  headquartersAddress   String
-  contactEmail          String
-  contactPhone          String
-  website               String?
-  directors             String?  // JSON stringified array of directors
-  fiscalYearStart       String   @default("04-01")
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+model CompanyProfiles {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  legalName             String    @db.VarChar(255) @map("legal_name")
+  tradingName           String    @db.VarChar(255) @map("trading_name")
+  registrationNumber    String?   @db.VarChar(100) @map("registration_number")
+  incorporatedDate      DateTime? @db.Date @map("incorporated_date")
+  panNumber             String?   @db.VarChar(50) @map("pan_number")
+  gstNumber             String?   @db.VarChar(50) @map("gst_number")
+  tanNumber             String?   @db.VarChar(50) @map("tan_number")
+  iecNumber             String?   @db.VarChar(50) @map("iec_number")
+  pfRegistrationNumber  String?   @db.VarChar(50) @map("pf_registration_number")
+  esiRegistrationNumber String?   @db.VarChar(50) @map("esi_registration_number")
+  contactEmail          String    @db.VarChar(255) @map("contact_email")
+  contactPhone          String    @db.VarChar(50) @map("contact_phone")
+  website               String?   @db.VarChar(255) @map("website")
+  address               String    @db.Text @map("address")
+  city                  String    @db.VarChar(100) @map("city")
+  state                 String    @db.VarChar(100) @map("state")
+  country               String    @default("India") @db.VarChar(100) @map("country")
+  zipCode               String    @db.VarChar(20) @map("zip_code")
+  currency              String    @default("INR") @db.VarChar(10) @map("currency")
+  currencySymbol        String    @default("₹") @db.VarChar(10) @map("currency_symbol")
+  workingDaysPerWeek    Int       @default(5) @map("working_days_per_week")
+  standardHoursPerDay   Decimal   @default(8.0) @map("standard_hours_per_day") @db.Decimal(4, 2)
+  fiscalYearStart       String    @default("April") @db.VarChar(20) @map("fiscal_year_start")
+  governanceMode        String    @default("None") @db.VarChar(50) @map("governance_mode")
+  governanceAuthorityName  String? @db.VarChar(150) @map("governance_authority_name")
+  governanceAuthorityTitle String? @db.VarChar(150) @map("governance_authority_title")
+  createdAt             DateTime  @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt             DateTime  @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
 
   @@map("company_profiles")
+  @@schema("organization")
 }
 
-model Branch {
-  id              String   @id @default(uuid())
-  code            String   @unique
-  name            String
-  city            String
-  state           String
-  country         String   @default("India")
-  address         String
-  isHeadquarters  Boolean  @default(false)
-  timezone        String   @default("Asia/Kolkata")
-  status          String   @default("Active")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model StatutoryComplianceConfigs {
+  id                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  companyId                 String    @db.Uuid @map("company_id")
+  epfApplicable             Boolean   @default(true) @map("epf_applicable")
+  epfEmployeeRatePercent    Decimal   @default(12.00) @map("epf_employee_rate_percent") @db.Decimal(5, 2)
+  epfEmployerRatePercent    Decimal   @default(12.00) @map("epf_employer_rate_percent") @db.Decimal(5, 2)
+  epfWageCeilingMonthly     Decimal   @default(15000.00) @map("epf_wage_ceiling_monthly") @db.Decimal(10, 2)
+  epfRestrictToWageCeiling  Boolean   @default(false) @map("epf_restrict_to_wage_ceiling")
+  epfEffectiveFrom          DateTime  @default(dbgenerated("'2026-04-01'::date")) @db.Date @map("epf_effective_from")
+  epfExemptionReason        String?   @db.Text @map("epf_exemption_reason")
+  esiApplicable             Boolean   @default(true) @map("esi_applicable")
+  esiGrossThresholdMonthly  Decimal   @default(21000.00) @map("esi_gross_threshold_monthly") @db.Decimal(10, 2)
+  esiEmployeeRatePercent    Decimal   @default(0.75) @map("esi_employee_rate_percent") @db.Decimal(5, 2)
+  esiEmployerRatePercent    Decimal   @default(3.25) @map("esi_employer_rate_percent") @db.Decimal(5, 2)
+  esiEffectiveFrom          DateTime  @default(dbgenerated("'2026-04-01'::date")) @db.Date @map("esi_effective_from")
+  esiExemptionReason        String?   @db.Text @map("esi_exemption_reason")
+  ptApplicable              Boolean   @default(true) @map("pt_applicable")
+  ptStateJurisdiction       String    @default("Karnataka") @db.VarChar(100) @map("pt_state_jurisdiction")
+  ptMonthlySlabAmount       Decimal   @default(200.00) @map("pt_monthly_slab_amount") @db.Decimal(10, 2)
+  ptMinGrossThreshold       Decimal   @default(15000.00) @map("pt_min_gross_threshold") @db.Decimal(10, 2)
+  ptEffectiveFrom           DateTime  @default(dbgenerated("'2026-04-01'::date")) @db.Date @map("pt_effective_from")
+  tdsApplicable             Boolean   @default(true) @map("tds_applicable")
+  tdsFinancialYear          String    @default("FY 2026-27") @db.VarChar(50) @map("tds_financial_year")
+  tdsDefaultRegime          String    @default("New Regime (FY 2026-27)") @db.VarChar(100) @map("tds_default_regime")
+  tdsEffectiveFrom          DateTime  @default(dbgenerated("'2026-04-01'::date")) @db.Date @map("tds_effective_from")
+  createdAt                 DateTime  @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt                 DateTime  @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+
+  @@map("statutory_compliance_configs")
+  @@schema("organization")
+}
+
+model Branches {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  companyId      String?       @db.Uuid @map("company_id")
+  code           String        @db.VarChar(50) @map("code")
+  name           String        @db.VarChar(150) @map("name")
+  city           String        @db.VarChar(100) @map("city")
+  state          String        @db.VarChar(100) @map("state")
+  country        String        @default("India") @db.VarChar(100) @map("country")
+  address        String?       @db.Text @map("address")
+  isHeadquarters Boolean       @default(false) @map("is_headquarters")
+  timezone       String        @default("Asia/Kolkata") @db.VarChar(50) @map("timezone")
+  isActive       Boolean       @default(true) @map("is_active")
+  createdAt      DateTime      @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt      DateTime      @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
 
   @@map("branches")
+  @@schema("organization")
 }
 
-model Department {
-  id              String   @id @default(uuid())
-  code            String   @unique
-  name            String
-  branchId        String?
-  parentDeptId    String?
-  headEmployeeId  String?
-  status          String   @default("Active")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model CompanyDirectors {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  companyId       String    @db.Uuid @map("company_id")
+  fullName        String    @db.VarChar(150) @map("full_name")
+  designation     String    @db.VarChar(100) @map("designation")
+  appointmentDate DateTime? @db.Date @map("appointment_date")
+  din             String?   @db.VarChar(50) @map("din")
+  isActive        Boolean   @default(true) @map("is_active")
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+
+  @@map("company_directors")
+  @@schema("organization")
+}
+
+model Departments {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  code           String         @db.VarChar(50) @map("code")
+  name           String         @db.VarChar(150) @map("name")
+  branchId       String?        @db.Uuid @map("branch_id")
+  parentDeptId   String?        @db.Uuid @map("parent_dept_id")
+  headEmployeeId String?        @db.VarChar(50) @map("head_employee_id")
+  description    String?        @db.Text @map("description")
+  isActive       Boolean        @default(true) @map("is_active")
+  createdAt      DateTime       @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt      DateTime       @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
 
   @@map("departments")
+  @@schema("organization")
 }
 
-model Designation {
-  id              String   @id @default(uuid())
-  code            String   @unique // e.g. 'SWE', 'MD', 'HRM'
-  title           String
-  departmentId    String?
-  level           Int      @default(1)
-  description     String?
-  status          String   @default("Active")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model Designations {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  code         String        @db.VarChar(50) @map("code")
+  title        String        @db.VarChar(150) @map("title")
+  departmentId String?       @db.Uuid @map("department_id")
+  level        Int           @default(1) @map("level")
+  description  String?       @db.Text @map("description")
+  isActive     Boolean       @default(true) @map("is_active")
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt    DateTime      @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
 
   @@map("designations")
+  @@schema("organization")
 }
-

@@ -35,6 +35,20 @@ export function apiSuccess<T>(
   return res.status(statusCode).json(body);
 }
 
+export function sendSuccess<T>(
+  res: Response,
+  data: T,
+  message?: string,
+  statusCode = 200
+): Response {
+  return res.status(statusCode).json({
+    success: true,
+    message,
+    data,
+    timestamp: new Date().toISOString(),
+  });
+}
+
 export function apiError(
   res: Response,
   statusCode = 500,

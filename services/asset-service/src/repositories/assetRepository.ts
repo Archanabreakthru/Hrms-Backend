@@ -25,23 +25,7 @@ export class InMemoryAssetRepository implements IAssetRepository {
   private assets = new Map<string, HardwareAssetDTO>();
 
   constructor() {
-    this.seedDefaults();
-  }
-
-  private seedDefaults() {
-    const a1: HardwareAssetDTO = {
-      id: 'AST-001',
-      assetTag: 'AST-LAP-001',
-      category: 'Laptop',
-      brand: 'Apple',
-      model: 'MacBook Pro M3 16"',
-      serialNumber: 'SN-APPL-99881',
-      status: 'Available',
-      custodyStatus: 'Available',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.assets.set(a1.id, a1);
+    // Zero mock assets: clean start
   }
 
   async findAssetById(id: string): Promise<HardwareAssetDTO | null> {

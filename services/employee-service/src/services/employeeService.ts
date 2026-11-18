@@ -1,4 +1,4 @@
-import { IEmployeeRepository, EmployeeRecord } from '../repositories/employeeRepository';
+import { IEmployeeRepository, EmployeeRecord, ServiceRecordEntry } from '../repositories/employeeRepository';
 import { IOrgServiceClient } from './orgServiceClient';
 import {
   NotFoundError,
@@ -242,10 +242,23 @@ export class EmployeeService {
       updatedAt: now,
     };
 
+    const outboxPayload = {
+      employeeId: updatedEmployee.id,
+      email: updatedEmployee.email,
+      firstName: updatedEmployee.firstName,
+      lastName: updatedEmployee.lastName,
+      roleCode: 'employee',
+      departmentId: updatedEmployee.departmentId,
+    };
+
     if (data.id) {
       await this.employeeRepo.update(data.id, updatedEmployee);
     } else {
-      await this.employeeRepo.create(updatedEmployee);
+      if (this.employeeRepo.createWithOutbox) {
+        await this.employeeRepo.createWithOutbox(updatedEmployee, outboxPayload);
+      } else {
+        await this.employeeRepo.create(updatedEmployee);
+      }
     }
 
     // Publish enrollment finalized event
@@ -476,6 +489,8 @@ export class EmployeeService {
       branchId?: string;
       status?: string;
       profileStatus?: string;
+      reportingManagerId?: string;
+      search?: string;
       page?: number;
       limit?: number;
     },
@@ -516,6 +531,124 @@ export class EmployeeService {
       page: query.page || 1,
       limit: query.limit || 50,
     };
+  }
+
+  /**
+   * Service Records: List service history for an employee
+   */
+  async getServiceRecords(employeeId: string, actor: AuthenticatedUser): Promise<ServiceRecordEntry[]> {
+    const employee = await this.employeeRepo.findById(employeeId);
+    if (!employee) throw new NotFoundError(`Employee ${employeeId} not found`);
+
+    this.assertReadAccess(employee, actor);
+
+    return this.employeeRepo.getServiceRecords(employeeId);
+  }
+
+  /**
+   * Service Records: Create a new service record entry
+   */
+  async createServiceRecord(
+    employeeId: string,
+    data: {
+      recordType: string;
+      effectiveDate: string;
+      previousDesignationId?: string;
+      newDesignationId?: string;
+      previousDepartmentId?: string;
+      newDepartmentId?: string;
+      previousReportingManagerId?: string;
+      newReportingManagerId?: string;
+      previousBranchId?: string;
+      newBranchId?: string;
+      previousEmploymentType?: string;
+      newEmploymentType?: string;
+      previousSalaryAmount?: number;
+      newSalaryAmount?: number;
+      notes?: string;
+      approvalStatus?: 'Pending' | 'Approved' | 'Rejected';
+    },
+    actor: AuthenticatedUser
+  ): Promise<ServiceRecordEntry> {
+    const employee = await this.employeeRepo.findById(employeeId);
+    if (!employee) throw new NotFoundError(`Employee ${employeeId} not found`);
+
+    if (actor.role !== UserRole.HR_ADMIN && actor.role !== UserRole.SUPER_ADMIN) {
+      throw new ForbiddenError('Only HR Administrators can create service records');
+    }
+
+    const newRecord = await this.employeeRepo.createServiceRecord({
+      employeeId,
+      recordType: data.recordType,
+      effectiveDate: new Date(data.effectiveDate),
+      previousDesignationId: data.previousDesignationId || employee.designationId || null,
+      newDesignationId: data.newDesignationId || null,
+      previousDepartmentId: data.previousDepartmentId || employee.departmentId || null,
+      newDepartmentId: data.newDepartmentId || null,
+      previousReportingManagerId: data.previousReportingManagerId || employee.reportingManagerId || null,
+      newReportingManagerId: data.newReportingManagerId || null,
+      previousBranchId: data.previousBranchId || employee.branchId || null,
+      newBranchId: data.newBranchId || null,
+      previousEmploymentType: data.previousEmploymentType || employee.employmentType || null,
+      newEmploymentType: data.newEmploymentType || null,
+      previousSalaryAmount: data.previousSalaryAmount ?? employee.baseSalaryAnnual ?? null,
+      newSalaryAmount: data.newSalaryAmount ?? null,
+      notes: data.notes || null,
+      approvalStatus: data.approvalStatus || 'Approved',
+      approvedBy: data.approvalStatus === 'Approved' ? actor.email || actor.id : null,
+      approvedAt: data.approvalStatus === 'Approved' ? new Date() : null,
+    });
+
+    if (this.eventBus) {
+      await this.eventBus.publish(
+        'employee.service_record_created',
+        createEvent('SERVICE_RECORD_CREATED', newRecord.id, 'ServiceRecord', {
+          recordId: newRecord.id,
+          employeeId,
+          recordType: newRecord.recordType,
+          actorId: actor.id,
+        })
+      );
+    }
+
+    return newRecord;
+  }
+
+  /**
+   * Service Records: Update status (Approve / Reject)
+   */
+  async updateServiceRecordStatus(
+    employeeId: string,
+    recordId: string,
+    status: 'Approved' | 'Rejected',
+    actor: AuthenticatedUser
+  ): Promise<ServiceRecordEntry> {
+    const employee = await this.employeeRepo.findById(employeeId);
+    if (!employee) throw new NotFoundError(`Employee ${employeeId} not found`);
+
+    if (actor.role !== UserRole.HR_ADMIN && actor.role !== UserRole.SUPER_ADMIN) {
+      throw new ForbiddenError('Only HR Administrators can approve or reject service records');
+    }
+
+    const updated = await this.employeeRepo.updateServiceRecordStatus(
+      recordId,
+      status,
+      actor.email || actor.id
+    );
+
+    if (this.eventBus) {
+      await this.eventBus.publish(
+        'employee.service_record_status_updated',
+        createEvent('SERVICE_RECORD_STATUS_UPDATED', recordId, 'ServiceRecord', {
+          recordId,
+          employeeId,
+          status,
+          actorId: actor.id,
+        })
+      );
+    }
+
+    return updated;
   }
 
   /**

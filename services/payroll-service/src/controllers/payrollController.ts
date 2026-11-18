@@ -15,5 +15,33 @@ export class PayrollController {
       next(err);
     }
   };
+
+  listSalaryStructures = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const structures = await this.payrollService.listSalaryStructures();
+      apiSuccess(res, structures, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  createSalaryStructure = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const saved = await this.payrollService.createSalaryStructure(req.body);
+      apiSuccess(res, saved, 201);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  deleteSalaryStructure = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      await this.payrollService.deleteSalaryStructure(id);
+      apiSuccess(res, { deleted: true, id }, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 

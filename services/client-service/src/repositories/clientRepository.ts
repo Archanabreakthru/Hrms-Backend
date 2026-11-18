@@ -1,10 +1,14 @@
 export interface ClientOrgDTO {
   id: string;
   name: string;
+  code?: string;
   contactName?: string;
   email?: string;
   phone?: string;
   address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   contractStart?: string;
   contractEnd?: string;
   status: string;
