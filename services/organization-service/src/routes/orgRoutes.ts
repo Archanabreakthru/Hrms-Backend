@@ -132,6 +132,11 @@ export function createOrgRouter(orgController: OrganizationController): Router {
   // Internal Designation Code Derivation for Employee Service ID Generation
   router.get('/designations/derive-code', authMiddleware, orgController.getDesignationCode);
 
+  // Delegations (Executive Delegation with Persistent Database Storage)
+  router.get('/delegations', authMiddleware, requirePermission('org.profile.read'), orgController.getDelegations);
+  router.post('/delegations', authMiddleware, requirePermission('org.profile.manage'), orgController.createDelegation);
+  router.patch('/delegations/:id/revoke', authMiddleware, requirePermission('org.profile.manage'), orgController.revokeDelegation);
+
   return router;
 }
 

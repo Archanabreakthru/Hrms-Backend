@@ -82,6 +82,31 @@ export class AuthController {
       const { employeeId } = req.body;
       const actor = req.user as any;
       const result = await this.authService.resendInvitation(employeeId, actor);
+
+      // Dispatch activation email via Notification Service
+      if (result.activationToken) {
+        try {
+          const notificationUrl = process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:5008';
+          await fetch(`${notificationUrl}/api/v1/notifications/dispatch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              recipientId: result.email,
+              title: 'Welcome to Celestial - Your HRMS Account Is Ready',
+              message: 'A fresh activation invitation has been generated for your account. Please activate within 24 hours.',
+              channel: 'EMAIL',
+              metadata: {
+                recipientEmail: result.email,
+                employeeId: result.employeeId,
+                activationToken: result.activationToken,
+              },
+            }),
+          });
+        } catch (notifErr: any) {
+          console.warn('[auth-service] Notification dispatch on resend-invite deferred:', notifErr.message);
+        }
+      }
+
       apiSuccess(res, result, 200);
     } catch (err) {
       next(err);
@@ -103,6 +128,53 @@ export class AuthController {
       const { role } = req.body;
       const updated = await this.authService.updateUserRole(id, role);
       apiSuccess(res, updated, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  listRoles = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const roles = await this.authService.listRoles();
+      apiSuccess(res, roles, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  createRole = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const created = await this.authService.createRole(req.body);
+      apiSuccess(res, created, 201);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateRoleDefinition = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { code } = req.params;
+      const updated = await this.authService.updateRole(code, req.body);
+      apiSuccess(res, updated, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  deleteRole = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { code } = req.params;
+      const result = await this.authService.deleteRole(code);
+      apiSuccess(res, { deleted: result }, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  listPermissions = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const permissions = await this.authService.listAllPermissions();
+      apiSuccess(res, permissions, 200);
     } catch (err) {
       next(err);
     }

@@ -50,10 +50,15 @@ class AuthService {
     async generateAccessToken(user) {
         // Dynamically retrieve permissions from PostgreSQL tables
         const permissions = (await this.authRepo.getUserPermissions(user.id, user.role));
+        const isBootstrap = user.role === 'super_admin' || user.username === 'bootstrap_admin' || user.email === 'arunarchana2034@gmail.com' || user.email === 'admin@orbyx.internal';
+        const username = user.username || (isBootstrap ? 'bootstrap_admin' : undefined);
+        const name = isBootstrap ? 'Bootstrap Administrator' : (user.username || user.email.split('@')[0]);
         const payload = {
             sub: user.id,
             email: user.email,
             role: user.role,
+            username,
+            name,
             employeeId: user.employeeId,
             departmentId: user.departmentId,
             clientId: user.clientId,
@@ -121,6 +126,11 @@ class AuthService {
             expiresAt,
         });
         const { passwordHash, ...userProfile } = user;
+        const isBootstrap = user.email === 'arunarchana2034@gmail.com' || user.username === 'bootstrap_admin';
+        if (isBootstrap) {
+            userProfile.username = 'bootstrap_admin';
+            userProfile.name = 'Bootstrap Administrator';
+        }
         return {
             user: userProfile,
             accessToken,
@@ -359,6 +369,36 @@ class AuthService {
             return rest;
         }
         throw new Error('updateUserRole not supported on this repository');
+    }
+    async listRoles() {
+        if (this.authRepo.listRoles) {
+            return this.authRepo.listRoles();
+        }
+        return [];
+    }
+    async createRole(data) {
+        if (this.authRepo.createRole) {
+            return this.authRepo.createRole(data);
+        }
+        throw new Error('createRole not supported on this repository');
+    }
+    async updateRole(code, data) {
+        if (this.authRepo.updateRole) {
+            return this.authRepo.updateRole(code, data);
+        }
+        throw new Error('updateRole not supported on this repository');
+    }
+    async deleteRole(code) {
+        if (this.authRepo.deleteRole) {
+            return this.authRepo.deleteRole(code);
+        }
+        throw new Error('deleteRole not supported on this repository');
+    }
+    async listAllPermissions() {
+        if (this.authRepo.listAllPermissions) {
+            return this.authRepo.listAllPermissions();
+        }
+        return [];
     }
 }
 exports.AuthService = AuthService;

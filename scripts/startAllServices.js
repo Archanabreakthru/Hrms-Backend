@@ -1,5 +1,6 @@
 const { spawn } = require('child_process');
 const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const services = [
   { name: 'API Gateway', dir: 'api-gateway', entry: 'src/server.js', port: 5000 },
@@ -29,22 +30,41 @@ const procs = [];
 
 for (const svc of services) {
   const cwd = path.resolve(__dirname, '..', svc.dir);
+  const childEnv = { ...process.env };
+  delete childEnv.DATABASE_URL;
+  if (svc.port) {
+    childEnv.PORT = String(svc.port);
+  }
   const p = spawn(process.execPath, [svc.entry], {
     cwd,
     stdio: 'inherit',
     windowsHide: true,
-    env: { ...process.env }
+    env: childEnv
   });
 
   p.on('error', (err) => {
     console.error(`[${svc.name}] Failed to start:`, err.message);
   });
 
+  p.on('exit', (code, signal) => {
+    console.log(`[${svc.name}] Process exited with code ${code} signal ${signal}`);
+  });
+
   procs.push(p);
 }
 
+// Keep the event loop alive indefinitely to monitor microservices
+process.stdin.resume();
+setInterval(() => {}, 1000 * 60 * 60);
+
 process.on('SIGINT', () => {
   console.log('\nStopping all services...');
+  for (const p of procs) p.kill();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('\nStopping all services (SIGTERM)...');
   for (const p of procs) p.kill();
   process.exit(0);
 });

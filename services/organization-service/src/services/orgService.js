@@ -157,5 +157,20 @@ class OrganizationService {
         }
         return 'GEN';
     }
+    async getDelegations() {
+        return this.orgRepo.getDelegations();
+    }
+    async createDelegation(data) {
+        if (data.delegatorUserId === data.delegateUserId) {
+            throw new AppError_1.ValidationError('Self-delegation is blocked: Delegator and Delegate must be different accounts.');
+        }
+        if (!data.reason || !data.reason.trim()) {
+            throw new AppError_1.ValidationError('A mandatory governance reason is required to grant delegated executive authority.');
+        }
+        return this.orgRepo.createDelegation(data);
+    }
+    async revokeDelegation(id, revokedBy) {
+        return this.orgRepo.revokeDelegation(id, revokedBy);
+    }
 }
 exports.OrganizationService = OrganizationService;

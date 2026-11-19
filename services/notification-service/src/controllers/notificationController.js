@@ -96,5 +96,14 @@ class NotificationController {
             next(err);
         }
     };
+    verifySmtp = async (req, res, next) => {
+        try {
+            const result = await this.service.verifySmtp();
+            return (0, apiResponse_1.sendSuccess)(res, result, 'SMTP verification completed');
+        }
+        catch (err) {
+            next(err);
+        }
+    };
 }
 exports.NotificationController = NotificationController;

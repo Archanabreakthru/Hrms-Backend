@@ -35,5 +35,9 @@ function createOrgRouter(orgController) {
     router.delete('/designations/:id', authMiddleware, (0, auth_1.requirePermission)('org.designations.manage'), orgController.deleteDesignation);
     // Internal Designation Code Derivation for Employee Service ID Generation
     router.get('/designations/derive-code', authMiddleware, orgController.getDesignationCode);
+    // Delegations (Executive Delegation with Persistent Database Storage)
+    router.get('/delegations', authMiddleware, (0, auth_1.requirePermission)('org.profile.read'), orgController.getDelegations);
+    router.post('/delegations', authMiddleware, (0, auth_1.requirePermission)('org.profile.manage'), orgController.createDelegation);
+    router.patch('/delegations/:id/revoke', authMiddleware, (0, auth_1.requirePermission)('org.profile.manage'), orgController.revokeDelegation);
     return router;
 }

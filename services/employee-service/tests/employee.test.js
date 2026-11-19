@@ -25,6 +25,15 @@ class MockOrgClient {
     async validateBranch(id) {
         return id === 'BR-BLR';
     }
+    async resolveDepartmentId(id) {
+        return id || null;
+    }
+    async resolveDesignationId(id) {
+        return id || null;
+    }
+    async resolveBranchId(id) {
+        return id || null;
+    }
 }
 const mockHrAdmin = {
     id: 'usr-admin-1',

@@ -214,5 +214,30 @@ class InMemoryOrganizationRepository {
     async deleteDesignation(id) {
         return this.designations.delete(id);
     }
+    delegations = new Map();
+    async getDelegations() {
+        return Array.from(this.delegations.values());
+    }
+    async createDelegation(record) {
+        const id = `del-${Date.now()}`;
+        const now = new Date();
+        const del = { ...record, id, createdAt: now, updatedAt: now };
+        this.delegations.set(id, del);
+        return del;
+    }
+    async revokeDelegation(id, revokedBy) {
+        const existing = this.delegations.get(id);
+        if (!existing)
+            throw new Error(`Delegation ${id} not found`);
+        const updated = {
+            ...existing,
+            status: 'Revoked',
+            revokedAt: new Date(),
+            revokedBy,
+            updatedAt: new Date(),
+        };
+        this.delegations.set(id, updated);
+        return updated;
+    }
 }
 exports.InMemoryOrganizationRepository = InMemoryOrganizationRepository;

@@ -26,5 +26,11 @@ function createAuthRouter(authController) {
     // User & Role Management endpoints for Super Admin / authorized operators
     router.get('/users', authMiddleware, (0, auth_1.requirePermission)('auth.users.manage', 'org.profile.manage'), authController.listUsers);
     router.put('/users/:id/role', authMiddleware, (0, auth_1.requirePermission)('auth.users.manage'), authController.updateRole);
+    // Dynamic Roles & Permissions Management endpoints
+    router.get('/roles', authMiddleware, authController.listRoles);
+    router.post('/roles', authMiddleware, (0, auth_1.requirePermission)('auth.users.manage'), authController.createRole);
+    router.put('/roles/:code', authMiddleware, (0, auth_1.requirePermission)('auth.users.manage'), authController.updateRoleDefinition);
+    router.delete('/roles/:code', authMiddleware, (0, auth_1.requirePermission)('auth.users.manage'), authController.deleteRole);
+    router.get('/permissions', authMiddleware, authController.listPermissions);
     return router;
 }

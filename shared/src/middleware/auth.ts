@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { UnauthorizedError, ForbiddenError } from '../errors/AppError';
 import { AuthenticatedUser, JwtTokenPayload } from '../contracts/auth';
-import { Permission, AccessScope } from '../constants/roles';
+import { Permission, AccessScope, UserRole } from '../constants/roles';
 
 // Extend express request to include user
 declare global {
@@ -32,6 +32,8 @@ export function createAuthMiddleware(jwtSecret: string, issuer = 'orbyx-auth-ser
         id: decoded.sub,
         email: decoded.email,
         role: decoded.role,
+        username: decoded.username,
+        name: decoded.name,
         employeeId: decoded.employeeId,
         departmentId: decoded.departmentId,
         clientId: decoded.clientId,
@@ -54,7 +56,16 @@ export function requirePermission(...requiredPermissions: Permission[]) {
       return next(new UnauthorizedError('Authentication required'));
     }
 
+    // Bootstrap Administrator / Super Admin has unrestricted access across all modules & APIs
+    if (String(req.user.role).toLowerCase() === 'super_admin') {
+      return next();
+    }
+
     const userPerms = new Set(req.user.permissions);
+    if (userPerms.has('*' as any)) {
+      return next();
+    }
+
     const hasPermission = requiredPermissions.some((perm) => userPerms.has(perm));
 
     if (!hasPermission) {
@@ -73,6 +84,11 @@ export function requireScope(
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
       return next(new UnauthorizedError('Authentication required'));
+    }
+
+    // Super Admin has unrestricted access and bypasses data-scoping restrictions
+    if (String(req.user.role).toLowerCase() === 'super_admin') {
+      return next();
     }
 
     const result = evaluator(req.user, req);

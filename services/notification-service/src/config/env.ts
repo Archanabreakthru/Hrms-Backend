@@ -12,7 +12,7 @@ export const notificationConfig = {
     fromAddress: process.env.MAIL_FROM_ADDRESS || 'noreply@orbyx.internal',
     fromName: process.env.MAIL_FROM_NAME || 'Celestial HRMS',
   },
-  portalUrl: process.env.HRMS_PORTAL_URL || 'http://localhost:3000',
+  portalUrl: process.env.PUBLIC_APP_URL || process.env.HRMS_PORTAL_URL || process.env.APP_URL || 'http://localhost:3000',
   companyName: process.env.COMPANY_NAME || 'Celestial Technologies',
 };
 

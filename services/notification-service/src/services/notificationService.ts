@@ -1,12 +1,17 @@
 import { INotificationRepository, NotificationRecord, AuditLogRecord } from '../repositories/notificationRepository';
 import { AppError } from '../../../../shared/src/errors/AppError';
-import { EmailService, ActivationEmailData } from './emailService';
+import { EmailService, ActivationEmailData, ClientSupervisorEmailData } from './emailService';
+import { notificationConfig } from '../config/env';
 
 export class NotificationService {
   private emailService: EmailService;
 
   constructor(private repo: INotificationRepository, emailService?: EmailService) {
     this.emailService = emailService || new EmailService();
+  }
+
+  async verifySmtp(): Promise<{ connected: boolean; provider: string; error?: string }> {
+    return this.emailService.verifyConnection();
   }
 
   async sendNotification(data: {
@@ -22,21 +27,44 @@ export class NotificationService {
   }): Promise<NotificationRecord> {
     // 1. If channel is EMAIL, dispatch physical email via EmailService
     if (data.channel === 'EMAIL' && data.metadata?.activationToken) {
-      const emailData: ActivationEmailData = {
-        recipientEmail: data.metadata.recipientEmail || data.recipientId,
-        employeeName: data.metadata.employeeName || 'Colleague',
-        employeeId: data.metadata.employeeId || data.recipientId,
-        activationToken: data.metadata.activationToken,
-        companyName: data.metadata.companyName,
-      };
+      if (data.metadata.clientName || data.metadata.supervisorName) {
+        // Client supervisor welcome email
+        const supervisorData: ClientSupervisorEmailData = {
+          recipientEmail: data.metadata.recipientEmail || data.recipientId,
+          supervisorName: data.metadata.supervisorName || data.metadata.fullName || 'Client Supervisor',
+          clientName: data.metadata.clientName || 'Partner Client Organization',
+          activationToken: data.metadata.activationToken,
+          portalUrl: data.metadata.portalUrl || notificationConfig.portalUrl,
+        };
 
-      try {
-        await this.emailService.sendActivationEmail(emailData);
-      } catch (err: any) {
-        // Record failure in notification record metadata for delivery tracking
-        if (!data.metadata) data.metadata = {};
-        data.metadata.deliveryError = err.message || 'SMTP delivery failed';
-        data.metadata.deliveryStatus = 'FAILED';
+        try {
+          await this.emailService.sendClientSupervisorWelcomeEmail(supervisorData);
+          if (!data.metadata) data.metadata = {};
+          data.metadata.deliveryStatus = 'DELIVERED';
+        } catch (err: any) {
+          if (!data.metadata) data.metadata = {};
+          data.metadata.deliveryError = err.message || 'SMTP delivery failed';
+          data.metadata.deliveryStatus = 'FAILED';
+        }
+      } else {
+        // Employee onboarding activation email
+        const emailData: ActivationEmailData = {
+          recipientEmail: data.metadata.recipientEmail || data.recipientId,
+          employeeName: data.metadata.employeeName || 'Colleague',
+          employeeId: data.metadata.employeeId || data.recipientId,
+          activationToken: data.metadata.activationToken,
+          companyName: data.metadata.companyName,
+        };
+
+        try {
+          await this.emailService.sendActivationEmail(emailData);
+          if (!data.metadata) data.metadata = {};
+          data.metadata.deliveryStatus = 'DELIVERED';
+        } catch (err: any) {
+          if (!data.metadata) data.metadata = {};
+          data.metadata.deliveryError = err.message || 'SMTP delivery failed';
+          data.metadata.deliveryStatus = 'FAILED';
+        }
       }
     }
 
@@ -62,20 +90,30 @@ export class NotificationService {
   }
 
   async markAsRead(notificationId: string, recipientId: string): Promise<NotificationRecord> {
-    try {
-      return await this.repo.markAsRead(notificationId, recipientId);
-    } catch {
-      throw new AppError('Notification not found or access denied', 404);
-    }
+    return this.repo.markAsRead(notificationId, recipientId);
   }
 
-  async markAllAsRead(recipientId: string): Promise<{ markedCount: number }> {
-    const markedCount = await this.repo.markAllAsRead(recipientId);
-    return { markedCount };
+  async markAllAsRead(recipientId: string): Promise<{ count: number; markedCount: number }> {
+    const count = await this.repo.markAllAsRead(recipientId);
+    return { count, markedCount: count };
   }
 
-  // Audit Logs (Write-Only append / Read-only query for authorized compliance)
   async recordAudit(data: {
+    serviceName: string;
+    action: string;
+    resourceType: string;
+    resourceId?: string;
+    actorId: string;
+    actorRole?: string;
+    actorIp?: string;
+    details?: any;
+    diff?: any;
+    correlationId?: string;
+  }): Promise<AuditLogRecord> {
+    return this.createAuditLog(data);
+  }
+
+  async createAuditLog(data: {
     serviceName: string;
     action: string;
     resourceType: string;
@@ -90,7 +128,13 @@ export class NotificationService {
     return this.repo.createAuditLog(data);
   }
 
-  async queryAuditLogs(filters?: { serviceName?: string; actorId?: string; resourceType?: string; resourceId?: string; limit?: number }): Promise<AuditLogRecord[]> {
+  async queryAuditLogs(filters?: {
+    serviceName?: string;
+    actorId?: string;
+    resourceType?: string;
+    resourceId?: string;
+    limit?: number;
+  }): Promise<AuditLogRecord[]> {
     return this.repo.queryAuditLogs(filters);
   }
 }

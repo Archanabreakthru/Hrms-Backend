@@ -6,10 +6,10 @@ export const PHONE_REGEX = /^\+?[0-9\s\-]{8,15}$/;
 export const draftEmployeeSchema = {
   body: z.object({
     firstName: z.string().min(1, 'First name is required'),
-    lastName: z.string().min(1, 'Last name is required'),
+    lastName: z.string().optional().default(''),
     email: z.string().email('Valid official email is required'),
-    phone: z.string().regex(PHONE_REGEX, 'Valid phone number is required'),
-    userId: z.string().min(1, 'Linked user ID is required'),
+    phone: z.string().optional().default(''),
+    userId: z.string().optional(),
     departmentId: z.string().optional(),
     designationId: z.string().optional(),
     branchId: z.string().optional(),
@@ -137,5 +137,27 @@ export const updateServiceRecordStatusSchema = {
     approvalStatus: z.enum(['Approved', 'Rejected']),
   }),
 };
+
+export const uploadDocumentSchema = {
+  body: z.object({
+    title: z.string().min(1, 'Title is required'),
+    documentType: z.string().min(1, 'Document type is required'),
+    fileName: z.string().min(1, 'File name is required'),
+    fileSizeBytes: z.number().nonnegative().optional().default(0),
+    fileUrl: z.string().min(1, 'File content or URL is required'),
+    issueDate: z.string().optional().nullable(),
+    expiryDate: z.string().optional().nullable(),
+    verificationStatus: z.enum(['Pending', 'Verified', 'Rejected']).default('Pending'),
+    notes: z.string().optional().nullable(),
+  }),
+};
+
+export const updateDocumentStatusSchema = {
+  body: z.object({
+    verificationStatus: z.enum(['Pending', 'Verified', 'Rejected']),
+    notes: z.string().optional().nullable(),
+  }),
+};
+
 
 

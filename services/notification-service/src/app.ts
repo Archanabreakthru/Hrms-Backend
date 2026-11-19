@@ -2,23 +2,24 @@ import express from 'express';
 import cors from 'cors';
 import { correlationMiddleware } from '../../../shared/src/middleware/correlation';
 import { errorHandler } from '../../../shared/src/middleware/errorHandler';
-import { InMemoryNotificationRepository } from './repositories/notificationRepository';
+import { INotificationRepository } from './repositories/notificationRepository';
+import { PrismaNotificationRepository } from './repositories/prismaNotificationRepository';
 import { NotificationService } from './services/notificationService';
 import { NotificationController } from './controllers/notificationController';
 import { createNotificationRouter, createAuditRouter } from './routes/notificationRoutes';
 
-export function createApp(customRepo?: InMemoryNotificationRepository) {
+export function createApp(customRepo?: INotificationRepository) {
   const app = express();
   app.use(cors());
   app.use(express.json());
   app.use(correlationMiddleware);
 
-  const repo = customRepo || new InMemoryNotificationRepository();
+  const repo = customRepo || new PrismaNotificationRepository();
   const service = new NotificationService(repo);
   const controller = new NotificationController(service);
 
   app.get('/', (req, res) => res.json({ service: 'notification-service', status: 'UP', health: '/health' }));
-    app.get('/health', (req, res) => {
+  app.get('/health', (req, res) => {
     res.status(200).json({ status: 'UP', service: 'notification-service' });
   });
 

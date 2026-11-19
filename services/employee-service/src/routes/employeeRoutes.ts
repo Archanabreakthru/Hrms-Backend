@@ -11,6 +11,8 @@ import {
   updateSalaryBankSchema,
   createServiceRecordSchema,
   updateServiceRecordStatusSchema,
+  uploadDocumentSchema,
+  updateDocumentStatusSchema,
 } from '../validators/employeeValidators';
 import { config } from '../config/env';
 
@@ -45,6 +47,37 @@ export function createEmployeeRouter(employeeController: EmployeeController): Ro
     employeeController.updateServiceRecordStatus
   );
 
+  // Documents for an Employee
+  router.get(
+    '/:id/documents',
+    authMiddleware,
+    requirePermission('employee.directory.read_basic'),
+    employeeController.getDocuments
+  );
+
+  router.post(
+    '/:id/documents',
+    authMiddleware,
+    requirePermission('employee.profile.edit_employment', 'employee.profile.update_self', 'employee.profile.edit_personal'),
+    validateRequest(uploadDocumentSchema),
+    employeeController.uploadDocument
+  );
+
+  router.delete(
+    '/:id/documents/:docId',
+    authMiddleware,
+    requirePermission('employee.profile.edit_employment'),
+    employeeController.deleteDocument
+  );
+
+  router.put(
+    '/:id/documents/:docId/status',
+    authMiddleware,
+    requirePermission('employee.profile.edit_employment'),
+    validateRequest(updateDocumentStatusSchema),
+    employeeController.updateDocumentStatus
+  );
+
   // Single Employee Profile (Redacts sensitive fields based on caller scope)
   router.get('/:id', authMiddleware, requirePermission('employee.directory.read_basic'), employeeController.getById);
 
@@ -64,6 +97,14 @@ export function createEmployeeRouter(employeeController: EmployeeController): Ro
     requirePermission('employee.profile.edit_employment'),
     validateRequest(enrollEmployeeSchema),
     employeeController.enroll
+  );
+
+  // Delete Employee (HR Admin or Super Admin)
+  router.delete(
+    '/:id',
+    authMiddleware,
+    requirePermission('employee.profile.edit_employment'),
+    employeeController.delete
   );
 
   // Update Personal Details (Self or HR Admin)

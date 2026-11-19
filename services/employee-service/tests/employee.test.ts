@@ -21,6 +21,15 @@ class MockOrgClient implements IOrgServiceClient {
   async validateBranch(id: string): Promise<boolean> {
     return id === 'BR-BLR';
   }
+  async resolveDepartmentId(id?: string): Promise<string | null> {
+    return id || null;
+  }
+  async resolveDesignationId(id?: string): Promise<string | null> {
+    return id || null;
+  }
+  async resolveBranchId(id?: string): Promise<string | null> {
+    return id || null;
+  }
 }
 
 const mockHrAdmin: AuthenticatedUser = {

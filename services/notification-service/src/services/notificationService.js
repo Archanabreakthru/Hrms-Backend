@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationService = void 0;
-const AppError_1 = require("../../../../shared/src/errors/AppError");
 const emailService_1 = require("./emailService");
+const env_1 = require("../config/env");
 class NotificationService {
     repo;
     emailService;
@@ -10,25 +10,55 @@ class NotificationService {
         this.repo = repo;
         this.emailService = emailService || new emailService_1.EmailService();
     }
+    async verifySmtp() {
+        return this.emailService.verifyConnection();
+    }
     async sendNotification(data) {
         // 1. If channel is EMAIL, dispatch physical email via EmailService
         if (data.channel === 'EMAIL' && data.metadata?.activationToken) {
-            const emailData = {
-                recipientEmail: data.metadata.recipientEmail || data.recipientId,
-                employeeName: data.metadata.employeeName || 'Colleague',
-                employeeId: data.metadata.employeeId || data.recipientId,
-                activationToken: data.metadata.activationToken,
-                companyName: data.metadata.companyName,
-            };
-            try {
-                await this.emailService.sendActivationEmail(emailData);
+            if (data.metadata.clientName || data.metadata.supervisorName) {
+                // Client supervisor welcome email
+                const supervisorData = {
+                    recipientEmail: data.metadata.recipientEmail || data.recipientId,
+                    supervisorName: data.metadata.supervisorName || data.metadata.fullName || 'Client Supervisor',
+                    clientName: data.metadata.clientName || 'Partner Client Organization',
+                    activationToken: data.metadata.activationToken,
+                    portalUrl: data.metadata.portalUrl || env_1.notificationConfig.portalUrl,
+                };
+                try {
+                    await this.emailService.sendClientSupervisorWelcomeEmail(supervisorData);
+                    if (!data.metadata)
+                        data.metadata = {};
+                    data.metadata.deliveryStatus = 'DELIVERED';
+                }
+                catch (err) {
+                    if (!data.metadata)
+                        data.metadata = {};
+                    data.metadata.deliveryError = err.message || 'SMTP delivery failed';
+                    data.metadata.deliveryStatus = 'FAILED';
+                }
             }
-            catch (err) {
-                // Record failure in notification record metadata for delivery tracking
-                if (!data.metadata)
-                    data.metadata = {};
-                data.metadata.deliveryError = err.message || 'SMTP delivery failed';
-                data.metadata.deliveryStatus = 'FAILED';
+            else {
+                // Employee onboarding activation email
+                const emailData = {
+                    recipientEmail: data.metadata.recipientEmail || data.recipientId,
+                    employeeName: data.metadata.employeeName || 'Colleague',
+                    employeeId: data.metadata.employeeId || data.recipientId,
+                    activationToken: data.metadata.activationToken,
+                    companyName: data.metadata.companyName,
+                };
+                try {
+                    await this.emailService.sendActivationEmail(emailData);
+                    if (!data.metadata)
+                        data.metadata = {};
+                    data.metadata.deliveryStatus = 'DELIVERED';
+                }
+                catch (err) {
+                    if (!data.metadata)
+                        data.metadata = {};
+                    data.metadata.deliveryError = err.message || 'SMTP delivery failed';
+                    data.metadata.deliveryStatus = 'FAILED';
+                }
             }
         }
         return this.repo.createNotification({
@@ -50,19 +80,16 @@ class NotificationService {
         return this.repo.getUnreadCount(recipientId);
     }
     async markAsRead(notificationId, recipientId) {
-        try {
-            return await this.repo.markAsRead(notificationId, recipientId);
-        }
-        catch {
-            throw new AppError_1.AppError('Notification not found or access denied', 404);
-        }
+        return this.repo.markAsRead(notificationId, recipientId);
     }
     async markAllAsRead(recipientId) {
-        const markedCount = await this.repo.markAllAsRead(recipientId);
-        return { markedCount };
+        const count = await this.repo.markAllAsRead(recipientId);
+        return { count, markedCount: count };
     }
-    // Audit Logs (Write-Only append / Read-only query for authorized compliance)
     async recordAudit(data) {
+        return this.createAuditLog(data);
+    }
+    async createAuditLog(data) {
         return this.repo.createAuditLog(data);
     }
     async queryAuditLogs(filters) {

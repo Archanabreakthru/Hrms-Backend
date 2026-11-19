@@ -15,12 +15,19 @@ function createEmployeeRouter(employeeController) {
     router.get('/:id/service-records', authMiddleware, (0, auth_1.requirePermission)('employee.directory.read_basic'), employeeController.getServiceRecords);
     router.post('/:id/service-records', authMiddleware, (0, auth_1.requirePermission)('employee.profile.edit_employment'), (0, validation_1.validateRequest)(employeeValidators_1.createServiceRecordSchema), employeeController.createServiceRecord);
     router.put('/:id/service-records/:recordId/status', authMiddleware, (0, auth_1.requirePermission)('employee.profile.edit_employment'), (0, validation_1.validateRequest)(employeeValidators_1.updateServiceRecordStatusSchema), employeeController.updateServiceRecordStatus);
+    // Documents for an Employee
+    router.get('/:id/documents', authMiddleware, (0, auth_1.requirePermission)('employee.directory.read_basic'), employeeController.getDocuments);
+    router.post('/:id/documents', authMiddleware, (0, auth_1.requirePermission)('employee.profile.edit_employment', 'employee.profile.update_self', 'employee.profile.edit_personal'), (0, validation_1.validateRequest)(employeeValidators_1.uploadDocumentSchema), employeeController.uploadDocument);
+    router.delete('/:id/documents/:docId', authMiddleware, (0, auth_1.requirePermission)('employee.profile.edit_employment'), employeeController.deleteDocument);
+    router.put('/:id/documents/:docId/status', authMiddleware, (0, auth_1.requirePermission)('employee.profile.edit_employment'), (0, validation_1.validateRequest)(employeeValidators_1.updateDocumentStatusSchema), employeeController.updateDocumentStatus);
     // Single Employee Profile (Redacts sensitive fields based on caller scope)
     router.get('/:id', authMiddleware, (0, auth_1.requirePermission)('employee.directory.read_basic'), employeeController.getById);
     // Draft Creation (Partial info allowed)
     router.post('/draft', authMiddleware, (0, auth_1.requirePermission)('employee.profile.edit_employment'), (0, validation_1.validateRequest)(employeeValidators_1.draftEmployeeSchema), employeeController.createDraft);
     // Complete Enrollment (Mandatory fields enforced)
     router.post('/enroll', authMiddleware, (0, auth_1.requirePermission)('employee.profile.edit_employment'), (0, validation_1.validateRequest)(employeeValidators_1.enrollEmployeeSchema), employeeController.enroll);
+    // Delete Employee (HR Admin or Super Admin)
+    router.delete('/:id', authMiddleware, (0, auth_1.requirePermission)('employee.profile.edit_employment'), employeeController.delete);
     // Update Personal Details (Self or HR Admin)
     router.put('/:id/personal', authMiddleware, (0, auth_1.requirePermission)('employee.profile.update_self', 'employee.profile.edit_personal'), (0, validation_1.validateRequest)(employeeValidators_1.updatePersonalSchema), employeeController.updatePersonal);
     // Update Employment Details (HR Admin only)

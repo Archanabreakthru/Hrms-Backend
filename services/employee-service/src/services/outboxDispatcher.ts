@@ -113,6 +113,19 @@ export class OutboxDispatcher {
       if (res.ok || res.status === 201 || res.status === 200) {
         const provData = await res.json();
         const rawToken = provData?.data?.activationToken;
+        const newUserId = provData?.data?.user?.id;
+
+        // Securely link newly provisioned Auth User ID to Employee Record
+        if (newUserId) {
+          try {
+            await (this.prisma as any).employee.update({
+              where: { id: item.employeeId },
+              data: { userId: newUserId },
+            });
+          } catch {
+            // Safe fallback if already linked
+          }
+        }
 
         // Secure handoff: If an activationToken was generated, trigger the welcome email via Notification Service
         if (rawToken && this.config.notificationServiceUrl) {

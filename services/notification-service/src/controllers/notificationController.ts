@@ -89,4 +89,13 @@ export class NotificationController {
       next(err);
     }
   };
+
+  verifySmtp = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.service.verifySmtp();
+      return sendSuccess(res, result, 'SMTP verification completed');
+    } catch (err) {
+      next(err);
+    }
+  };
 }

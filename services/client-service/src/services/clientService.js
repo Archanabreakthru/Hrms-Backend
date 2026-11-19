@@ -1,10 +1,43 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClientService = void 0;
 const AppError_1 = require("../../../../shared/src/errors/AppError");
 const roles_1 = require("../../../../shared/src/constants/roles");
 const messaging_1 = require("../../../../shared/src/infrastructure/messaging");
-const crypto_1 = require("crypto");
+const crypto_1 = __importStar(require("crypto"));
 class ClientService {
     clientRepo;
     eventBus;
@@ -105,6 +138,71 @@ class ClientService {
             createdAt: now,
             updatedAt: now,
         };
+        // Automated Client Supervisor Onboarding: create account in auth-service & send welcome email
+        if (supervisor.email) {
+            try {
+                const body = {
+                    employeeId: `SUP-${supervisor.id.substring(0, 8).toUpperCase()}`,
+                    email: supervisor.email,
+                    firstName: data.fullName.split(' ')[0] || data.fullName,
+                    lastName: data.fullName.split(' ').slice(1).join(' ') || '',
+                    roleCode: roles_1.UserRole.CLIENT_SUPERVISOR,
+                    clientId: data.clientId,
+                };
+                const bodyString = JSON.stringify(body);
+                const bodyHash = crypto_1.default.createHash('sha256').update(bodyString).digest('hex');
+                const timestamp = new Date().toISOString();
+                const nonce = (0, crypto_1.randomUUID)();
+                const idempotencyKey = supervisor.id;
+                const secret = process.env.INTERNAL_SERVICE_SECRET || 'supersecret_jwt_key_replace_in_production';
+                const canonical = `POST\n/api/v1/auth/provision\n${timestamp}\n${nonce}\n${idempotencyKey}\n${bodyHash}`;
+                const signature = crypto_1.default.createHmac('sha256', secret).update(canonical).digest('hex');
+                const authUrl = `${process.env.AUTH_SERVICE_URL || 'http://localhost:5001'}/api/v1/auth/provision`;
+                const authRes = await fetch(authUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Service-Name': 'employee-service',
+                        'X-Service-Timestamp': timestamp,
+                        'X-Service-Nonce': nonce,
+                        'X-Idempotency-Key': idempotencyKey,
+                        'X-Service-Signature': signature,
+                    },
+                    body: bodyString,
+                });
+                if (authRes.ok) {
+                    const authData = await authRes.json();
+                    const token = authData?.data?.activationToken;
+                    const user = authData?.data?.user;
+                    if (user?.id) {
+                        supervisor.userId = user.id;
+                    }
+                    // Trigger automated client supervisor welcome email
+                    if (token) {
+                        const notifUrl = `${process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:5008'}/api/v1/notifications/dispatch`;
+                        await fetch(notifUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                recipientId: supervisor.email,
+                                title: `Welcome to Celestial Client Portal - Access for ${client.name}`,
+                                message: `You have been registered as an authorized Client Supervisor for ${client.name}. Please complete password setup.`,
+                                channel: 'EMAIL',
+                                metadata: {
+                                    recipientEmail: supervisor.email,
+                                    supervisorName: supervisor.fullName,
+                                    clientName: client.name,
+                                    activationToken: token,
+                                },
+                            }),
+                        }).catch(() => { });
+                    }
+                }
+            }
+            catch (err) {
+                console.warn('Client supervisor account provisioning warning:', err.message);
+            }
+        }
         return this.clientRepo.saveSupervisor(supervisor);
     }
     async updateSupervisor(id, updates) {

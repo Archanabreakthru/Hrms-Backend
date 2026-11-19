@@ -5,8 +5,9 @@ import {
   BranchRecord,
   DepartmentRecord,
   DesignationRecord,
+  DelegationRecord,
 } from '../repositories/orgRepository';
-import { NotFoundError, ConflictError } from '../../../../shared/src/errors/AppError';
+import { NotFoundError, ConflictError, ValidationError } from '../../../../shared/src/errors/AppError';
 
 export class OrganizationService {
   constructor(private orgRepo: IOrganizationRepository) {}
@@ -175,6 +176,24 @@ export class OrganizationService {
       return desig.code.split('-')[0].replace(/[^A-Za-z]/g, '').toUpperCase() || 'GEN';
     }
     return 'GEN';
+  }
+
+  async getDelegations(): Promise<DelegationRecord[]> {
+    return this.orgRepo.getDelegations();
+  }
+
+  async createDelegation(data: Omit<DelegationRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<DelegationRecord> {
+    if (data.delegatorUserId === data.delegateUserId) {
+      throw new ValidationError('Self-delegation is blocked: Delegator and Delegate must be different accounts.');
+    }
+    if (!data.reason || !data.reason.trim()) {
+      throw new ValidationError('A mandatory governance reason is required to grant delegated executive authority.');
+    }
+    return this.orgRepo.createDelegation(data);
+  }
+
+  async revokeDelegation(id: string, revokedBy: string): Promise<DelegationRecord> {
+    return this.orgRepo.revokeDelegation(id, revokedBy);
   }
 }
 
