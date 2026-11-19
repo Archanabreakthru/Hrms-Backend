@@ -1,4 +1,5 @@
-import { IEmployeeRepository, EmployeeRecord, ServiceRecordEntry } from '../repositories/employeeRepository';
+import crypto from 'crypto';
+import { IEmployeeRepository, EmployeeRecord, ServiceRecordEntry, EmployeeDocumentRecord } from '../repositories/employeeRepository';
 import { IOrgServiceClient } from './orgServiceClient';
 import {
   NotFoundError,
@@ -10,6 +11,8 @@ import { AuthenticatedUser } from '../../../../shared/src/contracts/auth';
 import { UserRole } from '../../../../shared/src/constants/roles';
 import { EventPublisher, createEvent } from '../../../../shared/src/infrastructure/messaging';
 import { encryptField, decryptField } from '../utils/crypto';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export class EmployeeService {
   constructor(
@@ -25,10 +28,10 @@ export class EmployeeService {
   async createDraft(
     data: {
       firstName: string;
-      lastName: string;
+      lastName?: string;
       email: string;
-      phone: string;
-      userId: string;
+      phone?: string;
+      userId?: string;
       departmentId?: string;
       designationId?: string;
       branchId?: string;
@@ -42,40 +45,52 @@ export class EmployeeService {
       throw new ConflictError(`An employee with email ${data.email} already exists`);
     }
 
-    const existingUser = await this.employeeRepo.findByUserId(data.userId);
-    if (existingUser) {
-      throw new ConflictError(`User ${data.userId} is already assigned to employee ${existingUser.id}`);
+    const finalUserId = (data.userId && UUID_REGEX.test(data.userId.trim()))
+      ? data.userId.trim()
+      : crypto.randomUUID();
+
+    if (finalUserId) {
+      const existingUser = await this.employeeRepo.findByUserId(finalUserId);
+      if (existingUser) {
+        throw new ConflictError(`User ${finalUserId} is already assigned to employee ${existingUser.id}`);
+      }
     }
 
-    // 2. Validate organization references if provided
-    if (data.departmentId) {
+    // 2. Validate and resolve organization references if provided
+    const [resolvedDeptId, resolvedDesigId, resolvedBranchId] = await Promise.all([
+      this.orgClient.resolveDepartmentId(data.departmentId),
+      this.orgClient.resolveDesignationId(data.designationId),
+      this.orgClient.resolveBranchId(data.branchId),
+    ]);
+
+    if (data.departmentId && !resolvedDeptId) {
       const valid = await this.orgClient.validateDepartment(data.departmentId);
       if (!valid) throw new ValidationError(`Department ${data.departmentId} does not exist`);
     }
-    if (data.designationId) {
+    if (data.designationId && !resolvedDesigId) {
       const valid = await this.orgClient.validateDesignation(data.designationId);
       if (!valid) throw new ValidationError(`Designation ${data.designationId} does not exist`);
     }
-    if (data.branchId) {
+    if (data.branchId && !resolvedBranchId) {
       const valid = await this.orgClient.validateBranch(data.branchId);
       if (!valid) throw new ValidationError(`Branch ${data.branchId} does not exist`);
     }
 
     // 3. Concurrency-safe ID allocation
-    const desigCode = await this.orgClient.getDesignationCode(data.designationId);
+    const desigCode = await this.orgClient.getDesignationCode(resolvedDesigId || data.designationId);
     const employeeId = await this.employeeRepo.allocateNextId(desigCode);
 
     const now = new Date();
     const newEmployee: EmployeeRecord = {
       id: employeeId,
-      userId: data.userId,
+      userId: finalUserId,
       firstName: data.firstName.trim(),
-      lastName: data.lastName.trim(),
+      lastName: (data.lastName || '').trim(),
       email: data.email.toLowerCase().trim(),
-      phone: data.phone.trim(),
-      departmentId: data.departmentId,
-      designationId: data.designationId,
-      branchId: data.branchId,
+      phone: (data.phone || '').trim(),
+      departmentId: resolvedDeptId || (UUID_REGEX.test(data.departmentId || '') ? data.departmentId : undefined),
+      designationId: resolvedDesigId || (UUID_REGEX.test(data.designationId || '') ? data.designationId : undefined),
+      branchId: resolvedBranchId || (UUID_REGEX.test(data.branchId || '') ? data.branchId : undefined),
       employmentType: data.employmentType || 'Permanent',
       status: 'Active',
       profileStatus: 'Draft',
@@ -120,7 +135,7 @@ export class EmployeeService {
       email: string;
       phone: string;
       dateOfBirth: string;
-      gender: string;
+      gender: 'Male' | 'Female' | 'Other';
       address: string;
       emergencyContact: {
         name: string;
@@ -133,7 +148,7 @@ export class EmployeeService {
       employmentType: 'Permanent' | 'Contract' | 'Probation' | 'Intern';
       dateOfJoining: string;
       noticePeriodDays?: number;
-      shiftId: string;
+      shiftId?: string;
       bankDetails: {
         accountNumber: string;
         ifscCode: string;
@@ -143,21 +158,30 @@ export class EmployeeService {
       panOrTaxNumber: string;
       pfUan?: string;
       esiNumber?: string;
-      baseSalaryAnnual?: number;
+      baseSalaryAnnual: number;
       salaryStructureId?: string;
     },
     actor: AuthenticatedUser
   ): Promise<EmployeeRecord> {
-    // 1. Validate Organization Service entities
+    // 1. Validate Organization Service entities and resolve IDs
     const [deptValid, desigValid, branchValid] = await Promise.all([
       this.orgClient.validateDepartment(data.departmentId),
       this.orgClient.validateDesignation(data.designationId),
       this.orgClient.validateBranch(data.branchId),
     ]);
-
     if (!deptValid) throw new ValidationError(`Department ${data.departmentId} is invalid`);
     if (!desigValid) throw new ValidationError(`Designation ${data.designationId} is invalid`);
     if (!branchValid) throw new ValidationError(`Branch ${data.branchId} is invalid`);
+
+    const [resolvedDeptId, resolvedDesigId, resolvedBranchId] = await Promise.all([
+      this.orgClient.resolveDepartmentId(data.departmentId),
+      this.orgClient.resolveDesignationId(data.designationId),
+      this.orgClient.resolveBranchId(data.branchId),
+    ]);
+
+    const finalUserId = (data.userId && UUID_REGEX.test(data.userId.trim()))
+      ? data.userId.trim()
+      : crypto.randomUUID();
 
     // 2. Uniqueness checks
     const panCheck = await this.employeeRepo.findByPan(data.panOrTaxNumber);
@@ -179,17 +203,19 @@ export class EmployeeService {
       if (emailCheck) {
         throw new ConflictError(`An employee with email ${data.email} already exists`);
       }
-      const userCheck = await this.employeeRepo.findByUserId(data.userId);
-      if (userCheck) {
-        throw new ConflictError(`User ${data.userId} is already assigned to employee ${userCheck.id}`);
+      if (finalUserId) {
+        const userCheck = await this.employeeRepo.findByUserId(finalUserId);
+        if (userCheck) {
+          throw new ConflictError(`User ${finalUserId} is already assigned to employee ${userCheck.id}`);
+        }
       }
 
-      const desigCode = await this.orgClient.getDesignationCode(data.designationId);
+      const desigCode = await this.orgClient.getDesignationCode(resolvedDesigId || data.designationId);
       const newId = await this.employeeRepo.allocateNextId(desigCode);
 
       targetEmployee = {
         id: newId,
-        userId: data.userId,
+        userId: finalUserId,
         firstName: data.firstName.trim(),
         lastName: data.lastName.trim(),
         email: data.email.toLowerCase().trim(),
@@ -213,6 +239,7 @@ export class EmployeeService {
 
     const updatedEmployee: EmployeeRecord = {
       ...targetEmployee,
+      userId: finalUserId || targetEmployee.userId,
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
       email: data.email.toLowerCase().trim(),
@@ -221,15 +248,15 @@ export class EmployeeService {
       gender: data.gender,
       address: data.address.trim(),
       emergencyContact: data.emergencyContact,
-      departmentId: data.departmentId,
-      designationId: data.designationId,
-      branchId: data.branchId,
+      departmentId: resolvedDeptId || (UUID_REGEX.test(data.departmentId || '') ? data.departmentId : undefined),
+      designationId: resolvedDesigId || (UUID_REGEX.test(data.designationId || '') ? data.designationId : undefined),
+      branchId: resolvedBranchId || (UUID_REGEX.test(data.branchId || '') ? data.branchId : undefined),
       employmentType: data.employmentType,
       status: 'Active',
       profileStatus: 'Active', // Successfully enrolled!
       dateOfJoining: new Date(data.dateOfJoining),
       noticePeriodDays: data.noticePeriodDays || 30,
-      shiftId: data.shiftId,
+      shiftId: (data.shiftId && UUID_REGEX.test(data.shiftId.trim())) ? data.shiftId.trim() : undefined,
       bankDetails: {
         ...data.bankDetails,
         accountNumber: encryptedAccount!,
@@ -252,7 +279,11 @@ export class EmployeeService {
     };
 
     if (data.id) {
-      await this.employeeRepo.update(data.id, updatedEmployee);
+      if (this.employeeRepo.updateWithOutbox) {
+        await this.employeeRepo.updateWithOutbox(data.id, updatedEmployee, outboxPayload);
+      } else {
+        await this.employeeRepo.update(data.id, updatedEmployee);
+      }
     } else {
       if (this.employeeRepo.createWithOutbox) {
         await this.employeeRepo.createWithOutbox(updatedEmployee, outboxPayload);
@@ -275,6 +306,37 @@ export class EmployeeService {
     }
 
     return this.redactSensitive(updatedEmployee, actor);
+  }
+
+  /**
+   * Delete Employee Record
+   * Authorized for: HR Admin / Super Admin
+   */
+  async deleteEmployee(id: string, actor: AuthenticatedUser): Promise<{ success: boolean; id: string; message: string }> {
+    const existing = await this.employeeRepo.findById(id);
+    if (!existing) {
+      throw new NotFoundError(`Employee with ID ${id} not found`);
+    }
+
+    if (this.employeeRepo.delete) {
+      await this.employeeRepo.delete(id);
+    }
+
+    if (this.eventBus) {
+      await this.eventBus.publish(
+        'employee.deleted',
+        createEvent('EMPLOYEE_DELETED', id, 'Employee', {
+          employeeId: id,
+          actorId: actor.id,
+        })
+      );
+    }
+
+    return {
+      success: true,
+      id,
+      message: `Employee ${id} deleted successfully.`,
+    };
   }
 
   /**
@@ -542,7 +604,44 @@ export class EmployeeService {
 
     this.assertReadAccess(employee, actor);
 
-    return this.employeeRepo.getServiceRecords(employeeId);
+    const records = await this.employeeRepo.getServiceRecords(employeeId);
+    if (!records || records.length === 0) {
+      try {
+        const initialRecord = await this.employeeRepo.createServiceRecord({
+          employeeId: employee.id,
+          recordType: 'Date of Joining',
+          effectiveDate: employee.dateOfJoining || new Date(),
+          newDesignationId: employee.designationId || null,
+          newDepartmentId: employee.departmentId || null,
+          newBranchId: employee.branchId || null,
+          newEmploymentType: employee.employmentType || 'Permanent',
+          newSalaryAmount: employee.baseSalaryAnnual || 192000,
+          notes: 'Initial employee appointment and official onboarding to organization.',
+          approvalStatus: 'Approved',
+          approvedBy: 'HR Administrator',
+        });
+        return [initialRecord];
+      } catch {
+        return [{
+          id: `sr-${employee.id}-init`,
+          employeeId: employee.id,
+          recordType: 'Date of Joining',
+          effectiveDate: employee.dateOfJoining || new Date(),
+          newDesignationId: employee.designationId || null,
+          newDepartmentId: employee.departmentId || null,
+          newBranchId: employee.branchId || null,
+          newEmploymentType: employee.employmentType || 'Permanent',
+          newSalaryAmount: employee.baseSalaryAnnual || 192000,
+          notes: 'Initial employee appointment and official onboarding to organization.',
+          approvalStatus: 'Approved',
+          approvedBy: 'HR Administrator',
+          createdAt: employee.createdAt || new Date(),
+          updatedAt: employee.updatedAt || new Date(),
+        }];
+      }
+    }
+
+    return records;
   }
 
   /**
@@ -651,6 +750,91 @@ export class EmployeeService {
     return updated;
   }
 
+  async getDocuments(employeeId: string, actor: AuthenticatedUser): Promise<EmployeeDocumentRecord[]> {
+    const employee = await this.employeeRepo.findById(employeeId);
+    if (!employee) throw new NotFoundError(`Employee ${employeeId} not found`);
+
+    this.assertReadAccess(employee, actor);
+    return this.employeeRepo.getDocuments(employeeId);
+  }
+
+  async uploadDocument(
+    employeeId: string,
+    payload: {
+      title: string;
+      documentType: string;
+      fileName: string;
+      fileSizeBytes?: number;
+      fileUrl: string;
+      issueDate?: string | null;
+      expiryDate?: string | null;
+      verificationStatus?: string;
+      notes?: string | null;
+    },
+    actor: AuthenticatedUser
+  ): Promise<EmployeeDocumentRecord> {
+    const employee = await this.employeeRepo.findById(employeeId);
+    if (!employee) throw new NotFoundError(`Employee ${employeeId} not found`);
+
+    const isHr = actor.role === UserRole.HR_ADMIN || actor.role === UserRole.SUPER_ADMIN;
+    const isSelf = actor.employeeId === employeeId;
+
+    if (!isHr && !isSelf) {
+      throw new ForbiddenError('You can only upload documents for your own profile or as HR Administrator');
+    }
+
+    const doc = await this.employeeRepo.createDocument({
+      employeeId,
+      title: payload.title,
+      documentType: payload.documentType,
+      fileName: payload.fileName,
+      fileSizeBytes: payload.fileSizeBytes || 0,
+      fileUrl: payload.fileUrl,
+      issueDate: payload.issueDate ? new Date(payload.issueDate) : null,
+      expiryDate: payload.expiryDate ? new Date(payload.expiryDate) : null,
+      verificationStatus: isHr ? (payload.verificationStatus || 'Verified') : 'Pending',
+      notes: payload.notes || null,
+      uploadedBy: actor.id || null,
+    });
+
+    return doc;
+  }
+
+  async deleteDocument(employeeId: string, docId: string, actor: AuthenticatedUser): Promise<boolean> {
+    const employee = await this.employeeRepo.findById(employeeId);
+    if (!employee) throw new NotFoundError(`Employee ${employeeId} not found`);
+
+    const isHr = actor.role === UserRole.HR_ADMIN || actor.role === UserRole.SUPER_ADMIN;
+    if (!isHr) {
+      throw new ForbiddenError('Only HR Administrators can delete employee documents');
+    }
+
+    return this.employeeRepo.deleteDocument(employeeId, docId);
+  }
+
+  async updateDocumentStatus(
+    employeeId: string,
+    docId: string,
+    payload: { verificationStatus: string; notes?: string },
+    actor: AuthenticatedUser
+  ): Promise<EmployeeDocumentRecord> {
+    const employee = await this.employeeRepo.findById(employeeId);
+    if (!employee) throw new NotFoundError(`Employee ${employeeId} not found`);
+
+    const isHr = actor.role === UserRole.HR_ADMIN || actor.role === UserRole.SUPER_ADMIN;
+    if (!isHr) {
+      throw new ForbiddenError('Only HR Administrators can verify or reject documents');
+    }
+
+    return this.employeeRepo.updateDocumentStatus(
+      employeeId,
+      docId,
+      payload.verificationStatus,
+      payload.notes,
+      actor.id
+    );
+  }
+
   /**
    * Asserts read permissions based on caller scope
    */
@@ -707,9 +891,9 @@ export class EmployeeService {
         panOrTaxNumber: decryptedPan ? `******${decryptedPan.slice(-4)}` : undefined,
         bankDetails: employee.bankDetails
           ? {
-              ...employee.bankDetails,
-              accountNumber: decryptedAccount ? `******${decryptedAccount.slice(-4)}` : '******',
-            }
+            ...employee.bankDetails,
+            accountNumber: decryptedAccount ? `******${decryptedAccount.slice(-4)}` : '******',
+          }
           : undefined,
       };
     }

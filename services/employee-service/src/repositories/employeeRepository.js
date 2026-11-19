@@ -4,6 +4,7 @@ exports.InMemoryEmployeeRepository = void 0;
 class InMemoryEmployeeRepository {
     employees = new Map();
     serviceRecords = new Map();
+    documents = new Map();
     sequences = new Map();
     // Mutex lock per designation code for concurrency-safe allocation
     sequenceLocks = new Map();
@@ -146,6 +147,47 @@ class InMemoryEmployeeRepository {
             updatedAt: new Date(),
         };
         this.serviceRecords.set(recordId, updated);
+        return updated;
+    }
+    async getDocuments(employeeId) {
+        const list = [];
+        for (const doc of this.documents.values()) {
+            if (doc.employeeId === employeeId)
+                list.push(doc);
+        }
+        return list;
+    }
+    async createDocument(doc) {
+        const id = `doc-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const now = new Date();
+        const newDoc = {
+            ...doc,
+            id,
+            createdAt: now,
+            updatedAt: now,
+        };
+        this.documents.set(id, newDoc);
+        return newDoc;
+    }
+    async deleteDocument(employeeId, docId) {
+        const doc = this.documents.get(docId);
+        if (!doc || doc.employeeId !== employeeId)
+            return false;
+        return this.documents.delete(docId);
+    }
+    async updateDocumentStatus(employeeId, docId, status, notes, verifiedBy) {
+        const existing = this.documents.get(docId);
+        if (!existing || existing.employeeId !== employeeId)
+            throw new Error(`Document ${docId} not found`);
+        const updated = {
+            ...existing,
+            verificationStatus: status,
+            notes: notes !== undefined ? notes : existing.notes,
+            verifiedBy: verifiedBy || existing.verifiedBy,
+            verifiedAt: status === 'Verified' ? new Date() : existing.verifiedAt,
+            updatedAt: new Date(),
+        };
+        this.documents.set(docId, updated);
         return updated;
     }
 }

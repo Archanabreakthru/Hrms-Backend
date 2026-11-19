@@ -14,7 +14,7 @@ import {
 import { AuthenticatedUser } from '../../../../shared/src/contracts/auth';
 import { UserRole } from '../../../../shared/src/constants/roles';
 import { EventPublisher, createEvent } from '../../../../shared/src/infrastructure/messaging';
-import { randomUUID } from 'crypto';
+import crypto, { randomUUID } from 'crypto';
 
 export class ClientService {
   constructor(
@@ -158,6 +158,75 @@ export class ClientService {
       createdAt: now,
       updatedAt: now,
     };
+
+    // Automated Client Supervisor Onboarding: create account in auth-service & send welcome email
+    if (supervisor.email) {
+      try {
+        const body = {
+          employeeId: `SUP-${supervisor.id.substring(0, 8).toUpperCase()}`,
+          email: supervisor.email,
+          firstName: data.fullName.split(' ')[0] || data.fullName,
+          lastName: data.fullName.split(' ').slice(1).join(' ') || '',
+          roleCode: UserRole.CLIENT_SUPERVISOR,
+          clientId: data.clientId,
+        };
+        const bodyString = JSON.stringify(body);
+        const bodyHash = crypto.createHash('sha256').update(bodyString).digest('hex');
+        const timestamp = new Date().toISOString();
+        const nonce = randomUUID();
+        const idempotencyKey = supervisor.id;
+        const secret = process.env.INTERNAL_SERVICE_SECRET || 'supersecret_jwt_key_replace_in_production';
+        const canonical = `POST\n/api/v1/auth/provision\n${timestamp}\n${nonce}\n${idempotencyKey}\n${bodyHash}`;
+        const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');
+
+        const authUrl = `${process.env.AUTH_SERVICE_URL || 'http://localhost:5001'}/api/v1/auth/provision`;
+        const authRes = await fetch(authUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Service-Name': 'employee-service',
+            'X-Service-Timestamp': timestamp,
+            'X-Service-Nonce': nonce,
+            'X-Idempotency-Key': idempotencyKey,
+            'X-Service-Signature': signature,
+          },
+          body: bodyString,
+        });
+
+        if (authRes.ok) {
+          const authData: any = await authRes.json();
+          const token = authData?.data?.activationToken;
+          const user = authData?.data?.user;
+          if (user?.id) {
+            supervisor.userId = user.id;
+          }
+
+          // Trigger automated client supervisor welcome email
+          if (token) {
+            const notifUrl = `${process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:5008'}/api/v1/notifications/dispatch`;
+            await fetch(notifUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                recipientId: supervisor.email,
+                title: `Welcome to Celestial Client Portal - Access for ${client.name}`,
+                message: `You have been registered as an authorized Client Supervisor for ${client.name}. Please complete password setup.`,
+                channel: 'EMAIL',
+                metadata: {
+                  recipientEmail: supervisor.email,
+                  supervisorName: supervisor.fullName,
+                  clientName: client.name,
+                  activationToken: token,
+                },
+              }),
+            }).catch(() => {});
+          }
+        }
+      } catch (err: any) {
+        console.warn('Client supervisor account provisioning warning:', err.message);
+      }
+    }
+
     return this.clientRepo.saveSupervisor(supervisor);
   }
 

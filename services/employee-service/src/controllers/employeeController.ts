@@ -23,6 +23,15 @@ export class EmployeeController {
     }
   };
 
+  delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const result = await this.employeeService.deleteEmployee(req.params.id, req.user!);
+      apiSuccess(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
   updatePersonal = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const employee = await this.employeeService.updatePersonal(req.params.id, req.body, req.user!);
@@ -118,6 +127,47 @@ export class EmployeeController {
         req.user!
       );
       apiSuccess(res, record, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getDocuments = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const docs = await this.employeeService.getDocuments(req.params.id, req.user!);
+      apiSuccess(res, docs, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  uploadDocument = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const doc = await this.employeeService.uploadDocument(req.params.id, req.body, req.user!);
+      apiSuccess(res, doc, 201);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  deleteDocument = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      await this.employeeService.deleteDocument(req.params.id, req.params.docId, req.user!);
+      apiSuccess(res, { deleted: true }, 200);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateDocumentStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const doc = await this.employeeService.updateDocumentStatus(
+        req.params.id,
+        req.params.docId,
+        req.body,
+        req.user!
+      );
+      apiSuccess(res, doc, 200);
     } catch (err) {
       next(err);
     }

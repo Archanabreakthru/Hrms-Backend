@@ -1,16 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateServiceRecordStatusSchema = exports.createServiceRecordSchema = exports.updateSalaryBankSchema = exports.updateReportingSchema = exports.updateEmploymentSchema = exports.updatePersonalSchema = exports.enrollEmployeeSchema = exports.draftEmployeeSchema = exports.PHONE_REGEX = exports.PAN_REGEX = void 0;
+exports.updateDocumentStatusSchema = exports.uploadDocumentSchema = exports.updateServiceRecordStatusSchema = exports.createServiceRecordSchema = exports.updateSalaryBankSchema = exports.updateReportingSchema = exports.updateEmploymentSchema = exports.updatePersonalSchema = exports.enrollEmployeeSchema = exports.draftEmployeeSchema = exports.PHONE_REGEX = exports.PAN_REGEX = void 0;
 const zod_1 = require("zod");
 exports.PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 exports.PHONE_REGEX = /^\+?[0-9\s\-]{8,15}$/;
 exports.draftEmployeeSchema = {
     body: zod_1.z.object({
         firstName: zod_1.z.string().min(1, 'First name is required'),
-        lastName: zod_1.z.string().min(1, 'Last name is required'),
+        lastName: zod_1.z.string().optional().default(''),
         email: zod_1.z.string().email('Valid official email is required'),
-        phone: zod_1.z.string().regex(exports.PHONE_REGEX, 'Valid phone number is required'),
-        userId: zod_1.z.string().min(1, 'Linked user ID is required'),
+        phone: zod_1.z.string().optional().default(''),
+        userId: zod_1.z.string().optional(),
         departmentId: zod_1.z.string().optional(),
         designationId: zod_1.z.string().optional(),
         branchId: zod_1.z.string().optional(),
@@ -129,5 +129,24 @@ exports.createServiceRecordSchema = {
 exports.updateServiceRecordStatusSchema = {
     body: zod_1.z.object({
         approvalStatus: zod_1.z.enum(['Approved', 'Rejected']),
+    }),
+};
+exports.uploadDocumentSchema = {
+    body: zod_1.z.object({
+        title: zod_1.z.string().min(1, 'Title is required'),
+        documentType: zod_1.z.string().min(1, 'Document type is required'),
+        fileName: zod_1.z.string().min(1, 'File name is required'),
+        fileSizeBytes: zod_1.z.number().nonnegative().optional().default(0),
+        fileUrl: zod_1.z.string().min(1, 'File content or URL is required'),
+        issueDate: zod_1.z.string().optional().nullable(),
+        expiryDate: zod_1.z.string().optional().nullable(),
+        verificationStatus: zod_1.z.enum(['Pending', 'Verified', 'Rejected']).default('Pending'),
+        notes: zod_1.z.string().optional().nullable(),
+    }),
+};
+exports.updateDocumentStatusSchema = {
+    body: zod_1.z.object({
+        verificationStatus: zod_1.z.enum(['Pending', 'Verified', 'Rejected']),
+        notes: zod_1.z.string().optional().nullable(),
     }),
 };

@@ -5,6 +5,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/client"
 }
 
 enum AssetStatus {
@@ -16,6 +17,7 @@ enum AssetStatus {
 }
 
 enum CustodyStatus {
+  Available
   Pending_Acknowledgement
   In_Possession
   Returned

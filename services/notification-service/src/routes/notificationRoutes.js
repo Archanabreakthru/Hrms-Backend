@@ -13,6 +13,7 @@ function createNotificationRouter(controller) {
     // Internal/Service dispatch endpoint
     router.post('/dispatch', (0, validation_1.validateRequest)({ body: notificationValidators_1.createNotificationSchema }), controller.sendNotification);
     // Authenticated user endpoints
+    router.get('/smtp/verify', controller.verifySmtp);
     router.get('/my', authMiddleware, controller.getMyNotifications);
     router.get('/my/unread-count', authMiddleware, controller.getMyUnreadCount);
     router.patch('/:id/read', authMiddleware, controller.markAsRead);

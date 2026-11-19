@@ -25,6 +25,15 @@ class EmployeeController {
             next(err);
         }
     };
+    delete = async (req, res, next) => {
+        try {
+            const result = await this.employeeService.deleteEmployee(req.params.id, req.user);
+            (0, apiResponse_1.apiSuccess)(res, result, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
     updatePersonal = async (req, res, next) => {
         try {
             const employee = await this.employeeService.updatePersonal(req.params.id, req.body, req.user);
@@ -114,6 +123,42 @@ class EmployeeController {
         try {
             const record = await this.employeeService.updateServiceRecordStatus(req.params.id, req.params.recordId, req.body.approvalStatus, req.user);
             (0, apiResponse_1.apiSuccess)(res, record, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    getDocuments = async (req, res, next) => {
+        try {
+            const docs = await this.employeeService.getDocuments(req.params.id, req.user);
+            (0, apiResponse_1.apiSuccess)(res, docs, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    uploadDocument = async (req, res, next) => {
+        try {
+            const doc = await this.employeeService.uploadDocument(req.params.id, req.body, req.user);
+            (0, apiResponse_1.apiSuccess)(res, doc, 201);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    deleteDocument = async (req, res, next) => {
+        try {
+            await this.employeeService.deleteDocument(req.params.id, req.params.docId, req.user);
+            (0, apiResponse_1.apiSuccess)(res, { deleted: true }, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    updateDocumentStatus = async (req, res, next) => {
+        try {
+            const doc = await this.employeeService.updateDocumentStatus(req.params.id, req.params.docId, req.body, req.user);
+            (0, apiResponse_1.apiSuccess)(res, doc, 200);
         }
         catch (err) {
             next(err);

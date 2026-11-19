@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { PrismaClient } from '../generated/client';
 import {
   IOrganizationRepository,
@@ -6,6 +7,7 @@ import {
   BranchRecord,
   DepartmentRecord,
   DesignationRecord,
+  DelegationRecord,
 } from './orgRepository';
 
 /** Convert a statutory effective date to a Prisma-compatible DateTime. */
@@ -44,6 +46,7 @@ export class PrismaOrgRepository implements IOrganizationRepository {
       panNumber: raw.panNumber ?? undefined,
       tanNumber: raw.tanNumber ?? undefined,
       gstin: raw.gstNumber ?? undefined,
+      iecNumber: raw.iecNumber ?? undefined,
       pfRegistrationNumber: raw.pfRegistrationNumber ?? undefined,
       esiRegistrationNumber: raw.esiRegistrationNumber ?? undefined,
       registeredAddress: raw.address,
@@ -51,6 +54,15 @@ export class PrismaOrgRepository implements IOrganizationRepository {
       contactEmail: raw.contactEmail,
       contactPhone: raw.contactPhone,
       website: raw.website ?? undefined,
+      incorporatedDate: raw.incorporatedDate ?? undefined,
+      city: raw.city ?? undefined,
+      state: raw.state ?? undefined,
+      country: raw.country ?? 'India',
+      zipCode: raw.zipCode ?? undefined,
+      currency: raw.currency ?? 'INR',
+      currencySymbol: raw.currencySymbol ?? '₹',
+      workingDaysPerWeek: raw.workingDaysPerWeek !== undefined && raw.workingDaysPerWeek !== null ? Number(raw.workingDaysPerWeek) : 5,
+      standardHoursPerDay: raw.standardHoursPerDay !== undefined && raw.standardHoursPerDay !== null ? Number(raw.standardHoursPerDay) : 8,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     };
@@ -138,6 +150,14 @@ export class PrismaOrgRepository implements IOrganizationRepository {
 
   async saveCompanyProfile(profile: Partial<CompanyProfileRecord>): Promise<CompanyProfileRecord> {
     const existing = await this.prisma.companyProfiles.findFirst();
+    const incDate = profile.incorporatedDate
+      ? (typeof profile.incorporatedDate === 'string'
+          ? (/^\d{4}-\d{2}-\d{2}$/.test(profile.incorporatedDate)
+              ? new Date(`${profile.incorporatedDate}T00:00:00.000Z`)
+              : new Date(profile.incorporatedDate))
+          : profile.incorporatedDate)
+      : undefined;
+
     if (existing) {
       const raw = await this.prisma.companyProfiles.update({
         where: { id: existing.id },
@@ -145,12 +165,22 @@ export class PrismaOrgRepository implements IOrganizationRepository {
           legalName: profile.legalName ?? existing.legalName,
           tradingName: profile.tradingName ?? existing.tradingName,
           registrationNumber: profile.cinNumber ?? existing.registrationNumber,
+          incorporatedDate: incDate ?? existing.incorporatedDate,
           panNumber: profile.panNumber ?? existing.panNumber,
           tanNumber: profile.tanNumber ?? existing.tanNumber,
           gstNumber: profile.gstin ?? existing.gstNumber,
+          iecNumber: profile.iecNumber ?? existing.iecNumber,
           pfRegistrationNumber: profile.pfRegistrationNumber ?? existing.pfRegistrationNumber,
           esiRegistrationNumber: profile.esiRegistrationNumber ?? existing.esiRegistrationNumber,
           address: profile.headquartersAddress || profile.registeredAddress || existing.address,
+          city: profile.city ?? existing.city,
+          state: profile.state ?? existing.state,
+          country: profile.country ?? existing.country,
+          zipCode: profile.zipCode ?? existing.zipCode,
+          workingDaysPerWeek: profile.workingDaysPerWeek !== undefined ? profile.workingDaysPerWeek : existing.workingDaysPerWeek,
+          standardHoursPerDay: profile.standardHoursPerDay !== undefined ? profile.standardHoursPerDay : existing.standardHoursPerDay,
+          currency: profile.currency ?? existing.currency,
+          currencySymbol: profile.currencySymbol ?? existing.currencySymbol,
           contactEmail: profile.contactEmail ?? existing.contactEmail,
           contactPhone: profile.contactPhone ?? existing.contactPhone,
           website: profile.website ?? existing.website,
@@ -163,16 +193,22 @@ export class PrismaOrgRepository implements IOrganizationRepository {
           legalName: profile.legalName || 'Celestial Technologies Ltd.',
           tradingName: profile.tradingName || 'Celestial Tech',
           registrationNumber: profile.cinNumber ?? null,
+          incorporatedDate: incDate ?? null,
           panNumber: profile.panNumber ?? null,
           tanNumber: profile.tanNumber ?? null,
           gstNumber: profile.gstin ?? null,
+          iecNumber: profile.iecNumber ?? null,
           pfRegistrationNumber: profile.pfRegistrationNumber ?? null,
           esiRegistrationNumber: profile.esiRegistrationNumber ?? null,
           address: profile.headquartersAddress || profile.registeredAddress || '',
-          city: 'Bengaluru',
-          state: 'Karnataka',
-          country: 'India',
-          zipCode: '560100',
+          city: profile.city || 'Bengaluru',
+          state: profile.state || 'Karnataka',
+          country: profile.country || 'India',
+          zipCode: profile.zipCode || '560100',
+          workingDaysPerWeek: profile.workingDaysPerWeek !== undefined ? profile.workingDaysPerWeek : 5,
+          standardHoursPerDay: profile.standardHoursPerDay !== undefined ? profile.standardHoursPerDay : 8.0,
+          currency: profile.currency || 'INR',
+          currencySymbol: profile.currencySymbol || '₹',
           contactEmail: profile.contactEmail || 'admin@orbyx.io',
           contactPhone: profile.contactPhone || '+91 80 1234 5678',
           website: profile.website ?? null,
@@ -362,16 +398,45 @@ export class PrismaOrgRepository implements IOrganizationRepository {
   }
 
   async createDesignation(desig: Omit<DesignationRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<DesignationRecord> {
+    let deptUuid: string | null = null;
+    if (desig.departmentId) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(desig.departmentId);
+      if (isUuid) {
+        deptUuid = desig.departmentId;
+      } else {
+        const foundDept = await this.prisma.departments.findFirst({
+          where: { OR: [{ code: desig.departmentId }, { name: desig.departmentId }] },
+        });
+        deptUuid = foundDept?.id || null;
+      }
+    }
+
     const raw = await this.prisma.designations.create({
       data: {
         code: desig.code,
         title: desig.title,
-        departmentId: desig.departmentId ?? null,
+        departmentId: deptUuid,
         level: desig.level,
         description: desig.description ?? null,
         isActive: desig.status === 'Active',
       },
     });
+
+    try {
+      await (this.prisma as any).$queryRawUnsafe(`
+        INSERT INTO org.designations (id, code, title, department_id, level, description, is_active, created_at, updated_at)
+        VALUES ($1::uuid, $2, $3, $4::uuid, $5, $6, $7, $8, $9)
+        ON CONFLICT (id) DO UPDATE SET
+          code = EXCLUDED.code,
+          title = EXCLUDED.title,
+          department_id = EXCLUDED.department_id,
+          level = EXCLUDED.level,
+          description = EXCLUDED.description,
+          is_active = EXCLUDED.is_active,
+          updated_at = EXCLUDED.updated_at;
+      `, raw.id, raw.code, raw.title, raw.departmentId, raw.level, raw.description, raw.isActive, raw.createdAt, raw.updatedAt);
+    } catch {}
+
     return this.mapDesignation(raw);
   }
 
@@ -391,10 +456,24 @@ export class PrismaOrgRepository implements IOrganizationRepository {
 
     const data: any = {};
     if (patch.title !== undefined) data.title = patch.title;
-    if (patch.departmentId !== undefined) data.departmentId = patch.departmentId;
     if (patch.level !== undefined) data.level = patch.level;
     if (patch.description !== undefined) data.description = patch.description;
     if (patch.status !== undefined) data.isActive = patch.status === 'Active';
+    if (patch.departmentId !== undefined) {
+      if (!patch.departmentId) {
+        data.departmentId = null;
+      } else {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(patch.departmentId);
+        if (isUuid) {
+          data.departmentId = patch.departmentId;
+        } else {
+          const foundDept = await this.prisma.departments.findFirst({
+            where: { OR: [{ code: patch.departmentId }, { name: patch.departmentId }] },
+          });
+          data.departmentId = foundDept?.id || null;
+        }
+      }
+    }
 
     const raw = await this.prisma.designations.update({
       where: { id: existing.id },
@@ -432,12 +511,82 @@ export class PrismaOrgRepository implements IOrganizationRepository {
 
   async deleteDesignation(id: string): Promise<boolean> {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    let targetId = id;
     if (isUuid) {
       await this.prisma.designations.delete({ where: { id } });
     } else {
       const d = await this.prisma.designations.findFirst({ where: { code: id.replace(/^DES-/i, '') } });
-      if (d) await this.prisma.designations.delete({ where: { id: d.id } });
+      if (d) {
+        targetId = d.id;
+        await this.prisma.designations.delete({ where: { id: d.id } });
+      }
     }
+    try {
+      await (this.prisma as any).$queryRawUnsafe(`DELETE FROM org.designations WHERE id = $1::uuid OR code = $2`, targetId, id);
+    } catch {}
     return true;
+  }
+
+  async getDelegations(): Promise<DelegationRecord[]> {
+    const rows: any[] = await this.prisma.$queryRawUnsafe(
+      `SELECT id, delegator_user_id as "delegatorUserId", delegator_employee_id as "delegatorEmployeeId",
+              delegate_user_id as "delegateUserId", delegate_employee_id as "delegateEmployeeId",
+              permitted_actions as "permittedActions", applicable_modules as "applicableModules",
+              to_char(effective_from, 'YYYY-MM-DD') as "effectiveFrom",
+              to_char(effective_to, 'YYYY-MM-DD') as "effectiveTo",
+              reason, status, revoked_at as "revokedAt", revoked_by as "revokedBy",
+              created_at as "createdAt", updated_at as "updatedAt"
+       FROM org.delegations
+       ORDER BY created_at DESC`
+    );
+    return rows;
+  }
+
+  async createDelegation(data: Omit<DelegationRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<DelegationRecord> {
+    const id = crypto.randomUUID();
+    const rows: any[] = await this.prisma.$queryRawUnsafe(
+      `INSERT INTO org.delegations (
+        id, delegator_user_id, delegator_employee_id, delegate_user_id, delegate_employee_id,
+        permitted_actions, applicable_modules, effective_from, effective_to, reason, status, created_at, updated_at
+      ) VALUES (
+        $1::uuid, $2::uuid, $3, $4::uuid, $5,
+        $6::text[], $7::text[], $8::date, $9::date, $10, $11, NOW(), NOW()
+      ) RETURNING id, delegator_user_id as "delegatorUserId", delegator_employee_id as "delegatorEmployeeId",
+                  delegate_user_id as "delegateUserId", delegate_employee_id as "delegateEmployeeId",
+                  permitted_actions as "permittedActions", applicable_modules as "applicableModules",
+                  to_char(effective_from, 'YYYY-MM-DD') as "effectiveFrom",
+                  to_char(effective_to, 'YYYY-MM-DD') as "effectiveTo",
+                  reason, status, created_at as "createdAt", updated_at as "updatedAt"`,
+      id,
+      data.delegatorUserId,
+      data.delegatorEmployeeId || null,
+      data.delegateUserId,
+      data.delegateEmployeeId || null,
+      data.permittedActions || [],
+      data.applicableModules || [],
+      data.effectiveFrom,
+      data.effectiveTo,
+      data.reason,
+      data.status || 'Active'
+    );
+    return rows[0];
+  }
+
+  async revokeDelegation(id: string, revokedBy: string): Promise<DelegationRecord> {
+    const rows: any[] = await this.prisma.$queryRawUnsafe(
+      `UPDATE org.delegations
+       SET status = 'Revoked', revoked_at = NOW(), revoked_by = $2::uuid, updated_at = NOW()
+       WHERE id = $1::uuid
+       RETURNING id, delegator_user_id as "delegatorUserId", delegator_employee_id as "delegatorEmployeeId",
+                 delegate_user_id as "delegateUserId", delegate_employee_id as "delegateEmployeeId",
+                 permitted_actions as "permittedActions", applicable_modules as "applicableModules",
+                 to_char(effective_from, 'YYYY-MM-DD') as "effectiveFrom",
+                 to_char(effective_to, 'YYYY-MM-DD') as "effectiveTo",
+                 reason, status, revoked_at as "revokedAt", revoked_by as "revokedBy",
+                 created_at as "createdAt", updated_at as "updatedAt"`,
+      id,
+      revokedBy
+    );
+    return rows[0];
   }
 }

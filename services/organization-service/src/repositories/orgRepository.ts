@@ -6,6 +6,7 @@ export interface CompanyProfileRecord {
   panNumber?: string;
   tanNumber?: string;
   gstin?: string;
+  iecNumber?: string;
   pfRegistrationNumber?: string;
   esiRegistrationNumber?: string;
   registeredAddress: string;
@@ -13,6 +14,15 @@ export interface CompanyProfileRecord {
   contactEmail: string;
   contactPhone: string;
   website?: string;
+  incorporatedDate?: Date | string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zipCode?: string;
+  currency?: string;
+  currencySymbol?: string;
+  workingDaysPerWeek?: number;
+  standardHoursPerDay?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -85,6 +95,24 @@ export interface DesignationRecord {
   updatedAt: Date;
 }
 
+export interface DelegationRecord {
+  id: string;
+  delegatorUserId: string;
+  delegatorEmployeeId?: string;
+  delegateUserId: string;
+  delegateEmployeeId?: string;
+  permittedActions: string[];
+  applicableModules: string[];
+  effectiveFrom: string;
+  effectiveTo: string;
+  reason: string;
+  status: string;
+  revokedAt?: Date | null;
+  revokedBy?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface IOrganizationRepository {
   getCompanyProfile(): Promise<CompanyProfileRecord | null>;
   saveCompanyProfile(profile: Partial<CompanyProfileRecord>): Promise<CompanyProfileRecord>;
@@ -110,6 +138,10 @@ export interface IOrganizationRepository {
   createDesignation(desig: Omit<DesignationRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<DesignationRecord>;
   updateDesignation(id: string, patch: Partial<DesignationRecord>): Promise<DesignationRecord>;
   deleteDesignation(id: string): Promise<boolean>;
+
+  getDelegations(): Promise<DelegationRecord[]>;
+  createDelegation(record: Omit<DelegationRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<DelegationRecord>;
+  revokeDelegation(id: string, revokedBy: string): Promise<DelegationRecord>;
 }
 
 export class InMemoryOrganizationRepository implements IOrganizationRepository {
@@ -344,5 +376,33 @@ export class InMemoryOrganizationRepository implements IOrganizationRepository {
 
   async deleteDesignation(id: string): Promise<boolean> {
     return this.designations.delete(id);
+  }
+
+  private delegations = new Map<string, DelegationRecord>();
+
+  async getDelegations(): Promise<DelegationRecord[]> {
+    return Array.from(this.delegations.values());
+  }
+
+  async createDelegation(record: Omit<DelegationRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<DelegationRecord> {
+    const id = `del-${Date.now()}`;
+    const now = new Date();
+    const del: DelegationRecord = { ...record, id, createdAt: now, updatedAt: now };
+    this.delegations.set(id, del);
+    return del;
+  }
+
+  async revokeDelegation(id: string, revokedBy: string): Promise<DelegationRecord> {
+    const existing = this.delegations.get(id);
+    if (!existing) throw new Error(`Delegation ${id} not found`);
+    const updated: DelegationRecord = {
+      ...existing,
+      status: 'Revoked',
+      revokedAt: new Date(),
+      revokedBy,
+      updatedAt: new Date(),
+    };
+    this.delegations.set(id, updated);
+    return updated;
   }
 }

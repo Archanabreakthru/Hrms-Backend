@@ -16,8 +16,9 @@
     "prisma:generate:expense": "prisma generate --schema=services/expense-service/prisma/schema.prisma",
     "prisma:generate:asset": "prisma generate --schema=services/asset-service/prisma/schema.prisma",
     "prisma:generate:client": "prisma generate --schema=services/client-service/prisma/schema.prisma",
+    "prisma:generate:payroll": "prisma generate --schema=services/payroll-service/prisma/schema.prisma",
     "prisma:generate:notification": "prisma generate --schema=services/notification-service/prisma/schema.prisma",
-    "prisma:generate:all": "npm run prisma:generate:auth && npm run prisma:generate:org && npm run prisma:generate:employee && npm run prisma:generate:attendance && npm run prisma:generate:expense && npm run prisma:generate:asset && npm run prisma:generate:client && npm run prisma:generate:notification"
+    "prisma:generate:all": "npm run prisma:generate:auth && npm run prisma:generate:org && npm run prisma:generate:employee && npm run prisma:generate:attendance && npm run prisma:generate:expense && npm run prisma:generate:asset && npm run prisma:generate:client && npm run prisma:generate:payroll && npm run prisma:generate:notification"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

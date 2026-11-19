@@ -17,6 +17,7 @@ export function createNotificationRouter(controller: NotificationController): Ro
   );
 
   // Authenticated user endpoints
+  router.get('/smtp/verify', controller.verifySmtp);
   router.get('/my', authMiddleware, controller.getMyNotifications);
   router.get('/my/unread-count', authMiddleware, controller.getMyUnreadCount);
   router.patch('/:id/read', authMiddleware, controller.markAsRead);

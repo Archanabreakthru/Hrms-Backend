@@ -71,6 +71,36 @@ export function createAuthRouter(authController: AuthController): Router {
     authController.updateRole
   );
 
+  // Dynamic Roles & Permissions Management endpoints
+  router.get(
+    '/roles',
+    authMiddleware,
+    authController.listRoles
+  );
+  router.post(
+    '/roles',
+    authMiddleware,
+    requirePermission('auth.users.manage'),
+    authController.createRole
+  );
+  router.put(
+    '/roles/:code',
+    authMiddleware,
+    requirePermission('auth.users.manage'),
+    authController.updateRoleDefinition
+  );
+  router.delete(
+    '/roles/:code',
+    authMiddleware,
+    requirePermission('auth.users.manage'),
+    authController.deleteRole
+  );
+  router.get(
+    '/permissions',
+    authMiddleware,
+    authController.listPermissions
+  );
+
   return router;
 }
 

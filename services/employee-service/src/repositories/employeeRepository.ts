@@ -81,6 +81,25 @@ export interface ServiceRecordEntry {
   updatedAt: Date;
 }
 
+export interface EmployeeDocumentRecord {
+  id: string;
+  employeeId: string;
+  title: string;
+  documentType: string;
+  fileName: string;
+  fileSizeBytes: number;
+  fileUrl: string;
+  issueDate?: Date | null;
+  expiryDate?: Date | null;
+  verificationStatus: string;
+  verifiedBy?: string | null;
+  verifiedAt?: Date | null;
+  notes?: string | null;
+  uploadedBy?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface IEmployeeRepository {
   findById(id: string): Promise<EmployeeRecord | null>;
   findByEmail(email: string): Promise<EmployeeRecord | null>;
@@ -100,6 +119,8 @@ export interface IEmployeeRepository {
   create(employee: EmployeeRecord): Promise<EmployeeRecord>;
   createWithOutbox?(employee: EmployeeRecord, outboxPayload: any): Promise<EmployeeRecord>;
   update(id: string, updates: Partial<EmployeeRecord>): Promise<EmployeeRecord>;
+  updateWithOutbox?(id: string, updates: Partial<EmployeeRecord>, outboxPayload: any): Promise<EmployeeRecord>;
+  delete?(id: string): Promise<boolean>;
   allocateNextId(designationCode: string): Promise<string>;
   getDirectReports(managerId: string): Promise<EmployeeRecord[]>;
 
@@ -107,11 +128,18 @@ export interface IEmployeeRepository {
   getServiceRecords(employeeId: string): Promise<ServiceRecordEntry[]>;
   createServiceRecord(record: Omit<ServiceRecordEntry, 'id' | 'createdAt' | 'updatedAt'>): Promise<ServiceRecordEntry>;
   updateServiceRecordStatus(recordId: string, status: string, approvedBy?: string): Promise<ServiceRecordEntry>;
+
+  // Documents
+  getDocuments(employeeId: string): Promise<EmployeeDocumentRecord[]>;
+  createDocument(doc: Omit<EmployeeDocumentRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<EmployeeDocumentRecord>;
+  deleteDocument(employeeId: string, docId: string): Promise<boolean>;
+  updateDocumentStatus(employeeId: string, docId: string, status: string, notes?: string, verifiedBy?: string): Promise<EmployeeDocumentRecord>;
 }
 
 export class InMemoryEmployeeRepository implements IEmployeeRepository {
   private employees = new Map<string, EmployeeRecord>();
   private serviceRecords = new Map<string, ServiceRecordEntry>();
+  private documents = new Map<string, EmployeeDocumentRecord>();
   private sequences = new Map<string, number>();
   // Mutex lock per designation code for concurrency-safe allocation
   private sequenceLocks = new Map<string, Promise<void>>();
@@ -277,6 +305,56 @@ export class InMemoryEmployeeRepository implements IEmployeeRepository {
       updatedAt: new Date(),
     };
     this.serviceRecords.set(recordId, updated);
+    return updated;
+  }
+
+  async getDocuments(employeeId: string): Promise<EmployeeDocumentRecord[]> {
+    const list: EmployeeDocumentRecord[] = [];
+    for (const doc of this.documents.values()) {
+      if (doc.employeeId === employeeId) list.push(doc);
+    }
+    return list;
+  }
+
+  async createDocument(
+    doc: Omit<EmployeeDocumentRecord, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<EmployeeDocumentRecord> {
+    const id = `doc-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const now = new Date();
+    const newDoc: EmployeeDocumentRecord = {
+      ...doc,
+      id,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.documents.set(id, newDoc);
+    return newDoc;
+  }
+
+  async deleteDocument(employeeId: string, docId: string): Promise<boolean> {
+    const doc = this.documents.get(docId);
+    if (!doc || doc.employeeId !== employeeId) return false;
+    return this.documents.delete(docId);
+  }
+
+  async updateDocumentStatus(
+    employeeId: string,
+    docId: string,
+    status: string,
+    notes?: string,
+    verifiedBy?: string
+  ): Promise<EmployeeDocumentRecord> {
+    const existing = this.documents.get(docId);
+    if (!existing || existing.employeeId !== employeeId) throw new Error(`Document ${docId} not found`);
+    const updated: EmployeeDocumentRecord = {
+      ...existing,
+      verificationStatus: status,
+      notes: notes !== undefined ? notes : existing.notes,
+      verifiedBy: verifiedBy || existing.verifiedBy,
+      verifiedAt: status === 'Verified' ? new Date() : existing.verifiedAt,
+      updatedAt: new Date(),
+    };
+    this.documents.set(docId, updated);
     return updated;
   }
 }

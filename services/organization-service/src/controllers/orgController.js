@@ -188,5 +188,33 @@ class OrganizationController {
             next(err);
         }
     };
+    getDelegations = async (req, res, next) => {
+        try {
+            const delegations = await this.orgService.getDelegations();
+            (0, apiResponse_1.apiSuccess)(res, delegations, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    createDelegation = async (req, res, next) => {
+        try {
+            const delegation = await this.orgService.createDelegation(req.body);
+            (0, apiResponse_1.apiSuccess)(res, delegation, 201);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
+    revokeDelegation = async (req, res, next) => {
+        try {
+            const actorId = req.user?.id || '00000000-0000-0000-0000-000000000000';
+            const revoked = await this.orgService.revokeDelegation(req.params.id, actorId);
+            (0, apiResponse_1.apiSuccess)(res, revoked, 200);
+        }
+        catch (err) {
+            next(err);
+        }
+    };
 }
 exports.OrganizationController = OrganizationController;

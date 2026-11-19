@@ -29,12 +29,17 @@ function createGatewayApp() {
     }));
     app.use(express_1.default.json());
     app.use(correlation_1.correlationMiddleware);
-    // Rate Limiting on public/external API requests
-    const limiter = (0, rateLimiter_1.createRateLimiter)({ windowMs: 60 * 1000, max: 200 });
+    // Rate Limiting on external API requests: 2,000 requests per minute
+    const maxReqPerMin = parseInt(process.env.RATE_LIMIT_MAX || '2000', 10);
+    const limiter = (0, rateLimiter_1.createRateLimiter)({ windowMs: 60 * 1000, max: maxReqPerMin });
     app.use(limiter);
-    // Specialized Rate Limiter for Activation Endpoint (5 attempts per 15 minutes)
+    // Stricter Rate Limiter for Sensitive Authentication Endpoints
+    const loginLimiter = (0, rateLimiter_1.createRateLimiter)({ windowMs: 60 * 1000, max: 10 });
+    app.use('/api/v1/auth/login', loginLimiter);
+    // Specialized Rate Limiter for Activation & Invitation Endpoints (5 attempts per 15 minutes)
     const activationLimiter = (0, rateLimiter_1.createRateLimiter)({ windowMs: 15 * 60 * 1000, max: 5 });
     app.use('/api/v1/auth/activate', activationLimiter);
+    app.use('/api/v1/auth/resend-invite', activationLimiter);
     // Root Route - Redirect or friendly landing to Swagger docs
     app.get('/', (req, res) => {
         res.redirect('/api-docs');

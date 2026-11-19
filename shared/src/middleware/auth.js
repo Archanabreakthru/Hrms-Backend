@@ -25,6 +25,8 @@ function createAuthMiddleware(jwtSecret, issuer = 'orbyx-auth-service', audience
                 id: decoded.sub,
                 email: decoded.email,
                 role: decoded.role,
+                username: decoded.username,
+                name: decoded.name,
                 employeeId: decoded.employeeId,
                 departmentId: decoded.departmentId,
                 clientId: decoded.clientId,
@@ -45,7 +47,14 @@ function requirePermission(...requiredPermissions) {
         if (!req.user) {
             return next(new AppError_1.UnauthorizedError('Authentication required'));
         }
+        // Bootstrap Administrator / Super Admin has unrestricted access across all modules & APIs
+        if (String(req.user.role).toLowerCase() === 'super_admin') {
+            return next();
+        }
         const userPerms = new Set(req.user.permissions);
+        if (userPerms.has('*')) {
+            return next();
+        }
         const hasPermission = requiredPermissions.some((perm) => userPerms.has(perm));
         if (!hasPermission) {
             return next(new AppError_1.ForbiddenError(`Insufficient permissions. Required one of: ${requiredPermissions.join(', ')}`));
@@ -57,6 +66,10 @@ function requireScope(evaluator) {
     return (req, res, next) => {
         if (!req.user) {
             return next(new AppError_1.UnauthorizedError('Authentication required'));
+        }
+        // Super Admin has unrestricted access and bypasses data-scoping restrictions
+        if (String(req.user.role).toLowerCase() === 'super_admin') {
+            return next();
         }
         const result = evaluator(req.user, req);
         if (!result.allowed) {

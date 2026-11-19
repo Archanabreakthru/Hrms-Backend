@@ -6,14 +6,21 @@ function createRateLimiter(options) {
     return (req, res, next) => {
         const ip = req.ip || req.socket.remoteAddress || 'unknown-client';
         const now = Date.now();
-        const clientRecord = store.get(ip);
+        let clientRecord = store.get(ip);
         if (!clientRecord || now > clientRecord.resetAt) {
-            store.set(ip, {
+            clientRecord = {
                 count: 1,
                 resetAt: now + options.windowMs,
-            });
+            };
+            store.set(ip, clientRecord);
+            res.setHeader('X-RateLimit-Limit', options.max.toString());
+            res.setHeader('X-RateLimit-Remaining', Math.max(0, options.max - 1).toString());
+            res.setHeader('X-RateLimit-Reset', Math.ceil(clientRecord.resetAt / 1000).toString());
             return next();
         }
+        res.setHeader('X-RateLimit-Limit', options.max.toString());
+        res.setHeader('X-RateLimit-Remaining', Math.max(0, options.max - clientRecord.count).toString());
+        res.setHeader('X-RateLimit-Reset', Math.ceil(clientRecord.resetAt / 1000).toString());
         if (clientRecord.count >= options.max) {
             return res.status(429).json({
                 success: false,
