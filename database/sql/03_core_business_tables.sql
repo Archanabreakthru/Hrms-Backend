@@ -1,4 +1,4 @@
-﻿-- ============================================================================
+-- ============================================================================
 -- SCRIPT 03: CORE BUSINESS TABLES
 -- DATABASE: Hrms (PostgreSQL 14+)
 -- PURPOSE: Create all core transactional and business entities across domains.
@@ -198,6 +198,8 @@ CREATE TABLE IF NOT EXISTS employee.employees (
     notice_period_days INTEGER NOT NULL DEFAULT 60,
     date_of_separation DATE,
     separation_reason TEXT,
+    base_salary_annual NUMERIC(15,2) DEFAULT 0,
+    salary_structure_id VARCHAR(50),
     is_active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -212,8 +214,8 @@ CREATE TABLE IF NOT EXISTS employee.employee_bank_details (
     employee_id VARCHAR(50) NOT NULL,
     bank_name VARCHAR(150) NOT NULL,
     account_holder_name VARCHAR(150) NOT NULL,
-    account_number VARCHAR(50) NOT NULL,
-    ifsc_code VARCHAR(20) NOT NULL,
+    account_number TEXT NOT NULL,
+    ifsc_code VARCHAR(50) NOT NULL,
     branch_name VARCHAR(150),
     is_primary BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -225,7 +227,7 @@ CREATE TABLE IF NOT EXISTS employee.employee_bank_details (
 CREATE TABLE IF NOT EXISTS employee.employee_statutory_details (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     employee_id VARCHAR(50) NOT NULL,
-    pan_number VARCHAR(50),
+    pan_number TEXT,
     pf_uan VARCHAR(50),
     esi_number VARCHAR(50),
     epf_applicable BOOLEAN NOT NULL DEFAULT true,

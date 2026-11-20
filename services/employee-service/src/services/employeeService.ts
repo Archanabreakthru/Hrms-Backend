@@ -865,8 +865,8 @@ export class EmployeeService {
    * Redacts sensitive financial and statutory fields according to caller's role
    */
   private redactSensitive(employee: EmployeeRecord, actor: AuthenticatedUser): EmployeeRecord {
-    const isHr = actor.role === UserRole.HR_ADMIN || actor.role === UserRole.SUPER_ADMIN;
-    const isSelf = actor.employeeId === employee.id;
+    const isHr = actor.role === UserRole.HR_ADMIN || actor.role === UserRole.SUPER_ADMIN || actor.permissions?.includes('*' as any) || actor.permissions?.includes('employee.salary.read' as any);
+    const isSelf = actor.employeeId === employee.id || Boolean(employee.userId && actor.id === employee.userId);
 
     const decryptedPan = employee.panOrTaxNumber ? decryptField(employee.panOrTaxNumber) : undefined;
     const decryptedAccount = employee.bankDetails?.accountNumber

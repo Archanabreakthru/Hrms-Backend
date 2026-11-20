@@ -612,8 +612,8 @@ class EmployeeService {
      * Redacts sensitive financial and statutory fields according to caller's role
      */
     redactSensitive(employee, actor) {
-        const isHr = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN;
-        const isSelf = actor.employeeId === employee.id;
+        const isHr = actor.role === roles_1.UserRole.HR_ADMIN || actor.role === roles_1.UserRole.SUPER_ADMIN || actor.permissions?.includes('*') || actor.permissions?.includes('employee.salary.read');
+        const isSelf = actor.employeeId === employee.id || Boolean(employee.userId && actor.id === employee.userId);
         const decryptedPan = employee.panOrTaxNumber ? (0, crypto_2.decryptField)(employee.panOrTaxNumber) : undefined;
         const decryptedAccount = employee.bankDetails?.accountNumber
             ? (0, crypto_2.decryptField)(employee.bankDetails.accountNumber)

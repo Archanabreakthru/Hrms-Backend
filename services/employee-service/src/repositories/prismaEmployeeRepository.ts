@@ -8,13 +8,17 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
     const raw = await this.prisma.employee.findUnique({ where: { id } });
     if (!raw) return null;
     try {
-      const [bankRows, statRows, srvRows]: [any[], any[], any[]] = await Promise.all([
+      const [bankRows, statRows, srvRows, empExtra]: [any[], any[], any[], any[]] = await Promise.all([
         (this.prisma as any).$queryRawUnsafe('SELECT * FROM employee.employee_bank_details WHERE employee_id = $1 LIMIT 1', id).catch(() => []),
         (this.prisma as any).$queryRawUnsafe('SELECT * FROM employee.employee_statutory_details WHERE employee_id = $1 LIMIT 1', id).catch(() => []),
-        (this.prisma as any).$queryRawUnsafe('SELECT new_salary_amount FROM employee.service_records WHERE employee_id = $1 ORDER BY effective_date DESC LIMIT 1', id).catch(() => []),
+        (this.prisma as any).$queryRawUnsafe('SELECT new_salary_amount FROM employee.service_records WHERE employee_id = $1 ORDER BY effective_date DESC, created_at DESC LIMIT 1', id).catch(() => []),
+        (this.prisma as any).$queryRawUnsafe('SELECT base_salary_annual, salary_structure_id FROM employee.employees WHERE id = $1 LIMIT 1', id).catch(() => []),
       ]);
-      const salary = srvRows[0]?.new_salary_amount ? Number(srvRows[0].new_salary_amount) : undefined;
-      return this.enrichEmployeeRecord(raw, bankRows[0], statRows[0], salary);
+      const salary = (empExtra[0]?.base_salary_annual !== null && empExtra[0]?.base_salary_annual !== undefined)
+        ? Number(empExtra[0].base_salary_annual)
+        : (srvRows[0]?.new_salary_amount ? Number(srvRows[0].new_salary_amount) : undefined);
+      const salaryStructureId = empExtra[0]?.salary_structure_id || undefined;
+      return this.enrichEmployeeRecord(raw, bankRows[0], statRows[0], salary, salaryStructureId);
     } catch {
       return this.enrichEmployeeRecord(raw);
     }
@@ -23,13 +27,13 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
   async findByEmail(email: string): Promise<EmployeeRecord | null> {
     const raw = await this.prisma.employee.findUnique({ where: { email: email.toLowerCase().trim() } });
     if (!raw) return null;
-    return this.enrichEmployeeRecord(raw);
+    return this.findById(raw.id);
   }
 
   async findByUserId(userId: string): Promise<EmployeeRecord | null> {
     const raw = await this.prisma.employee.findUnique({ where: { userId } });
     if (!raw) return null;
-    return this.enrichEmployeeRecord(raw);
+    return this.findById(raw.id);
   }
 
   async findByPan(pan: string): Promise<EmployeeRecord | null> {
@@ -88,31 +92,41 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
     let bankMap: Record<string, any> = {};
     let statMap: Record<string, any> = {};
     let salaryMap: Record<string, number> = {};
+    let structureMap: Record<string, string> = {};
 
     if (empIds.length > 0) {
       try {
         const placeholders = empIds.map((_, i) => `$${i + 1}`).join(',');
-        const [banks, stats, srvs]: [any[], any[], any[]] = await Promise.all([
+        const [banks, stats, srvs, empExtras]: [any[], any[], any[], any[]] = await Promise.all([
           (this.prisma as any).$queryRawUnsafe(`SELECT * FROM employee.employee_bank_details WHERE employee_id IN (${placeholders})`, ...empIds).catch(() => []),
           (this.prisma as any).$queryRawUnsafe(`SELECT * FROM employee.employee_statutory_details WHERE employee_id IN (${placeholders})`, ...empIds).catch(() => []),
-          (this.prisma as any).$queryRawUnsafe(`SELECT DISTINCT ON (employee_id) employee_id, new_salary_amount FROM employee.service_records WHERE employee_id IN (${placeholders}) ORDER BY employee_id, effective_date DESC`, ...empIds).catch(() => []),
+          (this.prisma as any).$queryRawUnsafe(`SELECT DISTINCT ON (employee_id) employee_id, new_salary_amount FROM employee.service_records WHERE employee_id IN (${placeholders}) ORDER BY employee_id, effective_date DESC, created_at DESC`, ...empIds).catch(() => []),
+          (this.prisma as any).$queryRawUnsafe(`SELECT id, base_salary_annual, salary_structure_id FROM employee.employees WHERE id IN (${placeholders})`, ...empIds).catch(() => []),
         ]);
         if (Array.isArray(banks)) banks.forEach((b) => { bankMap[b.employee_id] = b; });
         if (Array.isArray(stats)) stats.forEach((s) => { statMap[s.employee_id] = s; });
         if (Array.isArray(srvs)) srvs.forEach((sr) => { if (sr.new_salary_amount) salaryMap[sr.employee_id] = Number(sr.new_salary_amount); });
+        if (Array.isArray(empExtras)) empExtras.forEach((extra) => {
+          if (extra.base_salary_annual !== null && extra.base_salary_annual !== undefined) {
+            salaryMap[extra.id] = Number(extra.base_salary_annual);
+          }
+          if (extra.salary_structure_id) {
+            structureMap[extra.id] = extra.salary_structure_id;
+          }
+        });
       } catch {
         // Fallback gracefully
       }
     }
 
     const enrichedEmployees = employees.map((e) =>
-      this.enrichEmployeeRecord(e, bankMap[e.id], statMap[e.id], salaryMap[e.id])
+      this.enrichEmployeeRecord(e, bankMap[e.id], statMap[e.id], salaryMap[e.id], structureMap[e.id])
     );
 
     return { employees: enrichedEmployees, total };
   }
 
-  private enrichEmployeeRecord(raw: any, bankRow?: any, statRow?: any, salary?: number): EmployeeRecord {
+  private enrichEmployeeRecord(raw: any, bankRow?: any, statRow?: any, salary?: number, salaryStructureId?: string): EmployeeRecord {
     if (!raw) return raw;
     const enriched: any = {
       ...raw,
@@ -127,6 +141,7 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
         bankName: bankRow.bank_name || '',
         accountNumber: bankRow.account_number || '',
         ifscCode: bankRow.ifsc_code || '',
+        ifscOrRouting: bankRow.ifsc_code || '',
         branchName: bankRow.branch_name || '',
       } : (raw.bankDetails || undefined),
       panOrTaxNumber: statRow?.pan_number || raw.panOrTaxNumber || undefined,
@@ -137,6 +152,7 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
       esiApplicable: statRow?.esi_applicable ?? raw.esiApplicable ?? false,
       ptApplicable: statRow?.pt_applicable ?? raw.ptApplicable ?? true,
       baseSalaryAnnual: salary !== undefined ? salary : (raw.baseSalaryAnnual || 0),
+      salaryStructureId: salaryStructureId || raw.salaryStructureId || undefined,
     };
     return enriched;
   }
@@ -144,21 +160,39 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
   private async syncBankAndStatutory(employeeId: string, employee: Partial<EmployeeRecord>): Promise<void> {
     try {
       if (employee.bankDetails && (employee.bankDetails.accountNumber || employee.bankDetails.bankName)) {
-        await (this.prisma as any).$queryRawUnsafe(
-          'DELETE FROM employee.employee_bank_details WHERE employee_id = $1',
-          employeeId
-        );
+        let holderName = `${employee.firstName || ''} ${employee.lastName || ''}`.trim();
+        if (!holderName) {
+          const empRow: any[] = await (this.prisma as any).$queryRawUnsafe(
+            'SELECT first_name, last_name FROM employee.employees WHERE id = $1 LIMIT 1',
+            employeeId
+          ).catch(() => []);
+          if (empRow && empRow.length > 0) {
+            holderName = `${empRow[0].first_name || ''} ${empRow[0].last_name || ''}`.trim();
+          }
+        }
+        if (!holderName) holderName = 'Primary Account';
+
+        const ifsc = (employee.bankDetails.ifscCode || (employee.bankDetails as any).ifscOrRouting || '').trim();
+
         await (this.prisma as any).$queryRawUnsafe(
           `INSERT INTO employee.employee_bank_details (
             id, employee_id, bank_name, account_holder_name, account_number, ifsc_code, branch_name, is_primary, created_at, updated_at
           ) VALUES (
             gen_random_uuid(), $1, $2, $3, $4, $5, $6, true, NOW(), NOW()
-          )`,
+          )
+          ON CONFLICT (employee_id) DO UPDATE SET
+            bank_name = EXCLUDED.bank_name,
+            account_holder_name = EXCLUDED.account_holder_name,
+            account_number = EXCLUDED.account_number,
+            ifsc_code = EXCLUDED.ifsc_code,
+            branch_name = EXCLUDED.branch_name,
+            is_primary = true,
+            updated_at = NOW()`,
           employeeId,
           employee.bankDetails.bankName || 'HDFC Bank',
-          `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || 'Primary Account',
+          holderName,
           employee.bankDetails.accountNumber || '',
-          employee.bankDetails.ifscCode || '',
+          ifsc,
           employee.bankDetails.branchName || null
         );
       }
@@ -168,22 +202,27 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
 
     try {
       if (
-        employee.panOrTaxNumber ||
-        employee.pfUan ||
-        employee.esiNumber ||
+        employee.panOrTaxNumber !== undefined ||
+        employee.pfUan !== undefined ||
+        employee.esiNumber !== undefined ||
         employee.epfApplicable !== undefined ||
         employee.ptApplicable !== undefined
       ) {
-        await (this.prisma as any).$queryRawUnsafe(
-          'DELETE FROM employee.employee_statutory_details WHERE employee_id = $1',
-          employeeId
-        );
         await (this.prisma as any).$queryRawUnsafe(
           `INSERT INTO employee.employee_statutory_details (
             id, employee_id, pan_number, pf_uan, esi_number, epf_applicable, epf_wage_ceiling_applied, esi_applicable, pt_applicable, created_at, updated_at
           ) VALUES (
             gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()
-          )`,
+          )
+          ON CONFLICT (employee_id) DO UPDATE SET
+            pan_number = COALESCE(EXCLUDED.pan_number, employee.employee_statutory_details.pan_number),
+            pf_uan = COALESCE(EXCLUDED.pf_uan, employee.employee_statutory_details.pf_uan),
+            esi_number = COALESCE(EXCLUDED.esi_number, employee.employee_statutory_details.esi_number),
+            epf_applicable = EXCLUDED.epf_applicable,
+            epf_wage_ceiling_applied = EXCLUDED.epf_wage_ceiling_applied,
+            esi_applicable = EXCLUDED.esi_applicable,
+            pt_applicable = EXCLUDED.pt_applicable,
+            updated_at = NOW()`,
           employeeId,
           employee.panOrTaxNumber || null,
           employee.pfUan || null,
@@ -196,6 +235,71 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
       }
     } catch (e) {
       console.warn('syncBankAndStatutory (statutory) error:', e);
+    }
+  }
+
+  private async syncSalary(employeeId: string, employee: Partial<EmployeeRecord>): Promise<void> {
+    try {
+      const salary = employee.baseSalaryAnnual !== undefined ? Number(employee.baseSalaryAnnual) : undefined;
+      const structureId = employee.salaryStructureId !== undefined ? employee.salaryStructureId : undefined;
+
+      if (salary !== undefined || structureId !== undefined) {
+        // 1. Update employee.employees table directly in DB
+        await (this.prisma as any).$queryRawUnsafe(
+          `UPDATE employee.employees 
+           SET 
+             base_salary_annual = COALESCE($2, base_salary_annual),
+             salary_structure_id = COALESCE($3, salary_structure_id),
+             updated_at = NOW()
+           WHERE id = $1`,
+          employeeId,
+          salary !== undefined && !isNaN(salary) ? salary : null,
+          structureId !== undefined ? structureId : null
+        );
+
+        // 2. Also ensure service_records reflects salary history
+        if (salary !== undefined && !isNaN(salary)) {
+          const srvRows: any[] = await (this.prisma as any).$queryRawUnsafe(
+            'SELECT new_salary_amount FROM employee.service_records WHERE employee_id = $1 ORDER BY effective_date DESC, created_at DESC LIMIT 1',
+            employeeId
+          ).catch(() => []);
+
+          const currentSalaryInSrv = (srvRows && srvRows[0]?.new_salary_amount !== undefined && srvRows[0]?.new_salary_amount !== null)
+            ? Number(srvRows[0].new_salary_amount)
+            : undefined;
+
+          if (currentSalaryInSrv === undefined) {
+            // No service record yet - create initial Date of Joining record with new_salary_amount
+            await (this.prisma as any).$queryRawUnsafe(
+              `INSERT INTO employee.service_records (
+                id, employee_id, record_type, effective_date, new_salary_amount,
+                notes, approval_status, approved_by, approved_at, created_at, updated_at
+              ) VALUES (
+                gen_random_uuid(), $1, 'Date of Joining', CURRENT_DATE, $2,
+                'Initial salary assignment on onboarding', 'Approved', 'HR Administrator', NOW(), NOW(), NOW()
+              )`,
+              employeeId,
+              salary
+            ).catch((e: any) => console.warn('syncSalary initial service_record error:', e));
+          } else if (currentSalaryInSrv !== salary) {
+            // Salary changed - record revision in service history
+            await (this.prisma as any).$queryRawUnsafe(
+              `INSERT INTO employee.service_records (
+                id, employee_id, record_type, effective_date, previous_salary_amount, new_salary_amount,
+                notes, approval_status, approved_by, approved_at, created_at, updated_at
+              ) VALUES (
+                gen_random_uuid(), $1, 'Salary Revision', CURRENT_DATE, $2, $3,
+                'Annual compensation structure update', 'Approved', 'HR Administrator', NOW(), NOW(), NOW()
+              )`,
+              employeeId,
+              currentSalaryInSrv,
+              salary
+            ).catch((e: any) => console.warn('syncSalary revision service_record error:', e));
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('syncSalary error:', e);
     }
   }
 
@@ -334,7 +438,8 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
     data.userId = null;
     const created = await this.prisma.employee.create({ data });
     await this.syncBankAndStatutory(employee.id, employee);
-    return this.enrichEmployeeRecord(created, undefined, undefined, employee.baseSalaryAnnual);
+    await this.syncSalary(employee.id, employee);
+    return (await this.findById(employee.id)) || this.enrichEmployeeRecord(created, undefined, undefined, employee.baseSalaryAnnual, employee.salaryStructureId);
   }
 
   async createWithOutbox(employee: EmployeeRecord, outboxPayload: any): Promise<EmployeeRecord> {
@@ -355,7 +460,8 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
       return res;
     });
     await this.syncBankAndStatutory(employee.id, employee);
-    return this.enrichEmployeeRecord(created, undefined, undefined, employee.baseSalaryAnnual);
+    await this.syncSalary(employee.id, employee);
+    return (await this.findById(employee.id)) || this.enrichEmployeeRecord(created, undefined, undefined, employee.baseSalaryAnnual, employee.salaryStructureId);
   }
 
   async update(id: string, updates: Partial<EmployeeRecord>): Promise<EmployeeRecord> {
@@ -365,6 +471,7 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
       await this.prisma.employee.update({ where: { id }, data });
     }
     await this.syncBankAndStatutory(id, updates);
+    await this.syncSalary(id, updates);
     return (await this.findById(id)) || updates as any;
   }
 
@@ -386,6 +493,7 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
       });
     });
     await this.syncBankAndStatutory(id, updates);
+    await this.syncSalary(id, updates);
     return (await this.findById(id)) || updates as any;
   }
 
@@ -395,6 +503,8 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
       try {
         await (tx as any).$queryRawUnsafe('DELETE FROM employee.service_records WHERE employee_id = $1', id);
         await (tx as any).$queryRawUnsafe('DELETE FROM employee.employee_documents WHERE employee_id = $1', id);
+        await (tx as any).$queryRawUnsafe('DELETE FROM employee.employee_bank_details WHERE employee_id = $1', id);
+        await (tx as any).$queryRawUnsafe('DELETE FROM employee.employee_statutory_details WHERE employee_id = $1', id);
       } catch {
         // Ignored if table or record does not exist
       }

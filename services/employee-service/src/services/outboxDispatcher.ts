@@ -135,13 +135,14 @@ export class OutboxDispatcher {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 recipientId: item.email,
-                title: 'Welcome to Celestial - Your HRMS Account Is Ready',
+                title: 'Welcome to Breakthru Enterprise Solution - Your HRMS Account Is Ready',
                 message: 'Your official HRMS account has been provisioned. Please activate your account within 24 hours.',
                 channel: 'EMAIL',
                 metadata: {
                   recipientEmail: item.email,
                   employeeName: `${payload.firstName || ''} ${payload.lastName || ''}`.trim() || item.employeeId,
                   employeeId: item.employeeId,
+                  companyName: 'Breakthru Enterprise Solution',
                   activationToken: rawToken,
                 },
               }),

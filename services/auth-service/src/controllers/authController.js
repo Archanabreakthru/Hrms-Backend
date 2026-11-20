@@ -92,12 +92,13 @@ class AuthController {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             recipientId: result.email,
-                            title: 'Welcome to Celestial - Your HRMS Account Is Ready',
+                            title: 'Welcome to Breakthru Enterprise Solution - Your HRMS Account Is Ready',
                             message: 'A fresh activation invitation has been generated for your account. Please activate within 24 hours.',
                             channel: 'EMAIL',
                             metadata: {
                                 recipientEmail: result.email,
                                 employeeId: result.employeeId,
+                                companyName: 'Breakthru Enterprise Solution',
                                 activationToken: result.activationToken,
                             },
                         }),
