@@ -10,9 +10,9 @@ export const notificationConfig = {
     user: process.env.MAIL_USERNAME || '',
     pass: process.env.MAIL_PASSWORD || '',
     fromAddress: process.env.MAIL_FROM_ADDRESS || 'noreply@orbyx.internal',
-    fromName: process.env.MAIL_FROM_NAME || 'Celestial HRMS',
+    fromName: process.env.MAIL_FROM_NAME || 'Breakthru Enterprise Solution',
   },
   portalUrl: process.env.PUBLIC_APP_URL || process.env.HRMS_PORTAL_URL || process.env.APP_URL || 'http://localhost:3000',
-  companyName: process.env.COMPANY_NAME || 'Celestial Technologies',
+  companyName: process.env.COMPANY_NAME || 'Breakthru Enterprise Solution',
 };
 

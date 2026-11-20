@@ -185,13 +185,14 @@ class ClientService {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 recipientId: supervisor.email,
-                                title: `Welcome to Celestial Client Portal - Access for ${client.name}`,
+                                title: `Welcome to Breakthru Enterprise Solution Client Portal - Access for ${client.name}`,
                                 message: `You have been registered as an authorized Client Supervisor for ${client.name}. Please complete password setup.`,
                                 channel: 'EMAIL',
                                 metadata: {
                                     recipientEmail: supervisor.email,
                                     supervisorName: supervisor.fullName,
                                     clientName: client.name,
+                                    companyName: 'Breakthru Enterprise Solution',
                                     activationToken: token,
                                 },
                             }),
