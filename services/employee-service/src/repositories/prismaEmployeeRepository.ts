@@ -446,19 +446,22 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
     const data = this.sanitizeForCreate(employee);
     // userId is linked asynchronously by OutboxDispatcher after user provisioning to prevent fk_employees_user violation
     data.userId = null;
-    const created = await this.prisma.$transaction(async (tx: any) => {
-      const res = await tx.employee.create({ data });
-      await tx.provisioningOutbox.create({
-        data: {
-          employeeId: employee.id,
-          email: employee.email.toLowerCase().trim(),
-          payload: outboxPayload,
-          status: 'PENDING',
-          attempts: 0,
-        },
-      });
-      return res;
-    });
+    const created = await this.prisma.$transaction(
+      async (tx: any) => {
+        const res = await tx.employee.create({ data });
+        await tx.provisioningOutbox.create({
+          data: {
+            employeeId: employee.id,
+            email: employee.email.toLowerCase().trim(),
+            payload: outboxPayload,
+            status: 'PENDING',
+            attempts: 0,
+          },
+        });
+        return res;
+      },
+      { maxWait: 10000, timeout: 30000 }
+    );
     await this.syncBankAndStatutory(employee.id, employee);
     await this.syncSalary(employee.id, employee);
     return (await this.findById(employee.id)) || this.enrichEmployeeRecord(created, undefined, undefined, employee.baseSalaryAnnual, employee.salaryStructureId);
@@ -478,39 +481,50 @@ export class PrismaEmployeeRepository implements IEmployeeRepository {
   async updateWithOutbox(id: string, updates: Partial<EmployeeRecord>, outboxPayload: any): Promise<EmployeeRecord> {
     const data = this.sanitizeForUpdate(updates);
     delete data.id;
-    await this.prisma.$transaction(async (tx: any) => {
-      if (Object.keys(data).length > 0) {
-        await tx.employee.update({ where: { id }, data });
-      }
-      await tx.provisioningOutbox.create({
-        data: {
-          employeeId: id,
-          email: (updates.email || '').toLowerCase().trim(),
-          payload: outboxPayload,
-          status: 'PENDING',
-          attempts: 0,
-        },
-      });
-    });
+    await this.prisma.$transaction(
+      async (tx: any) => {
+        if (Object.keys(data).length > 0) {
+          await tx.employee.update({ where: { id }, data });
+        }
+        await tx.provisioningOutbox.create({
+          data: {
+            employeeId: id,
+            email: (updates.email || '').toLowerCase().trim(),
+            payload: outboxPayload,
+            status: 'PENDING',
+            attempts: 0,
+          },
+        });
+      },
+      { maxWait: 10000, timeout: 30000 }
+    );
     await this.syncBankAndStatutory(id, updates);
     await this.syncSalary(id, updates);
     return (await this.findById(id)) || updates as any;
   }
 
   async delete(id: string): Promise<boolean> {
-    return this.prisma.$transaction(async (tx: any) => {
-      await tx.provisioningOutbox.deleteMany({ where: { employeeId: id } });
-      try {
-        await (tx as any).$queryRawUnsafe('DELETE FROM employee.service_records WHERE employee_id = $1', id);
-        await (tx as any).$queryRawUnsafe('DELETE FROM employee.employee_documents WHERE employee_id = $1', id);
-        await (tx as any).$queryRawUnsafe('DELETE FROM employee.employee_bank_details WHERE employee_id = $1', id);
-        await (tx as any).$queryRawUnsafe('DELETE FROM employee.employee_statutory_details WHERE employee_id = $1', id);
-      } catch {
-        // Ignored if table or record does not exist
+    return this.prisma.$transaction(
+      async (tx: any) => {
+        await tx.provisioningOutbox.deleteMany({ where: { employeeId: id } });
+        try {
+          await Promise.all([
+            (tx as any).$queryRawUnsafe('DELETE FROM employee.service_records WHERE employee_id = $1', id).catch(() => {}),
+            (tx as any).$queryRawUnsafe('DELETE FROM employee.employee_documents WHERE employee_id = $1', id).catch(() => {}),
+            (tx as any).$queryRawUnsafe('DELETE FROM employee.employee_bank_details WHERE employee_id = $1', id).catch(() => {}),
+            (tx as any).$queryRawUnsafe('DELETE FROM employee.employee_statutory_details WHERE employee_id = $1', id).catch(() => {}),
+          ]);
+        } catch {
+          // Ignored if table or record does not exist
+        }
+        await tx.employee.delete({ where: { id } });
+        return true;
+      },
+      {
+        maxWait: 10000,
+        timeout: 30000,
       }
-      await tx.employee.delete({ where: { id } });
-      return true;
-    });
+    );
   }
 
   async allocateNextId(designationCode: string): Promise<string> {
