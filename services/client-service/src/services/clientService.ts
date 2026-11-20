@@ -270,6 +270,11 @@ export class ClientService {
         throw new ForbiddenError('Client supervisor account is not assigned to a client organization');
       }
       effectiveFilter.clientId = actor.clientId;
+    } else if (actor.role === UserRole.EMPLOYEE) {
+      // Regular employee can only view their own assigned deployment
+      if (actor.employeeId) {
+        effectiveFilter.employeeId = actor.employeeId;
+      }
     }
 
     return this.clientRepo.listDeployments(effectiveFilter);

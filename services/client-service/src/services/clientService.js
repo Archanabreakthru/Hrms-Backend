@@ -230,6 +230,12 @@ class ClientService {
             }
             effectiveFilter.clientId = actor.clientId;
         }
+        else if (actor.role === roles_1.UserRole.EMPLOYEE) {
+            // Regular employee can only view their own assigned deployment
+            if (actor.employeeId) {
+                effectiveFilter.employeeId = actor.employeeId;
+            }
+        }
         return this.clientRepo.listDeployments(effectiveFilter);
     }
     async createDeployment(data, actor) {
