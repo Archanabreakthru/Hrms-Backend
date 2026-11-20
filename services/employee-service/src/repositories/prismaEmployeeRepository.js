@@ -433,7 +433,7 @@ class PrismaEmployeeRepository {
                 },
             });
             return res;
-        });
+        }, { maxWait: 10000, timeout: 30000 });
         await this.syncBankAndStatutory(employee.id, employee);
         await this.syncSalary(employee.id, employee);
         return (await this.findById(employee.id)) || this.enrichEmployeeRecord(created, undefined, undefined, employee.baseSalaryAnnual, employee.salaryStructureId);
@@ -464,7 +464,7 @@ class PrismaEmployeeRepository {
                     attempts: 0,
                 },
             });
-        });
+        }, { maxWait: 10000, timeout: 30000 });
         await this.syncBankAndStatutory(id, updates);
         await this.syncSalary(id, updates);
         return (await this.findById(id)) || updates;
@@ -473,16 +473,21 @@ class PrismaEmployeeRepository {
         return this.prisma.$transaction(async (tx) => {
             await tx.provisioningOutbox.deleteMany({ where: { employeeId: id } });
             try {
-                await tx.$queryRawUnsafe('DELETE FROM employee.service_records WHERE employee_id = $1', id);
-                await tx.$queryRawUnsafe('DELETE FROM employee.employee_documents WHERE employee_id = $1', id);
-                await tx.$queryRawUnsafe('DELETE FROM employee.employee_bank_details WHERE employee_id = $1', id);
-                await tx.$queryRawUnsafe('DELETE FROM employee.employee_statutory_details WHERE employee_id = $1', id);
+                await Promise.all([
+                    tx.$queryRawUnsafe('DELETE FROM employee.service_records WHERE employee_id = $1', id).catch(() => { }),
+                    tx.$queryRawUnsafe('DELETE FROM employee.employee_documents WHERE employee_id = $1', id).catch(() => { }),
+                    tx.$queryRawUnsafe('DELETE FROM employee.employee_bank_details WHERE employee_id = $1', id).catch(() => { }),
+                    tx.$queryRawUnsafe('DELETE FROM employee.employee_statutory_details WHERE employee_id = $1', id).catch(() => { }),
+                ]);
             }
             catch {
                 // Ignored if table or record does not exist
             }
             await tx.employee.delete({ where: { id } });
             return true;
+        }, {
+            maxWait: 10000,
+            timeout: 30000,
         });
     }
     async allocateNextId(designationCode) {
